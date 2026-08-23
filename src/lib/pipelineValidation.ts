@@ -1,20 +1,24 @@
 /**
  * pipelineValidation.ts — client-side structural & type validation for the
- * visual pipeline graph.
+ * visual pipeline graph, WITH one-click auto-fixes.
  *
- * Runs on every canvas mutation (memoized) so problems surface while the user
- * is wiring nodes, long before the Python engine executes anything:
- *   - broken DAG paths (disconnected data/model/viz stages)
- *   - cycles
- *   - parameter bounds that cannot execute (PCA components > features, k >= n)
- *   - data-shape mismatches derived from the attached dataset metadata
- *   - CSV content inspection: text columns feeding numeric-only models,
- *     unhandled missing values
+ * Every diagnostic that can be repaired programmatically carries a `fix`
+ * descriptor; the canvas executes it against its own state (rewires edges,
+ * clamps parameters, inserts an imputer node…). Fixes that need judgement
+ * (e.g. encoding a text column) stay manual but explain exactly what to do.
  */
 
 import type { CsvDataset, GraphEdgePayload, GraphNodePayload, ImageDataset } from "./types";
 
 export type DiagnosticLevel = "error" | "warning";
+
+/** A machine-executable repair the canvas can apply to its own state. */
+export type FixSpec =
+  | { kind: "remove-edge"; edgeId: string }
+  | { kind: "remove-node"; nodeId: string }
+  | { kind: "set-param"; nodeId: string; key: string; value: string | number }
+  | { kind: "add-imputer"; nodeId: string }
+  | { kind: "auto-connect" };
 
 export interface Diagnostic {
   id: string;
@@ -22,24 +26,66 @@ export interface Diagnostic {
   nodeId?: string;
   title: string;
   detail: string;
+  fix?: FixSpec;
+}
+
+export interface GraphFragment {
+  nodes: Array<Pick<GraphNodePayload, "id" | "type" | "category"> & { x?: number }>;
+  edges: Array<{ id: string; source: string; target: string }>;
+}
+
+const CATEGORY_ORDER: Record<string, number> = {
+  data: 0,
+  preprocessing: 1,
+  classic_ml: 2,
+  deep_learning: 2,
+  visualization: 3,
+};
+
+/**
+ * Wire a canonical data → preprocessing → model → visualization chain between
+ * whatever stages exist, skipping links that are already present.
+ */
+export function autoConnectChain(fragment: GraphFragment): Array<{ id: string; source: string; target: string }> {
+  const ordered = [...fragment.nodes].sort((a, b) => {
+    const rank = (CATEGORY_ORDER[a.category] ?? 9) - (CATEGORY_ORDER[b.category] ?? 9);
+    return rank !== 0 ? rank : (a.x ?? 0) - (b.x ?? 0);
+  });
+  const existing = new Set(fragment.edges.map((e) => `${e.source}->${e.target}`));
+  const additions: Array<{ id: string; source: string; target: string }> = [];
+  let counter = fragment.edges.length;
+  const lastOfStage = new Map<string, string>();
+
+  for (const node of ordered) {
+    const prev = lastOfStage.get(node.category);
+    if (prev) {
+      // Chain within the same stage (scaler → pca …).
+      if (!existing.has(`${prev}->${node.id}`)) {
+        additions.push({ id: `autofix-${++counter}`, source: prev, target: node.id });
+        existing.add(`${prev}->${node.id}`);
+      }
+    }
+    lastOfStage.set(node.category, node.id);
+  }
+
+  const stageSeq = ["data", "preprocessing", "classic_ml", "visualization"].filter((s) => lastOfStage.has(s));
+  for (let i = 0; i < stageSeq.length - 1; i += 1) {
+    const from = lastOfStage.get(stageSeq[i])!;
+    const to = lastOfStage.get(stageSeq[i + 1])!;
+    if (!existing.has(`${from}->${to}`)) {
+      additions.push({ id: `autofix-${++counter}`, source: from, target: to });
+      existing.add(`${from}->${to}`);
+    }
+  }
+  return additions.filter((a) => !fragment.edges.some((e) => e.id === a.id));
 }
 
 /** Known shapes of the built-in datasets. */
-const BUILTIN_DATASETS: Record<string, { n_samples: number; n_features: number; n_classes: number }> = {
-  "data:breast_cancer": { n_samples: 569, n_features: 30, n_classes: 2 },
-  "data:wine": { n_samples: 178, n_features: 13, n_classes: 3 },
-  "data:iris": { n_samples: 150, n_features: 4, n_classes: 3 },
+const BUILTIN_DATASETS: Record<string, { n_samples: number; n_features: number }> = {
+  "data:breast_cancer": { n_samples: 569, n_features: 30 },
+  "data:wine": { n_samples: 178, n_features: 13 },
+  "data:iris": { n_samples: 150, n_features: 4 },
 };
-
-interface DatasetFacts {
-  nodeId: string;
-  name: string;
-  n_samples: number;
-  n_features: number;
-  csv?: CsvDataset;
-  image?: ImageDataset;
-  syntheticParams?: Record<string, string | number>;
-}
 
 function paramValue(params: Record<string, string | number> | undefined, key: string): string | number | undefined {
   return params?.[key];
@@ -75,11 +121,11 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
   if (nodes.length === 0) return diagnostics;
 
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const outgoing = new Map<string, string[]>();
+  const outgoing = new Map<string, Array<{ target: string; edgeId: string }>>();
   const incoming = new Map<string, string[]>();
   for (const edge of edges) {
     if (!byId.has(edge.source) || !byId.has(edge.target)) continue;
-    outgoing.set(edge.source, [...(outgoing.get(edge.source) ?? []), edge.target]);
+    outgoing.set(edge.source, [...(outgoing.get(edge.source) ?? []), { target: edge.target, edgeId: edge.id }]);
     incoming.set(edge.target, [...(incoming.get(edge.target) ?? []), edge.source]);
   }
 
@@ -97,30 +143,52 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
 
   // ── Cycle detection ────────────────────────────────────────────────────────
   const state = new Map<string, 1 | 2>();
-  const walk = (id: string, path: string[]) => {
+  let cycleFound = false;
+  const walk = (id: string) => {
     state.set(id, 1);
     for (const next of outgoing.get(id) ?? []) {
-      if (state.get(next) === 1) {
+      if (cycleFound) return;
+      if (state.get(next.target) === 1) {
+        cycleFound = true;
         diagnostics.push({
-          id: `cycle-${next}`,
+          id: `cycle-${next.edgeId}`,
           level: "error",
-          nodeId: next,
+          nodeId: next.target,
           title: "Circular connection",
-          detail: `“${byId.get(next)?.label ?? next}” is part of a loop. Data cannot flow in circles — remove one of the back-links.`,
+          detail: `“${byId.get(next.target)?.label ?? next.target}” is part of a loop. Remove the back-link so data flows forward only.`,
+          fix: { kind: "remove-edge", edgeId: next.edgeId },
         });
         return;
       }
-      if (!state.has(next)) walk(next, [...path, id]);
+      if (!state.has(next.target)) walk(next.target);
     }
     state.set(id, 2);
   };
-  for (const node of nodes) if (!state.has(node.id)) walk(node.id, []);
+  for (const node of nodes) if (!state.has(node.id) && !cycleFound) walk(node.id);
 
   // ── Stage coverage ─────────────────────────────────────────────────────────
   const dataNodes = nodes.filter((n) => n.category === "data");
   const modelNodes = nodes.filter((n) => n.category === "classic_ml" || n.category === "deep_learning");
   const vizNodes = nodes.filter((n) => n.category === "visualization");
   const preNodes = nodes.filter((n) => n.category === "preprocessing");
+
+  const needsChain =
+    dataNodes.length > 0 &&
+    modelNodes.length > 0 &&
+    (() => {
+      // Only suggest auto-connect when at least one required link is missing.
+      const pairs = new Set(edges.map((e) => `${e.source}->${e.target}`));
+      const lastData = dataNodes[dataNodes.length - 1].id;
+      const firstPre = preNodes[0]?.id;
+      const model = modelNodes[0].id;
+      const viz = vizNodes[vizNodes.length - 1]?.id;
+      const chainLinks: Array<[string | undefined, string]> = [
+        [lastData, firstPre ?? model],
+        ...(firstPre ? ([[firstPre, model]] as Array<[string, string]>) : []),
+        ...(viz ? ([[model, viz]] as Array<[string, string]>) : []),
+      ];
+      return chainLinks.some(([from, to]) => from && to && from !== to && !pairs.has(`${from}->${to}`));
+    })();
 
   if (dataNodes.length === 0) {
     diagnostics.push({ id: "no-data", level: "error", title: "No dataset", detail: "Add a data node — every pipeline starts with a data source." });
@@ -130,7 +198,8 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
       level: "warning",
       nodeId: dataNodes[1].id,
       title: `${dataNodes.length} data sources`,
-      detail: "Only one dataset is used per run. Disconnect the extra sources to avoid ambiguity.",
+      detail: "Only one dataset is used per run. Disconnect or delete the extra source.",
+      fix: { kind: "remove-node", nodeId: dataNodes[dataNodes.length - 1].id },
     });
   }
 
@@ -138,7 +207,7 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
     diagnostics.push({ id: "no-model", level: "error", title: "No model", detail: "Add a classic-ML or deep-learning model node to train on." });
   }
 
-  // ── Connectivity of each stage ─────────────────────────────────────────────
+  // ── Connectivity ───────────────────────────────────────────────────────────
   const primaryData = dataNodes[0];
   for (const node of dataNodes) {
     if ((outgoing.get(node.id) ?? []).length === 0) {
@@ -147,7 +216,10 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
         level: node === primaryData ? "error" : "warning",
         nodeId: node.id,
         title: "Dataset is not connected",
-        detail: `“${node.label}” has no outgoing link — nothing consumes this data.`,
+        detail: needsChain
+          ? `“${node.label}” has no outgoing link — auto-connect will wire it into the chain.`
+          : `“${node.label}” has no outgoing link — nothing consumes this data.`,
+        fix: needsChain ? { kind: "auto-connect" } : undefined,
       });
     }
   }
@@ -159,120 +231,100 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
         level: "warning",
         nodeId: node.id,
         title: "Preprocessor is not connected",
-        detail: `“${node.label}” output goes nowhere — chain it into the model.`,
+        detail: needsChain ? `Auto-connect will chain “${node.label}” into the pipeline.` : `“${node.label}” output goes nowhere.`,
+        fix: needsChain ? { kind: "auto-connect" } : undefined,
       });
     }
   }
 
   for (const node of modelNodes) {
     const upstream = ancestorsOf(node.id);
-    const fedByData = dataNodes.some((d) => upstream.has(d.id));
-    if (!fedByData) {
+    if (dataNodes.length > 0 && !dataNodes.some((d) => upstream.has(d.id))) {
       diagnostics.push({
         id: `model-orphan-${node.id}`,
         level: "error",
         nodeId: node.id,
         title: "Model has no training data",
-        detail: `“${node.label}” is not reachable from any dataset. Connect a path from the data node.`,
+        detail: needsChain
+          ? `One click wires the dataset through to “${node.label}”.`
+          : `Connect a path from the data node into “${node.label}”.`,
+        fix: needsChain ? { kind: "auto-connect" } : undefined,
       });
     }
   }
 
   for (const node of vizNodes) {
     const upstream = ancestorsOf(node.id);
-    const fedByModel = modelNodes.some((m) => upstream.has(m.id));
-    if (!fedByModel && modelNodes.length > 0) {
-      diagnostics.push({
-        id: `viz-orphan-${node.id}`,
-        level: "warning",
-        nodeId: node.id,
-        title: "Visualization has no model",
-        detail: `“${node.label}” will only produce data-level plots unless it sits downstream of a trained model.`,
-      });
-    }
     if ((incoming.get(node.id) ?? []).length === 0) {
       diagnostics.push({
         id: `viz-input-${node.id}`,
         level: "error",
         nodeId: node.id,
         title: "Visualization has no input",
-        detail: `“${node.label}” needs an incoming connection to know what to plot.`,
+        detail: needsChain
+          ? `Auto-connect feeds “${node.label}” from the trained model.`
+          : `“${node.label}” needs an incoming connection to know what to plot.`,
+        fix: needsChain ? { kind: "auto-connect" } : undefined,
+      });
+    } else if (modelNodes.length > 0 && !modelNodes.some((m) => upstream.has(m.id))) {
+      diagnostics.push({
+        id: `viz-orphan-${node.id}`,
+        level: "warning",
+        nodeId: node.id,
+        title: "Visualization has no model",
+        detail: `Move “${node.label}” downstream of the model to unlock evaluation charts, or auto-connect the canonical chain.`,
+        fix: needsChain ? { kind: "auto-connect" } : undefined,
       });
     }
   }
 
   // ── Dataset facts → shape-aware parameter checks ───────────────────────────
-  const facts: DatasetFacts | null = primaryData
-    ? {
-      nodeId: primaryData.id,
+  if (primaryData) {
+    const facts = {
       name: primaryData.dataset?.filename ?? primaryData.imageDataset?.name ?? primaryData.label,
       n_samples: primaryData.dataset?.nrows ?? primaryData.imageDataset?.nsamples
         ?? (primaryData.type === "data:synthetic" ? Number(paramValue(primaryData.params, "n_samples") ?? 1200) : BUILTIN_DATASETS[primaryData.type]?.n_samples ?? 0),
       n_features: primaryData.dataset ? Math.max(0, primaryData.dataset.columns.length - 1)
         : primaryData.imageDataset ? primaryData.imageDataset.width * primaryData.imageDataset.height
           : (primaryData.type === "data:synthetic" ? Number(paramValue(primaryData.params, "n_features") ?? 20) : BUILTIN_DATASETS[primaryData.type]?.n_features ?? 0),
-      csv: primaryData.dataset,
-      image: primaryData.imageDataset,
+      csv: primaryData.dataset as CsvDataset | undefined,
       syntheticParams: primaryData.type === "data:synthetic" ? primaryData.params : undefined,
-    }
-    : null;
+    };
 
-  if (facts && primaryData) {
     for (const node of [...preNodes, ...modelNodes]) {
       const upstream = ancestorsOf(node.id);
       if (!upstream.has(primaryData.id)) continue;
 
-      // PCA component bound check.
       if (node.type === "pre:pca") {
-        const raw = paramValue(node.params, "n_components");
-        const value = typeof raw === "string" ? Number(raw) : raw;
-        if (typeof value === "number" && !Number.isNaN(value)) {
-          if (value < 1 && value <= 0) {
-            diagnostics.push({ id: `pca-${node.id}`, level: "error", nodeId: node.id, title: "Invalid PCA components", detail: "The fraction of variance must be greater than 0." });
-          } else if (value >= 1 && facts.n_features > 0 && value > facts.n_features) {
-            diagnostics.push({
-              id: `pca-${node.id}`,
-              level: "error",
-              nodeId: node.id,
-              title: "PCA exceeds feature count",
-              detail: `n_components=${value} but “${facts.name}” only has ${facts.n_features} features. Lower it or use a variance fraction below 1.`,
-            });
-          }
+        const raw = Number(paramValue(node.params, "n_components") ?? 0.95);
+        if (!Number.isNaN(raw) && raw >= 1 && facts.n_features > 0 && raw > facts.n_features) {
+          const suggested = Math.max(1, Math.floor(facts.n_features * 0.95));
+          diagnostics.push({
+            id: `pca-${node.id}`,
+            level: "error",
+            nodeId: node.id,
+            title: "PCA exceeds feature count",
+            detail: `n_components=${raw} but “${facts.name}” has ${facts.n_features} features. We can set it to ${suggested}.`,
+            fix: { kind: "set-param", nodeId: node.id, key: "n_components", value: suggested },
+          });
         }
       }
 
-      // KNN k vs sample count / class count.
       if (node.type === "ml:knn") {
         const k = Number(paramValue(node.params, "n_neighbors") ?? 5);
         if (facts.n_samples > 0 && k >= facts.n_samples) {
+          const suggested = Math.max(1, Math.min(k, Math.floor(facts.n_samples * 0.2)));
           diagnostics.push({
             id: `knn-${node.id}`,
             level: "error",
             nodeId: node.id,
             title: "k larger than the training set",
-            detail: `n_neighbors=${k} but the dataset has only ${facts.n_samples} samples. Reduce k.`,
-          });
-        } else if (facts.n_samples > 0 && k > facts.n_samples * 0.5) {
-          diagnostics.push({
-            id: `knn-${node.id}`,
-            level: "warning",
-            nodeId: node.id,
-            title: "Very large k",
-            detail: `k=${k} covers over half of the ${facts.n_samples} samples — predictions will be heavily smoothed.`,
+            detail: `n_neighbors=${k} but the dataset has ${facts.n_samples} samples. We can lower k to ${suggested}.`,
+            fix: { kind: "set-param", nodeId: node.id, key: "n_neighbors", value: suggested },
           });
         }
       }
 
-      // Synthetic class sanity.
-      if (facts.syntheticParams) {
-        const nClasses = Number(facts.syntheticParams.n_classes ?? 2);
-        const nSamples = Number(facts.syntheticParams.n_samples ?? 1200);
-        if (nClasses > nSamples) {
-          diagnostics.push({ id: "synthetic-classes", level: "error", nodeId: primaryData.id, title: "More classes than samples", detail: "Reduce the class count or add samples." });
-        }
-      }
-
-      // CSV content checks: text features + unhandled missing values.
       if (facts.csv && node.category !== "visualization") {
         const { textColumns, missingCells, sampledRows } = inspectCsv(facts.csv);
         if (textColumns.length > 0) {
@@ -281,7 +333,7 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
             level: "error",
             nodeId: node.id,
             title: "Text column feeds a numeric pipeline",
-            detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Remove or encode them before scaling / training.`,
+            detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Drop the column in your source file, or re-upload an encoded version — this one needs a human decision.`,
           });
         }
         if (missingCells > 0 && !preNodes.some((p) => p.type === "pre:impute")) {
@@ -290,13 +342,13 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
             level: "warning",
             nodeId: node.id,
             title: "Unhandled missing values",
-            detail: `${missingCells} empty cell${missingCells === 1 ? "" : "s"} found in the first ${sampledRows} rows of “${facts.csv.filename}”. Add the Impute Missing step before scaling or training.`,
+            detail: `${missingCells} empty cell${missingCells === 1 ? "" : "s"} found in the first ${sampledRows} rows of “${facts.csv.filename}”. One click inserts median imputation before this step.`,
+            fix: { kind: "add-imputer", nodeId: node.id },
           });
         }
       }
     }
 
-    // Test-split size sanity for tiny datasets.
     for (const node of preNodes) {
       if (node.type !== "pre:split") continue;
       const testSize = Number(paramValue(node.params, "test_size") ?? 0.2);
@@ -315,6 +367,7 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
           nodeId: node.id,
           title: "Tiny test split",
           detail: `test_size=${testSize} leaves fewer than 10 rows for evaluation on ${facts.n_samples} samples.`,
+          fix: { kind: "set-param", nodeId: node.id, key: "test_size", value: 0.25 },
         });
       }
     }
@@ -323,9 +376,10 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
   return diagnostics;
 }
 
-export function summarizeDiagnostics(diagnostics: Diagnostic[]): { errors: number; warnings: number } {
+export function summarizeDiagnostics(diagnostics: Diagnostic[]): { errors: number; warnings: number; fixes: number } {
   return {
     errors: diagnostics.filter((d) => d.level === "error").length,
     warnings: diagnostics.filter((d) => d.level === "warning").length,
+    fixes: diagnostics.filter((d) => d.fix).length,
   };
 }

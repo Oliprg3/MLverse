@@ -28,7 +28,7 @@ import { WorkflowPanel } from "@/components/canvas/WorkflowPanel";
 import { Toast, type ToastData } from "@/components/ui/toast";
 import { getPaletteItem, hasModelNode, resolveRoute } from "@/lib/canvasConfig";
 import { generateCode, generateNodeServer, type GeneratedCode } from "@/lib/codeGen";
-import { summarizeDiagnostics, validatePipeline } from "@/lib/pipelineValidation";
+import { autoConnectChain, summarizeDiagnostics, validatePipeline, type Diagnostic } from "@/lib/pipelineValidation";
 import { pyodideSupported, serverHasNativePython, trainInBrowser } from "@/lib/localEngine";
 import { deserializeWorkflow, downloadWorkflow, serializeWorkflow } from "@/lib/workflowSerialization";
 import type { TerminalLine } from "@/components/dashboard/TerminalConsole";
@@ -196,6 +196,79 @@ function Canvas() {
   const focusNode = useCallback((nodeId: string) => {
     setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === nodeId })));
   }, [setNodes]);
+
+  /** Execute a validation auto-fix against the canvas state. */
+  const handleApplyFix = useCallback((diagnostic: Diagnostic) => {
+    const fix = diagnostic.fix;
+    if (!fix) return;
+    switch (fix.kind) {
+      case "remove-edge": {
+        setEdges((eds) => eds.filter((e) => e.id !== fix.edgeId));
+        notify("Removed the circular link");
+        break;
+      }
+      case "remove-node": {
+        setNodes((nds) => nds.filter((n) => n.id !== fix.nodeId));
+        setEdges((eds) => eds.filter((e) => e.source !== fix.nodeId && e.target !== fix.nodeId));
+        notify("Removed the extra node");
+        break;
+      }
+      case "set-param": {
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === fix.nodeId && n.data.params
+              ? { ...n, data: { ...n.data, params: n.data.params.map((p) => (p.key === fix.key ? { ...p, value: fix.value } : p)) } }
+              : n,
+          ),
+        );
+        notify(`Set ${fix.key} = ${fix.value}`);
+        break;
+      }
+      case "add-imputer": {
+        const target = nodes.find((n) => n.id === fix.nodeId);
+        if (!target) return;
+        const incomingEdge = edges.find((e) => e.target === fix.nodeId);
+        if (!incomingEdge) return;
+        const palette = getPaletteItem("pre:impute");
+        if (!palette) return;
+        const newId = `pre:impute-autofix-${Date.now()}`;
+        const imputerNode: CustomFlowNode = {
+          id: newId,
+          type: "custom",
+          position: { x: target.position.x - 240, y: target.position.y },
+          data: {
+            type: palette.type, label: palette.label, description: palette.description,
+            category: palette.category, icon: palette.icon, accent: palette.accent,
+            params: palette.params?.map((p) => ({ ...p })),
+          },
+        };
+        setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), { ...imputerNode, selected: true }]);
+        setEdges((eds) =>
+          eds
+            .filter((e) => e.id !== incomingEdge.id)
+            .concat([
+              { id: `autofix-${incomingEdge.id}-a`, source: incomingEdge.source, target: newId, ...DEFAULT_EDGE_OPTIONS },
+              { id: `autofix-${incomingEdge.id}-b`, source: newId, target: fix.nodeId, ...DEFAULT_EDGE_OPTIONS },
+            ]),
+        );
+        notify("Inserted median imputation before this step");
+        break;
+      }
+      case "auto-connect": {
+        const additions = autoConnectChain({
+          nodes: nodes.map((n) => ({ id: n.id, type: n.data.type, category: n.data.category, x: n.position.x })),
+          edges: edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
+        }).filter((addition) => !edges.some((e) => e.source === addition.source && e.target === addition.target));
+        if (additions.length > 0) {
+          setEdges((eds) => eds.concat(additions.map((a) => ({ id: `${a.id}-${Date.now()}`, source: a.source, target: a.target, ...DEFAULT_EDGE_OPTIONS }))));
+          notify(`Connected ${additions.length} missing link${additions.length === 1 ? "" : "s"}`);
+        } else {
+          notify("Nothing left to connect");
+        }
+        break;
+      }
+    }
+  }, [edges, nodes, notify, setEdges, setNodes]);
 
   const onDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
@@ -548,7 +621,7 @@ function Canvas() {
             <span className="text-[10px] text-muted">{nodes.length} steps · {edges.length} connections{problemCounts.warnings > 0 ? ` · ${problemCounts.warnings} warning${problemCounts.warnings === 1 ? "" : "s"}` : ""}</span>
           </div>
 
-          <ProblemsPanel diagnostics={diagnostics} onSelectNode={focusNode} />
+          <ProblemsPanel diagnostics={diagnostics} onSelectNode={focusNode} onApplyFix={handleApplyFix} />
 
           {isDragActive ? (
             <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-primary/60 bg-primary/[0.06]">
@@ -614,4 +687,5 @@ export function HybridMLCanvas() {
 }
 
 export default HybridMLCanvas;
+
 

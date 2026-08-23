@@ -5,6 +5,8 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowsCounterClockwise,
+  BookOpen,
+  BracketsCurly,
   CaretDown,
   ChatCenteredDots,
   Check,
@@ -12,13 +14,17 @@ import {
   Code,
   Copy,
   DownloadSimple,
+  FileJs,
   FilePy,
+  FileText,
+  Gear,
   Monitor,
   PaperPlaneRight,
   Robot,
   Sparkle,
 } from "@phosphor-icons/react";
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
+import { generateAppFiles, type ScaffoldFile } from "@/lib/appScaffold";
 import { generateCode } from "@/lib/codeGen";
 import type { GraphPayload, MLNodeData } from "@/lib/types";
 
@@ -310,6 +316,10 @@ export function AIBuilder() {
   const modelLabel = modelData?.label ?? "Saved model";
   const model = modelData ? { name: modelData.label, format: "pickle" as const, size: 0 } : null;
   const suggestions = ["Create a polished prediction dashboard", "Switch the accent color to violet", "Add validation and a clear result state", "Make it feel like a medical product"];
+  const appFiles = useMemo<ScaffoldFile[]>(
+    () => (uiSpec ? generateAppFiles(uiSpec, { name: modelLabel, format: modelData?.category === "deep_learning" ? "onnx" : "pickle" }, { trainingCode: code }) : []),
+    [uiSpec, modelLabel, modelData, code],
+  );
 
   /** Reveal the reply progressively so responses feel streamed. */
   const typewrite = useCallback((full: string) => {
@@ -584,24 +594,25 @@ export function AIBuilder() {
           </div>
 
           {activeTab === "code" ? (
-            <div key="code" className="animate-builder-panel min-h-0 flex-1 overflow-auto p-5">
-              <div className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-[#262b36] bg-[#0d1117] shadow-xl">
-                <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
-                  <div className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
-                    <FilePy size={13} /> {filename}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => void copyCode()} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white">
-                      {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />} {copied ? "Copied" : "Copy"}
-                    </button>
-                    <button type="button" onClick={downloadCode} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white">
-                      <DownloadSimple size={12} /> Download
-                    </button>
-                  </div>
-                </div>
-                <pre className="scroll-thin max-h-[70vh] overflow-auto p-5 text-[11.5px] leading-5 text-slate-300"><code>{code}</code></pre>
-              </div>
-            </div>
+            <CodeExplorer
+              files={appFiles}
+              trainingFilename={filename}
+              trainingCode={code}
+              copied={copied}
+              onCopyTraining={() => void copyCode()}
+              onDownloadFile={(file) => {
+                const blob = new Blob([file.content], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = file.path.split("/").pop() ?? "file.txt";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                setNotice(`Downloaded ${file.path}`);
+              }}
+            />
           ) : (
             <div key="preview" className="scroll-thin min-h-0 flex-1 overflow-auto p-5">
               <div className="mx-auto max-w-4xl pb-6">
@@ -615,4 +626,162 @@ export function AIBuilder() {
   );
 }
 
+/* ── VS Code-style project explorer ─────────────────────────────────────── */
+
+type TreeNode =
+  | { kind: "folder"; name: string; path: string; children: TreeNode[] }
+  | { kind: "file"; name: string; path: string; file: ScaffoldFile };
+
+function buildTree(files: ScaffoldFile[]): TreeNode[] {
+  const root: TreeNode[] = [];
+  for (const file of files.sort((a, b) => a.path.localeCompare(b.path))) {
+    const parts = file.path.split("/");
+    let level = root;
+    let prefix = "";
+    for (let i = 0; i < parts.length; i += 1) {
+      const name = parts[i];
+      prefix = prefix ? `${prefix}/${name}` : name;
+      if (i === parts.length - 1) {
+        level.push({ kind: "file", name, path: file.path, file });
+      } else {
+        let folder = level.find((n): n is Extract<TreeNode, { kind: "folder" }> => n.kind === "folder" && n.name === name);
+        if (!folder) {
+          folder = { kind: "folder", name, path: prefix, children: [] };
+          level.push(folder);
+        }
+        level = folder.children;
+      }
+    }
+  }
+  return root;
+}
+
+const EXT_LANGUAGE: Record<string, string> = { tsx: "TypeScript React", ts: "TypeScript", py: "Python", json: "JSON", md: "Markdown", text: "Plain text" };
+
+function FileGlyph({ path }: { path: string }) {
+  const ext = path.split(".").pop() ?? "";
+  if (ext === "py") return <FilePy size={13} />;
+  if (ext === "tsx") return <BracketsCurly size={13} />;
+  if (ext === "ts") return <FileJs size={13} />;
+  if (ext === "json") return <Gear size={13} />;
+  if (ext === "md") return <BookOpen size={13} />;
+  return <FileText size={13} />;
+}
+
+function CodeExplorer({
+  files,
+  trainingFilename,
+  trainingCode,
+  copied,
+  onCopyTraining,
+  onDownloadFile,
+}: {
+  files: ScaffoldFile[];
+  trainingFilename: string;
+  trainingCode: string;
+  copied: boolean;
+  onCopyTraining: () => void;
+  onDownloadFile: (file: ScaffoldFile) => void;
+}) {
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [selectedPath, setSelectedPath] = useState<string>(files[0]?.path ?? "");
+  const tree = useMemo(() => buildTree(files), [files]);
+
+  // Derive the active file — falls back to the first entry after regeneration.
+  const activeFile = files.find((f) => f.path === selectedPath) ?? files[0];
+  const lines = (activeFile?.content ?? "").split("\n");
+
+  const toggle = (path: string) =>
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+
+  const renderNodes = (nodes: TreeNode[], depth = 0): React.ReactNode =>
+    nodes.map((node) => {
+      if (node.kind === "folder") {
+        const open = !collapsed.has(node.path);
+        return (
+          <div key={node.path}>
+            <button type="button" onClick={() => toggle(node.path)} className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-[11.5px] font-medium text-foreground-2 transition-colors hover:bg-white/5 hover:text-white" style={{ paddingLeft: 8 + depth * 12 }}>
+              <CaretDown size={10} className={`shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} /> {node.name}
+            </button>
+            {open ? renderNodes(node.children, depth + 1) : null}
+          </div>
+        );
+      }
+      const active = node.path === selectedPath;
+      return (
+        <button
+          key={node.path}
+          type="button"
+          onClick={() => setSelectedPath(node.path)}
+          className={`flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-[11.5px] transition-colors ${active ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+          style={{ paddingLeft: 8 + depth * 12 }}
+        >
+          <span className={active ? "text-emerald-400" : "text-slate-500 shrink-0"}><FileGlyph path={node.path} /></span>
+          <span className="truncate">{node.name}</span>
+        </button>
+      );
+    });
+
+  return (
+    <div className="animate-builder-panel flex min-h-0 flex-1">
+      {/* Explorer rail */}
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#262b36] bg-[#0b0e14] md:flex">
+        <p className="border-b border-[#1c212c] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Project</p>
+        <div className="scroll-thin min-h-0 flex-1 overflow-y-auto p-1.5">{renderNodes(tree)}</div>
+        <p className="border-t border-[#1c212c] px-3 py-2 text-[9.5px] leading-relaxed text-slate-600">{files.length} files · regenerated from your last chat edit</p>
+      </aside>
+
+      {/* Mobile file picker */}
+      <div className="min-w-0 flex-1 md:hidden">
+        <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#262b36] bg-[#0b0e14] px-4 py-2 text-xs text-slate-300 outline-none">
+          {files.map((file) => (<option key={file.path} value={file.path}>{file.path}</option>))}
+        </select>
+        {activeFile ? <EditorBody file={activeFile} lines={lines} onDownload={() => onDownloadFile(activeFile)} /> : null}
+      </div>
+
+      {/* Editor */}
+      {activeFile ? (
+        <div className="hidden min-w-0 flex-1 flex-col bg-[#0d1117] md:flex">
+          <div className="flex items-center justify-between gap-3 border-b border-[#262b36] px-4 py-2">
+            <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-400">
+              <span className="shrink-0"><FileGlyph path={activeFile.path} /></span>
+              <span className="truncate font-mono">{activeFile.path}</span>
+              <span className="ml-2 hidden shrink-0 text-slate-600 lg:inline">{EXT_LANGUAGE[activeFile.language] ?? ""}</span>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <button type="button" onClick={onCopyTraining} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white" title={`Copy the training script (${trainingFilename})`}>
+                {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />} {copied ? "Copied script" : "Training script"}
+              </button>
+              <button type="button" onClick={() => onDownloadFile(activeFile)} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white">
+                <DownloadSimple size={12} /> Download
+              </button>
+            </div>
+          </div>
+          <EditorBody file={activeFile} lines={lines} onDownload={() => onDownloadFile(activeFile)} />
+        </div>
+      ) : (
+        <div className="hidden flex-1 items-center justify-center bg-[#0d1117] text-xs text-slate-500 md:flex">No project yet — send a chat message to generate one.</div>
+      )}
+    </div>
+  );
+}
+
+function EditorBody({ file, lines, onDownload }: { file: ScaffoldFile; lines: string[]; onDownload: () => void }) {
+  void onDownload;
+  return (
+    <div className="scroll-thin flex min-h-0 flex-1 overflow-auto">
+      <pre aria-hidden className="sticky left-0 select-none border-r border-[#1c212c] bg-[#0b0e14] px-3 py-4 text-right font-mono text-[11.5px] leading-5 text-slate-700">
+        {lines.map((_, i) => (<div key={i}>{i + 1}</div>))}
+      </pre>
+      <pre className="min-w-0 flex-1 whitespace-pre-wrap break-words p-4 font-mono text-[11.5px] leading-5 text-slate-300"><code>{file.content}</code></pre>
+    </div>
+  );
+}
+
 export default AIBuilder;
+
