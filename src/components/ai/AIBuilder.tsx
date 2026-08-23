@@ -113,9 +113,9 @@ function defaultSpec(modelName: string, format: string): UiSpec {
 /** Renders the UiSpec as a believable website inside a browser-chrome frame. */
 function AppPreview({ spec }: { spec: UiSpec }) {
   const ACCENTS = {
-    sky: { text: "text-sky-600 dark:text-sky-400", chip: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300", soft: "bg-sky-500/10", solid: "bg-sky-600 hover:bg-sky-500 text-white", dot: "bg-sky-500", glow: "shadow-[0_8px_30px_-12px_rgba(14,165,233,0.45)]" },
-    violet: { text: "text-violet-600 dark:text-violet-400", chip: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300", soft: "bg-violet-500/10", solid: "bg-violet-600 hover:bg-violet-500 text-white", dot: "bg-violet-500", glow: "shadow-[0_8px_30px_-12px_rgba(139,92,246,0.45)]" },
-    emerald: { text: "text-emerald-600 dark:text-emerald-400", chip: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300", soft: "bg-emerald-500/10", solid: "bg-emerald-600 hover:bg-emerald-500 text-white", dot: "bg-emerald-500", glow: "shadow-[0_8px_30px_-12px_rgba(16,185,129,0.45)]" },
+    sky: { text: "text-sky-600", chip: "border-sky-500/25 bg-sky-500/10 text-sky-700", soft: "bg-sky-500/10", solid: "bg-sky-600 hover:bg-sky-500 text-white", dot: "bg-sky-500", glow: "shadow-[0_8px_30px_-12px_rgba(14,165,233,0.45)]" },
+    violet: { text: "text-violet-600", chip: "border-violet-500/25 bg-violet-500/10 text-violet-700", soft: "bg-violet-500/10", solid: "bg-violet-600 hover:bg-violet-500 text-white", dot: "bg-violet-500", glow: "shadow-[0_8px_30px_-12px_rgba(139,92,246,0.45)]" },
+    emerald: { text: "text-emerald-600", chip: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700", soft: "bg-emerald-500/10", solid: "bg-emerald-600 hover:bg-emerald-500 text-white", dot: "bg-emerald-500", glow: "shadow-[0_8px_30px_-12px_rgba(16,185,129,0.45)]" },
   } as const;
   const a = ACCENTS[spec.accent] ?? ACCENTS.sky;
   const [values, setValues] = useState<Record<string, string>>({});
@@ -647,8 +647,8 @@ export function AIBuilder() {
               onDownloadAll={() => void downloadAllAsZip()}
             />
           ) : (
-            <div key="preview" className="scroll-thin min-h-0 flex-1 overflow-auto p-5">
-              <div className={`mx-auto pb-6 force-light ${previewFullscreen ? "h-full max-w-full" : "max-w-4xl"}`}>
+            <div key="preview" className="scroll-thin min-h-0 flex-1 overflow-auto p-5 force-light">
+              <div className={`mx-auto pb-6 ${previewFullscreen ? "h-full max-w-full" : "max-w-4xl"}`}>
                 {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} /> : null}
               </div>
             </div>
