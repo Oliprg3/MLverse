@@ -22,9 +22,11 @@ export function Toast({ toast, onDone }: { toast: ToastData | null; onDone: () =
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4">
-      <div className="animate-slide-up pointer-events-auto flex items-center gap-2.5 rounded-lg border border-border bg-surface px-4 py-2.5 shadow-2xl">
-        <Icon className={cn("h-4 w-4 shrink-0", toast.tone === "warn" ? "text-amber-400" : "text-emerald-400")} />
-        <span className="text-[13px] tracking-tight text-foreground">{toast.message}</span>
+      <div className="animate-slide-up pointer-events-auto flex items-center gap-3 rounded-2xl border border-border bg-surface px-5 py-3 shadow-2xl backdrop-blur-sm">
+        <div className={cn("flex h-7 w-7 items-center justify-center rounded-xl", toast.tone === "warn" ? "bg-amber-500/10" : "bg-primary/10")}>
+          <Icon className={cn("h-4 w-4 shrink-0", toast.tone === "warn" ? "text-amber-400" : "text-primary")} />
+        </div>
+        <span className="text-[13px] font-medium tracking-tight text-foreground">{toast.message}</span>
       </div>
     </div>
   );

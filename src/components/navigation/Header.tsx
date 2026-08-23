@@ -47,7 +47,7 @@ export interface HeaderProps {
 function ThemeToggle() {
   const { resolvedTheme, toggle } = useTheme();
   return (
-    <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" title="Toggle light / dark">
+    <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" title="Toggle light / dark" className="rounded-xl">
       {resolvedTheme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
     </Button>
   );
@@ -55,7 +55,7 @@ function ThemeToggle() {
 
 function IconButton({ icon: Icon, label, onClick, className }: { icon: typeof Code; label: string; onClick: () => void; className?: string }) {
   return (
-    <Button variant="ghost" size="icon" onClick={onClick} aria-label={label} title={label} className={className}>
+    <Button variant="ghost" size="icon" onClick={onClick} aria-label={label} title={label} className={`rounded-xl ${className ?? ""}`}>
       <Icon className="h-[18px] w-[18px]" />
     </Button>
   );
@@ -84,18 +84,19 @@ export function Header({
   const disabled = !hasModel || loading;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface px-3 glass-panel">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/80 px-3 glass-panel">
       {/* Left: brand + breadcrumbs */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <Button variant="ghost" size="icon" onClick={onTogglePalette} aria-label={paletteOpen ? "Hide panel" : "Show panel"} title={paletteOpen ? "Hide panel" : "Show panel"}>
+        <Button variant="ghost" size="icon" onClick={onTogglePalette} aria-label={paletteOpen ? "Hide panel" : "Show panel"} title={paletteOpen ? "Hide panel" : "Show panel"} className="rounded-xl">
           {paletteOpen ? <SidebarSimple size={18} /> : <SidebarSimple size={18} weight="light" />}
         </Button>
 
-        {/* Bare logo glyph — no box, no gradient */}
-        <SquaresFour size={20} weight="bold" className="shrink-0 text-foreground" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20">
+          <SquaresFour size={16} weight="bold" className="text-white" />
+        </div>
 
         <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
-          <span className="font-semibold text-foreground">NeuralForge</span>
+          <span className="font-bold tracking-tight text-foreground">MLverse</span>
           <CaretRight className="h-3.5 w-3.5 shrink-0 text-muted" />
           <span className="hidden text-muted-2 sm:inline">Canvas</span>
           <CaretRight className="hidden h-3.5 w-3.5 shrink-0 text-muted xl:block" />
@@ -111,16 +112,16 @@ export function Header({
 
       {/* Right: actions */}
       <div className="flex items-center gap-0.5">
-        <Button variant="ghost" size="sm" onClick={onGuide} className="hidden xl:inline-flex">
+        <Button variant="ghost" size="sm" onClick={onGuide} className="hidden rounded-xl xl:inline-flex">
           <BookOpen size={16} /> Guide
         </Button>
-        <Button variant="ghost" size="sm" onClick={onCode}>
+        <Button variant="ghost" size="sm" onClick={onCode} className="rounded-xl">
           <Code size={16} /> <span className="hidden sm:inline">Code</span>
         </Button>
-        <Button variant="ghost" size="icon" onClick={onBuildAI} aria-label="Build with AI" title="Build with AI" className="border border-primary/20 text-primary md:inline-flex">
+        <Button variant="ghost" size="icon" onClick={onBuildAI} aria-label="Build with AI" title="Build with AI" className="hidden border border-primary/20 text-primary md:inline-flex rounded-xl">
           <Robot size={16} />
         </Button>
-        <Button variant="ghost" size="sm" onClick={onBuildAI} className="hidden border border-primary/20 text-foreground lg:inline-flex">
+        <Button variant="ghost" size="sm" onClick={onBuildAI} className="hidden border border-primary/20 text-foreground lg:inline-flex rounded-xl">
           <Robot size={16} /> Build with AI
         </Button>
         <IconButton icon={FloppyDisk} label="Save project locally" onClick={onSave} />
@@ -133,8 +134,7 @@ export function Header({
         <ThemeToggle />
         <div className="mx-1 hidden h-5 w-px bg-border sm:block" />
 
-        {/* Primary CTA — no background, no leading action icon. */}
-        <Button variant={route === "colab" ? "colab" : "instant"} size="lg" onClick={onExecute} disabled={disabled} className="ml-1 shadow-sm transition-transform active:scale-[0.98]">
+        <Button variant={route === "colab" ? "colab" : "instant"} size="lg" onClick={onExecute} disabled={disabled} className="ml-1 transition-all active:scale-[0.97]">
           {loading ? (
             <CircleNotch size={16} className="animate-spin" />
           ) : hasModel ? (
@@ -152,6 +152,3 @@ export function Header({
 }
 
 export default Header;
-
-
-

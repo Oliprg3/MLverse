@@ -122,15 +122,15 @@ function AppPreview({ spec }: { spec: UiSpec }) {
   const [ran, setRan] = useState(false);
 
   return (
-    <div className={`animate-builder-panel overflow-hidden rounded-2xl border border-border bg-card shadow-xl ${a.glow}`}>
+    <div className={`animate-builder-panel overflow-hidden rounded-2xl border border-border bg-card shadow-2xl ${a.glow}`}>
       {/* Browser chrome */}
-      <div className="flex items-center gap-3 border-b border-border bg-surface px-4 py-2.5">
+      <div className="flex items-center gap-3 border-b border-border bg-surface px-4 py-3">
         <div className="flex gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+          <span className="h-3 w-3 rounded-full bg-rose-400/80 shadow-sm shadow-rose-400/20" />
+          <span className="h-3 w-3 rounded-full bg-amber-400/80 shadow-sm shadow-amber-400/20" />
+          <span className="h-3 w-3 rounded-full bg-emerald-400/80 shadow-sm shadow-emerald-400/20" />
         </div>
-        <div className="mx-auto flex max-w-xs flex-1 items-center justify-center gap-1.5 truncate rounded-full border border-border bg-background px-3 py-1 text-[11px] text-muted">
+        <div className="mx-auto flex max-w-xs flex-1 items-center justify-center gap-1.5 truncate rounded-xl border border-border bg-background px-3 py-1.5 text-[11px] font-medium text-muted">
           <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${a.dot}`} />
           {spec.brand.toLowerCase().replace(/\s+/g, "")}.app
         </div>
@@ -138,51 +138,51 @@ function AppPreview({ spec }: { spec: UiSpec }) {
       </div>
 
       {/* Site nav */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
-        <span className="flex items-center gap-2 text-sm font-semibold">
-          <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${a.soft} ${a.text}`}><Sparkle size={13} weight="fill" /></span>
+      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <span className="flex items-center gap-2.5 text-sm font-bold">
+          <span className={`flex h-7 w-7 items-center justify-center rounded-xl ${a.soft} ${a.text}`}><Sparkle size={14} weight="fill" /></span>
           {spec.brand}
         </span>
-        <nav className="hidden items-center gap-5 sm:flex">
+        <nav className="hidden items-center gap-6 sm:flex">
           {spec.nav.map((item) => (
-            <span key={item} className="cursor-default text-xs font-medium text-muted transition-colors hover:text-foreground">{item}</span>
+            <span key={item} className="cursor-default text-xs font-semibold text-muted transition-colors hover:text-foreground">{item}</span>
           ))}
         </nav>
-        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${a.chip}`}>{spec.eyebrow.split(" ")[0]}</span>
+        <span className={`rounded-xl border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${a.chip}`}>{spec.eyebrow.split(" ")[0]}</span>
       </div>
 
       {/* Hero */}
-      <div className="relative overflow-hidden px-6 py-8 sm:px-10">
-        <div className={`pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-[0.07] blur-2xl ${a.dot}`} />
-        <p className={`text-[11px] font-bold uppercase tracking-[0.18em] ${a.text}`}>{spec.eyebrow}</p>
-        <h1 className="mt-2 max-w-xl text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl">{spec.title}</h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-muted">{spec.description}</p>
+      <div className="relative overflow-hidden px-6 py-10 sm:px-10">
+        <div className={`pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-[0.08] blur-3xl ${a.dot}`} />
+        <p className={`text-[11px] font-bold uppercase tracking-[0.2em] ${a.text}`}>{spec.eyebrow}</p>
+        <h1 className="mt-3 max-w-xl text-balance text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">{spec.title}</h1>
+        <p className="mt-4 max-w-xl text-sm leading-7 text-muted">{spec.description}</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-3 px-6 pb-2 sm:grid-cols-3 sm:px-10">
         {spec.stats.map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-border bg-surface p-4 transition-transform duration-200 hover:-translate-y-0.5">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-muted">{stat.label}</p>
-            <p className={`mt-1.5 text-xl font-bold tracking-tight ${a.text}`}>{stat.value}</p>
-            <p className="mt-0.5 text-[10px] text-muted-2">{stat.detail}</p>
+          <div key={stat.label} className="rounded-2xl border border-border bg-surface p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted">{stat.label}</p>
+            <p className={`mt-2 text-2xl font-extrabold tracking-tight ${a.text}`}>{stat.value}</p>
+            <p className="mt-1 text-[10px] text-muted-2">{stat.detail}</p>
           </div>
         ))}
       </div>
 
       {/* Form + insight */}
       <div className="grid gap-5 px-6 py-8 sm:px-10 lg:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-2xl border border-border bg-surface p-5">
-          <p className="text-sm font-semibold">Prediction input</p>
-          <div className="mt-4 space-y-3.5">
+        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <p className="text-sm font-bold">Prediction input</p>
+          <div className="mt-5 space-y-4">
             {spec.fields.map((field) => (
               <label key={field.key} className="block">
-                <span className="mb-1.5 block text-xs font-medium text-foreground-2">{field.label}</span>
+                <span className="mb-1.5 block text-xs font-semibold text-foreground-2">{field.label}</span>
                 {field.type === "select" ? (
                   <select
                     value={values[field.key] ?? ""}
                     onChange={(event) => { setValues((v) => ({ ...v, [field.key]: event.target.value })); setRan(false); }}
-                    className="w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none transition-shadow focus:border-transparent focus:ring-2 focus:ring-ring"
+                    className="w-full cursor-pointer rounded-xl border border-input bg-background px-3.5 py-2.5 text-xs outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-ring/40"
                   >
                     <option value="" disabled>Select…</option>
                     {(field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}
@@ -193,7 +193,7 @@ function AppPreview({ spec }: { spec: UiSpec }) {
                     value={values[field.key] ?? ""}
                     placeholder={field.placeholder ?? ""}
                     onChange={(event) => { setValues((v) => ({ ...v, [field.key]: event.target.value })); setRan(false); }}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none transition-shadow placeholder:text-muted-2 focus:border-transparent focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-xs outline-none transition-all placeholder:text-muted-2 focus:border-transparent focus:ring-2 focus:ring-ring/40"
                   />
                 )}
               </label>
@@ -201,32 +201,32 @@ function AppPreview({ spec }: { spec: UiSpec }) {
             <button
               type="button"
               onClick={() => setRan(true)}
-              className={`mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all active:scale-[0.98] ${a.solid}`}
+              className={`mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-bold transition-all active:scale-[0.98] ${a.solid}`}
             >
-              {ran ? <Check size={14} weight="bold" /> : <Sparkle size={14} weight="fill" />} {ran ? "Prediction complete" : spec.submitLabel}
+              {ran ? <Check size={15} weight="bold" /> : <Sparkle size={15} weight="fill" />} {ran ? "Prediction complete" : spec.submitLabel}
             </button>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className={`rounded-2xl border p-5 ${a.chip}`}>
-            <p className="text-sm font-semibold">{spec.insight.title}</p>
-            <p className="mt-1.5 text-xs leading-5 opacity-80">{spec.insight.description}</p>
+          <div className={`rounded-2xl border p-6 ${a.chip}`}>
+            <p className="text-sm font-bold">{spec.insight.title}</p>
+            <p className="mt-2 text-xs leading-6 opacity-80">{spec.insight.description}</p>
             {ran ? (
-              <div className="animate-builder-message mt-3 rounded-lg border border-current/20 bg-background/60 px-3 py-2 text-[11px] font-medium">
+              <div className="animate-builder-message mt-4 rounded-xl border border-current/20 bg-background/60 px-4 py-3 text-[11px] font-semibold">
                 Result state rendered — connect a serving endpoint to stream real predictions here.
               </div>
             ) : null}
           </div>
           <div className="grid gap-2.5">
             {spec.features.map((feature) => (
-              <div key={feature.title} className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3.5 transition-colors hover:border-border-strong">
-                <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${a.soft} ${a.text}`}>
-                  {feature.icon === "shield" ? <Monitor size={14} /> : feature.icon === "activity" ? <Code size={14} /> : <Sparkle size={14} weight="fill" />}
+              <div key={feature.title} className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm transition-all duration-200 hover:border-border-strong hover:shadow-md">
+                <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${a.soft} ${a.text}`}>
+                  {feature.icon === "shield" ? <Monitor size={15} /> : feature.icon === "activity" ? <Code size={15} /> : <Sparkle size={15} weight="fill" />}
                 </span>
                 <div>
-                  <p className="text-xs font-semibold">{feature.title}</p>
-                  <p className="mt-0.5 text-[11px] leading-4 text-muted">{feature.description}</p>
+                  <p className="text-xs font-bold">{feature.title}</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -454,17 +454,17 @@ export function AIBuilder() {
   if (!project || !graph || !model) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6">
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/[0.06] blur-3xl" />
-        <div className="animate-builder-panel relative w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-500 shadow-[0_0_24px_-6px_rgba(16,185,129,0.5)]">
-            <Robot size={22} />
+        <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/[0.08] blur-[100px]" />
+        <div className="animate-builder-panel relative w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
+            <Robot size={24} />
           </div>
-          <h1 className="mt-5 text-xl font-bold tracking-tight">Build with AI</h1>
-          <p className="mt-2 text-sm leading-6 text-muted">Save a pipeline with a model node from the canvas first. The builder turns that saved graph into a working app you refine through chat.</p>
-          <p className="mt-3 rounded-lg border border-border bg-surface px-3 py-2 text-[11px] leading-relaxed text-muted">
-            Opened from the canvas but seeing this? The pipeline could not be shared into the builder — press <span className="font-medium text-foreground-2">Build with AI</span> again after re-opening the canvas. Very large uploaded datasets are trimmed automatically.
+          <h1 className="mt-6 text-xl font-bold tracking-tight">Build with AI</h1>
+          <p className="mt-2.5 text-sm leading-7 text-muted">Save a pipeline with a model node from the canvas first. The builder turns that saved graph into a working app you refine through chat.</p>
+          <p className="mt-4 rounded-xl border border-border bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted shadow-sm">
+            Opened from the canvas but seeing this? The pipeline could not be shared into the builder — press <span className="font-semibold text-foreground-2">Build with AI</span> again after re-opening the canvas. Very large uploaded datasets are trimmed automatically.
           </p>
-          <Link href="/canvas" className="mt-6 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 px-4 py-2 text-sm font-medium text-emerald-500 transition-colors hover:border-emerald-500/70 hover:bg-emerald-500/10">
+          <Link href="/canvas" className="mt-6 inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-all hover:bg-primary/20 hover:border-primary/50">
             <ArrowLeft size={15} weight="bold" /> Back to canvas
           </Link>
         </div>
@@ -475,27 +475,29 @@ export function AIBuilder() {
   return (
     <main className="flex h-screen min-h-[620px] flex-col overflow-hidden bg-background text-foreground">
       {/* Header */}
-      <header className="glass-panel sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
+      <header className="glass-panel sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface/80 px-4">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href="/canvas" aria-label="Back to canvas" title="Back to canvas" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-border-strong hover:text-foreground">
+          <Link href="/canvas" aria-label="Back to canvas" title="Back to canvas" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
             <ArrowLeft size={14} weight="bold" />
           </Link>
           <div className="h-5 w-px bg-border" />
-          <div className="flex min-w-0 items-center gap-2">
-            <Robot size={17} className="shrink-0 text-emerald-500" />
-            <span className="truncate text-sm font-semibold">AI Builder</span>
-            <span className="hidden max-w-52 truncate border-l border-border pl-2 text-[11px] text-muted sm:inline">{project.title}</span>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm shadow-emerald-500/20">
+              <Robot size={14} className="text-white" />
+            </div>
+            <span className="truncate text-sm font-bold">AI Builder</span>
+            <span className="hidden max-w-52 truncate border-l border-border pl-2.5 text-[11px] text-muted sm:inline">{project.title}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2.5">
-          <span className="hidden items-center gap-1.5 text-[11px] text-muted md:inline-flex">
+        <div className="flex items-center gap-2">
+          <span className="hidden items-center gap-1.5 text-[11px] font-medium text-muted md:inline-flex">
             {modelLabel} · {formatBytes(model.size)}
           </span>
-          <button type="button" onClick={() => setHistoryOpen((open) => !open)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-foreground-2 transition-all hover:border-border-strong hover:text-foreground active:scale-[0.98]">
+          <button type="button" onClick={() => setHistoryOpen((open) => !open)} className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-border-strong hover:text-foreground hover:shadow-sm active:scale-[0.98]">
             <ArrowsCounterClockwise size={13} /> Checkpoints
             <CaretDown size={10} className={`transition-transform duration-200 ${historyOpen ? "" : "-rotate-90"}`} />
           </button>
-          <button type="button" onClick={regenerateCode} disabled={loading} className="inline-flex h-8 items-center gap-2 rounded-lg border border-border px-3 text-xs font-medium text-foreground-2 transition-all hover:border-border-strong hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]">
+          <button type="button" onClick={regenerateCode} disabled={loading} className="inline-flex h-8 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-border-strong hover:text-foreground hover:shadow-sm disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]">
             <Code size={14} /> Generate code
           </button>
         </div>
@@ -521,16 +523,16 @@ export function AIBuilder() {
         {/* Agent column — hidden in fullscreen preview */}
         {!previewFullscreen && (
         <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border bg-surface lg:w-[380px] lg:border-b-0 lg:border-r">
-          <div className="border-b border-border px-5 py-4">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Agent session</div>
-            <p className="mt-1.5 text-xs leading-5 text-muted">Describe changes like you would to an engineer — the preview updates with every reply.</p>
+            <div className="border-b border-border px-5 py-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Agent session</div>
+            <p className="mt-1.5 text-xs leading-6 text-muted">Describe changes like you would to an engineer — the preview updates with every reply.</p>
           </div>
 
-          <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 py-4">
+          <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
             {messages.length === 0 ? (
-              <div className="animate-builder-message rounded-xl border border-dashed border-border-strong bg-card/60 p-4">
-                <p className="flex items-center gap-2 text-xs font-semibold"><ChatCenteredDots size={14} /> Start with a direction</p>
-                <p className="mt-1.5 text-xs leading-5 text-muted">Your saved pipeline is attached as context. Ask for layout, copy, or interaction changes.</p>
+              <div className="animate-builder-message rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-5">
+                <p className="flex items-center gap-2 text-xs font-bold"><ChatCenteredDots size={15} className="text-primary" /> Start with a direction</p>
+                <p className="mt-2 text-xs leading-6 text-muted">Your saved pipeline is attached as context. Ask for layout, copy, or interaction changes.</p>
               </div>
             ) : null}
             {messages.map((message, index) => {
@@ -538,26 +540,26 @@ export function AIBuilder() {
               const text = isLastAssistantTyping ? typedText : message.content;
               return (
                 <div key={`${message.role}-${index}`} className={`animate-builder-message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[90%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-xs leading-5 shadow-sm ${message.role === "user" ? "rounded-br-md bg-gradient-to-br from-emerald-600 to-teal-600 text-white" : "rounded-bl-md border border-border bg-card text-foreground-2"}`}>
+                  <div className={`max-w-[90%] whitespace-pre-wrap px-4 py-3 text-xs leading-6 shadow-sm ${message.role === "user" ? "rounded-2xl rounded-br-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/20" : "rounded-2xl rounded-bl-lg border border-border bg-card text-foreground-2"}`}>
                     {text}
-                    {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse rounded-sm bg-emerald-400 align-middle" /> : null}
+                    {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-full bg-emerald-400 align-middle" /> : null}
                     {message.versionId && !isLastAssistantTyping ? (
-                      <span className="mt-1.5 block font-mono text-[9px] text-muted-2">{message.versionId} applied to preview</span>
+                      <span className="mt-2 block font-mono text-[9px] font-medium text-muted-2">{message.versionId} applied to preview</span>
                     ) : null}
                   </div>
                 </div>
               );
             })}
             {loading ? (
-              <div className="animate-builder-message space-y-1.5 rounded-xl border border-border bg-card/70 p-3">
+              <div className="animate-builder-message space-y-2 rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
                 {AGENT_STEPS.map((step, index) => {
                   const done = index < agentStep;
                   const active = index === agentStep;
                   return (
-                    <div key={step.label} className={`flex items-start gap-2 text-[11px] transition-colors duration-300 ${done ? "text-muted" : active ? "text-foreground" : "text-muted-2 opacity-50"}`}>
-                      {done ? <Check size={12} weight="bold" className="mt-0.5 shrink-0 text-emerald-500" /> : active ? <CircleNotch size={12} className="mt-0.5 shrink-0 animate-spin text-emerald-500" /> : <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-border-strong" />}
+                    <div key={step.label} className={`flex items-start gap-2.5 text-[11px] transition-colors duration-300 ${done ? "text-muted" : active ? "text-foreground" : "text-muted-2 opacity-50"}`}>
+                      {done ? <Check size={13} weight="bold" className="mt-0.5 shrink-0 text-primary" /> : active ? <CircleNotch size={13} className="mt-0.5 shrink-0 animate-spin text-primary" /> : <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-border-strong" />}
                       <span className="min-w-0">
-                        <span className="font-medium">{step.label}</span>
+                        <span className="font-semibold">{step.label}</span>
                         {active ? <span className="ml-1.5 font-mono text-[9px] text-muted-2">{step.hint}</span> : null}
                       </span>
                     </div>
@@ -568,14 +570,14 @@ export function AIBuilder() {
           </div>
 
           <div className="border-t border-border p-4">
-            <div className="mb-2.5 flex flex-wrap gap-x-3 gap-y-1">
+            <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1.5">
               {suggestions.map((suggestion) => (
-                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="text-[11px] text-muted transition-colors hover:text-foreground disabled:opacity-50">
+                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="rounded-lg px-2 py-1 text-[11px] font-medium text-muted transition-all hover:bg-foreground/[0.05] hover:text-foreground disabled:opacity-50">
                   {suggestion}
                 </button>
               ))}
             </div>
-            <div className="rounded-xl border border-input bg-background p-2.5 transition-shadow focus-within:ring-2 focus-within:ring-ring/60">
+            <div className="rounded-2xl border border-input bg-background p-3 transition-all focus-within:border-primary/30 focus-within:shadow-[0_0_16px_-4px_var(--glow-primary)] focus-within:ring-2 focus-within:ring-ring/40">
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -583,12 +585,12 @@ export function AIBuilder() {
                 disabled={loading}
                 rows={3}
                 placeholder="Describe the app you want…"
-                className="w-full resize-none bg-transparent px-1 text-xs leading-5 outline-none placeholder:text-muted-2"
+                className="w-full resize-none bg-transparent px-1 text-xs leading-6 outline-none placeholder:text-muted-2"
               />
-              <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
-                <span className="text-[10px] text-muted-2"><kbd className="font-mono">Enter</kbd> to send · <kbd className="font-mono">Shift+Enter</kbd> newline</span>
-                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm transition-all hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
-                  <PaperPlaneRight size={13} weight="fill" />
+              <div className="mt-2 flex items-center justify-between border-t border-border pt-2.5">
+                <span className="text-[10px] text-muted-2"><kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd> to send · <kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Shift+Enter</kbd> newline</span>
+                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 transition-all hover:shadow-lg hover:shadow-emerald-500/30 hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
+                  <PaperPlaneRight size={14} weight="fill" />
                 </button>
               </div>
             </div>
@@ -772,8 +774,8 @@ function CodeExplorer({
         const open = !collapsed.has(node.path);
         return (
           <div key={node.path}>
-            <button type="button" onClick={() => toggle(node.path)} className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-[11.5px] font-medium text-foreground-2 transition-colors hover:bg-white/5 hover:text-white" style={{ paddingLeft: 8 + depth * 12 }}>
-              <CaretDown size={10} className={`shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} /> {node.name}
+            <button type="button" onClick={() => toggle(node.path)} className="flex w-full items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-left text-[11.5px] font-semibold text-slate-300 transition-all hover:bg-white/5 hover:text-white" style={{ paddingLeft: 8 + depth * 12 }}>
+              <CaretDown size={10} className={`shrink-0 transition-transform duration-200 ${open ? "" : "-rotate-90"}`} /> {node.name}
             </button>
             {open ? renderNodes(node.children, depth + 1) : null}
           </div>
@@ -785,7 +787,7 @@ function CodeExplorer({
           key={node.path}
           type="button"
           onClick={() => setSelectedPath(node.path)}
-          className={`flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-[11.5px] transition-colors ${active ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+          className={`flex w-full items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all ${active ? "bg-white/10 text-white shadow-sm" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
           style={{ paddingLeft: 8 + depth * 12 }}
         >
           <span className={active ? "text-emerald-400" : "text-slate-500 shrink-0"}><FileGlyph path={node.path} /></span>
@@ -797,20 +799,20 @@ function CodeExplorer({
   return (
     <div className="animate-builder-panel flex min-h-0 flex-1">
       {/* Explorer rail */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#2b2340] bg-[#120e1d] md:flex">
-        <p className="border-b border-[#241d36] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-300">Project</p>
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#2a2244] bg-[#0e0a1a] md:flex">
+        <p className="border-b border-[#2a2244] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">Project</p>
         <div className="scroll-thin min-h-0 flex-1 overflow-y-auto p-1.5">{renderNodes(tree)}</div>
-        <div className="border-t border-[#241d36] p-2">
-          <button type="button" onClick={onDownloadAll} className="flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[10px] font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+        <div className="border-t border-[#2a2244] p-2">
+          <button type="button" onClick={onDownloadAll} className="flex w-full items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[10px] font-bold text-slate-300 transition-all hover:bg-white/5 hover:text-white">
             <DownloadSimple size={12} /> Download ZIP
           </button>
         </div>
-        <p className="border-t border-[#241d36] px-3 py-2 text-[9.5px] leading-relaxed text-slate-400">{files.length} files · regenerated from your last chat edit</p>
+        <p className="border-t border-[#2a2244] px-4 py-2 text-[9.5px] leading-relaxed text-slate-500">{files.length} files · regenerated from your last chat edit</p>
       </aside>
 
       {/* Mobile file picker */}
       <div className="min-w-0 flex-1 md:hidden">
-        <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#2b2340] bg-[#120e1d] px-4 py-2 text-xs text-slate-200 outline-none">
+        <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#2a2244] bg-[#0e0a1a] px-4 py-2.5 text-xs font-medium text-slate-200 outline-none">
           {files.map((file) => (<option key={file.path} value={file.path}>{file.path}</option>))}
         </select>
         {activeFile ? <EditorBody file={activeFile} /> : null}
@@ -818,18 +820,18 @@ function CodeExplorer({
 
       {/* Editor */}
       {activeFile ? (
-        <div className="hidden min-w-0 flex-1 flex-col bg-[#161126] md:flex">
-          <div className="flex items-center justify-between gap-3 border-b border-[#2b2340] px-4 py-2">
-            <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-300">
+        <div className="hidden min-w-0 flex-1 flex-col bg-[#110d1f] md:flex">
+          <div className="flex items-center justify-between gap-3 border-b border-[#2a2244] bg-[#0e0a1a] px-4 py-2.5">
+            <div className="flex min-w-0 items-center gap-2.5 text-[11px] text-slate-300">
               <span className="shrink-0"><FileGlyph path={activeFile.path} /></span>
-              <span className="truncate font-mono">{activeFile.path}</span>
-              <span className="ml-2 hidden shrink-0 text-slate-600 lg:inline">{EXT_LANGUAGE[activeFile.language] ?? ""}</span>
+              <span className="truncate font-mono font-medium">{activeFile.path}</span>
+              <span className="ml-2 hidden shrink-0 text-slate-500 lg:inline">{EXT_LANGUAGE[activeFile.language] ?? ""}</span>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <button type="button" onClick={onCopyTraining} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-300 transition-colors hover:bg-white/5 hover:text-white" title={`Copy the training script (${trainingFilename})`}>
+              <button type="button" onClick={onCopyTraining} className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[10px] font-medium text-slate-300 transition-all hover:bg-white/5 hover:text-white" title={`Copy the training script (${trainingFilename})`}>
                 {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />} {copied ? "Copied script" : "Training script"}
               </button>
-              <button type="button" onClick={() => onDownloadFile(activeFile)} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+              <button type="button" onClick={() => onDownloadFile(activeFile)} className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[10px] font-medium text-slate-300 transition-all hover:bg-white/5 hover:text-white">
                 <DownloadSimple size={12} /> Download
               </button>
             </div>
