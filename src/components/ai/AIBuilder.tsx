@@ -6,6 +6,8 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowsCounterClockwise,
+  ArrowsOutSimple,
+  ArrowsInSimple,
   BookOpen,
   BracketsCurly,
   CaretDown,
@@ -251,6 +253,7 @@ export function AIBuilder() {
   const [copied, setCopied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(true);
   const [typedText, setTypedText] = useState<string | null>(null);
+  const [previewFullscreen, setPreviewFullscreen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typeTimerRef = useRef<number | null>(null);
 
@@ -515,7 +518,8 @@ export function AIBuilder() {
       ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* Agent column */}
+        {/* Agent column — hidden in fullscreen preview */}
+        {!previewFullscreen && (
         <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border bg-surface lg:w-[380px] lg:border-b-0 lg:border-r">
           <div className="border-b border-border px-5 py-4">
             <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Agent session</div>
@@ -593,9 +597,10 @@ export function AIBuilder() {
             ) : null}
           </div>
         </aside>
+        )}
 
         {/* Preview / Code column */}
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-background-2">
+        <section className={`flex min-h-0 min-w-0 flex-1 flex-col bg-background-2 ${previewFullscreen ? "fixed inset-0 z-50" : ""}`}>
           <div className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-surface px-4">
             <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-1">
               {(["preview", "code"] as const).map((tab) => (
@@ -609,9 +614,14 @@ export function AIBuilder() {
                 </button>
               ))}
             </div>
-            <div className="hidden items-center gap-2 md:flex">
-              <span className="font-mono text-[10px] text-muted-2">{versions.length} checkpoints · {graph.nodes.length} steps · {graph.edges.length} links</span>
-              <span className="hidden text-[10px] text-muted lg:inline">Model context attached</span>
+            <div className="flex items-center gap-2">
+              <div className="hidden items-center gap-2 md:flex">
+                <span className="font-mono text-[10px] text-muted-2">{versions.length} checkpoints · {graph.nodes.length} steps · {graph.edges.length} links</span>
+                <span className="hidden text-[10px] text-muted lg:inline">Model context attached</span>
+              </div>
+              <button type="button" onClick={() => setPreviewFullscreen((f) => !f)} title={previewFullscreen ? "Exit fullscreen" : "Fullscreen preview"} className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-border-strong hover:text-foreground">
+                {previewFullscreen ? <ArrowsInSimple size={14} /> : <ArrowsOutSimple size={14} />}
+              </button>
             </div>
           </div>
 
@@ -638,7 +648,7 @@ export function AIBuilder() {
             />
           ) : (
             <div key="preview" className="scroll-thin min-h-0 flex-1 overflow-auto p-5">
-              <div className="mx-auto max-w-4xl pb-6 force-light">
+              <div className={`mx-auto pb-6 force-light ${previewFullscreen ? "h-full max-w-full" : "max-w-4xl"}`}>
                 {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} /> : null}
               </div>
             </div>
