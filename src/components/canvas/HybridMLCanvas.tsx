@@ -29,6 +29,7 @@ import { Toast, type ToastData } from "@/components/ui/toast";
 import { getPaletteItem, hasModelNode, resolveRoute } from "@/lib/canvasConfig";
 import { generateCode, generateNodeServer, type GeneratedCode } from "@/lib/codeGen";
 import { summarizeDiagnostics, validatePipeline } from "@/lib/pipelineValidation";
+import { pyodideSupported, serverHasNativePython, trainInBrowser } from "@/lib/localEngine";
 import { deserializeWorkflow, downloadWorkflow, serializeWorkflow } from "@/lib/workflowSerialization";
 import type { TerminalLine } from "@/components/dashboard/TerminalConsole";
 import { hasSavedProject, loadProject, saveProject } from "@/lib/projectStorage";
@@ -310,6 +311,27 @@ function Canvas() {
     }
 
     try {
+      // ── Compute-tier selection ────────────────────────────────────────────
+      // 1) Server-side Python (best), 2) user's browser via Pyodide/WASM,
+      // 3) server's built-in TypeScript fallback (last resort).
+      const native = await serverHasNativePython();
+      if (!native && route === "instant" && pyodideSupported()) {
+        pushLine("No Python stack on the deployment — training locally in your browser (nothing is uploaded)…", "system");
+        try {
+          const local = await trainInBrowser(payload, (message) => pushLine(message));
+          setResponse(local);
+          const ok = local.status === "success";
+          pushLine(
+            ok ? `Trained on this device in ${(local.timing.total_seconds ?? 0).toFixed(2)}s.` : `Engine error: ${local.error ?? "unknown failure"}`,
+            ok ? "success" : "error",
+          );
+          stampStatuses(ok ? "success" : "error");
+          return;
+        } catch (localError) {
+          pushLine(`Local engine unavailable (${localError instanceof Error ? localError.message : "failed"}) — trying the server engine…`, "system");
+        }
+      }
+
       const res = await fetch("/api/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -47,7 +47,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
       {/* Thin solid accent bar — subtle category cue, no gradient. */}
       <span aria-hidden className="absolute left-0 top-3 h-[calc(100%-1.5rem)] w-[2px] rounded-full" style={{ background: accent }} />
 
-      {/* Delete control (utility button, not an icon container) */}
+      {/* Delete control — always reachable, even when a status is shown. */}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); deleteElements({ nodes: [{ id }] }); }}
@@ -55,23 +55,22 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
         aria-label="Delete node"
         title="Delete node"
         className={cn(
-          "absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md text-muted opacity-0 transition-all duration-150 hover:bg-foreground/[0.06] hover:text-rose-400",
+          "absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md text-muted transition-all duration-150 hover:bg-foreground/[0.06] hover:text-rose-400",
           selected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
-          data.executionStatus && "hidden",
         )}
       >
         <Trash size={13} />
       </button>
 
-      {/* Execution lifecycle indicator replaces the delete button while a run is active. */}
+      {/* Execution lifecycle indicator — transient spinner replaces the trash slot while running. */}
       {data.executionStatus === "running" ? (
-        <span className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-surface/90 px-1 py-0.5 font-mono text-[9px] text-sky-400" title="Running">
+        <span className="absolute right-9 top-2 flex items-center gap-1 rounded-md bg-surface/90 px-1 py-0.5 font-mono text-[9px] text-sky-400" title="Running">
           <CircleNotch size={11} className="animate-spin" /> run
         </span>
       ) : data.executionStatus === "success" ? (
-        <CheckCircle size={15} weight="fill" className="absolute right-2 top-2 text-emerald-500" aria-label="Succeeded" />
+        <CheckCircle size={13} weight="fill" className="absolute bottom-2.5 right-2.5 text-emerald-500" aria-label="Succeeded" />
       ) : data.executionStatus === "error" ? (
-        <XCircle size={15} weight="fill" className="absolute right-2 top-2 text-rose-500" aria-label="Failed" />
+        <XCircle size={13} weight="fill" className="absolute bottom-2.5 right-2.5 text-rose-500" aria-label="Failed" />
       ) : null}
 
       {/* Header — bare icon glyph (no box/border/tint) */}
