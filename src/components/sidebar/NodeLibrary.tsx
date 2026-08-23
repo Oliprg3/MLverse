@@ -18,14 +18,6 @@ const CATEGORY_ORDER: NodeCategory[] = [
   "visualization",
 ];
 
-const CATEGORY_COLORS: Record<NodeCategory, string> = {
-  data: "text-emerald-500",
-  preprocessing: "text-cyan-500",
-  classic_ml: "text-violet-500",
-  deep_learning: "text-amber-500",
-  visualization: "text-rose-500",
-};
-
 function LibraryCard({ item }: { item: PaletteItem }) {
   const Icon = resolveIcon(item.icon);
 
@@ -53,7 +45,6 @@ function LibraryCard({ item }: { item: PaletteItem }) {
 function Section({ catId, query }: { catId: NodeCategory; query: string }) {
   const [open, setOpen] = useState(true);
   const items = useMemo(() => NODE_PALETTE.filter((i) => i.category === catId), [catId]);
-  const color = CATEGORY_COLORS[catId];
 
   const filtered = useMemo(() => {
     if (!query.trim()) return items;
@@ -72,7 +63,7 @@ function Section({ catId, query }: { catId: NodeCategory; query: string }) {
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-foreground/[0.04]"
       >
-        <span className={`text-[10px] font-bold uppercase tracking-[0.14em] ${color}`}>{CATEGORIES[catId].label}</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{CATEGORIES[catId].label}</span>
         <span className="flex items-center gap-1.5">
           <span className="text-[10px] font-semibold text-muted/60">{filtered.length}</span>
           <CaretDown className={cn("h-3.5 w-3.5 text-muted transition-transform duration-200", !open && "-rotate-90")} />

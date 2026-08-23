@@ -456,7 +456,7 @@ export function AIBuilder() {
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6">
         <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/[0.08] blur-[100px]" />
         <div className="animate-builder-panel relative w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
             <Robot size={24} />
           </div>
           <h1 className="mt-6 text-xl font-bold tracking-tight">Build with AI</h1>
@@ -482,7 +482,7 @@ export function AIBuilder() {
           </Link>
           <div className="h-5 w-px bg-border" />
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm shadow-emerald-500/20">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-sm shadow-violet-500/20">
               <Robot size={14} className="text-white" />
             </div>
             <span className="truncate text-sm font-bold">AI Builder</span>
@@ -540,7 +540,7 @@ export function AIBuilder() {
               const text = isLastAssistantTyping ? typedText : message.content;
               return (
                 <div key={`${message.role}-${index}`} className={`animate-builder-message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[90%] whitespace-pre-wrap px-4 py-3 text-xs leading-6 shadow-sm ${message.role === "user" ? "rounded-2xl rounded-br-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/20" : "rounded-2xl rounded-bl-lg border border-border bg-card text-foreground-2"}`}>
+                  <div className={`max-w-[90%] whitespace-pre-wrap px-4 py-3 text-xs leading-6 shadow-sm ${message.role === "user" ? "rounded-2xl rounded-br-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-violet-500/20" : "rounded-2xl rounded-bl-lg border border-border bg-card text-foreground-2"}`}>
                     {text}
                     {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-full bg-emerald-400 align-middle" /> : null}
                     {message.versionId && !isLastAssistantTyping ? (
@@ -589,7 +589,7 @@ export function AIBuilder() {
               />
               <div className="mt-2 flex items-center justify-between border-t border-border pt-2.5">
                 <span className="text-[10px] text-muted-2"><kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd> to send · <kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Shift+Enter</kbd> newline</span>
-                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 transition-all hover:shadow-lg hover:shadow-emerald-500/30 hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
+                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/25 transition-all hover:shadow-lg hover:shadow-violet-500/30 hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
                   <PaperPlaneRight size={14} weight="fill" />
                 </button>
               </div>

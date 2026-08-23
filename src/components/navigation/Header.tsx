@@ -91,7 +91,7 @@ export function Header({
           {paletteOpen ? <SidebarSimple size={18} /> : <SidebarSimple size={18} weight="light" />}
         </Button>
 
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/20">
           <SquaresFour size={16} weight="bold" className="text-white" />
         </div>
 

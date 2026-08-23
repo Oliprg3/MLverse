@@ -35,33 +35,33 @@ const TEMPLATES = [
     title: "Classic classifier",
     description: "Breast Cancer → Scaler → Random Forest → evaluation charts.",
     icon: Target,
-    gradient: "from-emerald-500/20 to-teal-500/20",
-    border: "hover:border-emerald-500/30",
-    iconColor: "text-emerald-500",
+    gradient: "from-violet-500/20 to-purple-500/20",
+    border: "hover:border-violet-500/30",
+    iconColor: "text-violet-500",
   },
   {
     title: "Fast baseline",
     description: "Iris → Min-Max → KNN with the built-in TypeScript engine.",
     icon: Lightning,
-    gradient: "from-amber-500/20 to-orange-500/20",
-    border: "hover:border-amber-500/30",
-    iconColor: "text-amber-500",
+    gradient: "from-purple-500/20 to-fuchsia-500/20",
+    border: "hover:border-purple-500/30",
+    iconColor: "text-purple-500",
   },
   {
     title: "Deep learning",
     description: "PyTorch MLP pipeline exported as a ready-to-run Colab notebook.",
     icon: Brain,
-    gradient: "from-violet-500/20 to-purple-500/20",
-    border: "hover:border-violet-500/30",
-    iconColor: "text-violet-500",
+    gradient: "from-fuchsia-500/20 to-pink-500/20",
+    border: "hover:border-fuchsia-500/30",
+    iconColor: "text-fuchsia-500",
   },
 ];
 
 const FEATURES = [
-  { icon: SquaresFour, title: "Visual pipelines", description: "Drag nodes, wire the graph, and configure hyperparameters without writing code.", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  { icon: ChartLine, title: "Live dashboards", description: "Accuracy, ROC-AUC, confusion matrices and decision boundaries render as interactive Plotly figures.", color: "text-cyan-500", bg: "bg-cyan-500/10" },
-  { icon: Robot, title: "AI builder", description: "Turn a saved model into a polished prediction web app by chatting with the built-in agent.", color: "text-violet-500", bg: "bg-violet-500/10" },
-  { icon: Database, title: "Your data", description: "Upload CSVs or image folders — target detection and preprocessing are automatic.", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: SquaresFour, title: "Visual pipelines", description: "Drag nodes, wire the graph, and configure hyperparameters without writing code.", color: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: ChartLine, title: "Live dashboards", description: "Accuracy, ROC-AUC, confusion matrices and decision boundaries render as interactive Plotly figures.", color: "text-purple-500", bg: "bg-purple-500/10" },
+  { icon: Robot, title: "AI builder", description: "Turn a saved model into a polished prediction web app by chatting with the built-in agent.", color: "text-fuchsia-500", bg: "bg-fuchsia-500/10" },
+  { icon: Database, title: "Your data", description: "Upload CSVs or image folders — target detection and preprocessing are automatic.", color: "text-pink-500", bg: "bg-pink-500/10" },
 ];
 
 function formatSavedAt(iso: string) {
@@ -107,7 +107,7 @@ export function Dashboard() {
       <header className="glass-panel sticky top-0 z-30 border-b border-border">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/20">
               <SquaresFour size={16} weight="bold" className="text-white" />
             </div>
             <span className="text-sm font-bold tracking-tight">MLverse</span>
@@ -126,20 +126,20 @@ export function Dashboard() {
         {/* Hero */}
         <section className="relative overflow-hidden pt-20 sm:pt-28">
           {/* Background glow orbs */}
-          <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[50rem] -translate-x-1/2 rounded-full bg-emerald-500/[0.06] blur-[100px]" />
-          <div className="pointer-events-none absolute -top-10 right-0 h-64 w-64 rounded-full bg-violet-500/[0.05] blur-[80px]" />
+          <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[50rem] -translate-x-1/2 rounded-full bg-violet-500/[0.06] blur-[100px]" />
+          <div className="pointer-events-none absolute -top-10 right-0 h-64 w-64 rounded-full bg-purple-500/[0.05] blur-[80px]" />
 
           <div className="relative">
             <p className="animate-slide-up text-[11px] font-bold uppercase tracking-[0.25em] text-primary">Train · evaluate · ship</p>
             <h1 className="animate-slide-up mt-6 max-w-3xl text-balance text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl" style={{ animationDelay: "60ms" }}>
               Build machine learning pipelines{" "}
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">without code</span>
+              <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">without code</span>
             </h1>
             <p className="animate-slide-up mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg" style={{ animationDelay: "120ms" }}>
               Wire datasets, preprocessing, and models on a visual canvas. Train instantly, generate real Python for Colab, then let AI wrap your model in a web app.
             </p>
             <div className="animate-slide-up mt-8 flex flex-wrap items-center gap-4" style={{ animationDelay: "180ms" }}>
-              <Link href="/canvas" className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 px-6 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-110 active:scale-[0.97]">
+              <Link href="/canvas" className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 px-6 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 active:scale-[0.97]">
                 <Play size={16} weight="fill" /> Open canvas
               </Link>
               <Link href="/build" className="inline-flex h-12 items-center gap-2.5 rounded-xl border border-border bg-surface px-6 text-sm font-bold text-foreground shadow-sm transition-all hover:border-border-strong hover:shadow-md active:scale-[0.97]">

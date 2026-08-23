@@ -12,7 +12,7 @@ const buttonVariants = cva(
         outline: "border border-border text-foreground hover:border-border-strong hover:bg-foreground/[0.03]",
         instant: "border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50 shadow-sm hover:shadow-[0_0_16px_-4px_var(--glow-primary)]",
         colab: "border border-accent-2/30 bg-accent-2/10 text-accent-2 hover:bg-accent-2/20 hover:border-accent-2/50 shadow-sm hover:shadow-[0_0_16px_-4px_var(--glow-accent)]",
-        primary: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 hover:brightness-110",
+        primary: "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20 hover:shadow-lg hover:shadow-violet-500/30 hover:brightness-110",
         danger: "border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/50",
         subtle: "text-muted-2 hover:text-foreground hover:bg-foreground/[0.04]",
       },

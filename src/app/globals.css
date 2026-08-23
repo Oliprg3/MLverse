@@ -20,42 +20,42 @@
   --foreground-2: #2e3a50;
   --muted: #5e6b82;
   --muted-2: #8d99ae;
-  --primary: #10b981;
-  --primary-light: #34d399;
-  --accent: #06b6d4;
-  --accent-2: #8b5cf6;
-  --ring: #10b981;
+  --primary: #8b5cf6;
+  --primary-light: #a78bfa;
+  --accent: #c084fc;
+  --accent-2: #a78bfa;
+  --ring: #8b5cf6;
   --input: #e2e5ea;
-  --glow-primary: rgba(16, 185, 129, 0.15);
-  --glow-accent: rgba(139, 92, 246, 0.12);
+  --glow-primary: rgba(139, 92, 246, 0.15);
+  --glow-accent: rgba(192, 132, 252, 0.12);
 }
 
 .dark {
-  --background: #0a0e1a;
-  --background-2: #0d1120;
-  --surface: #121728;
-  --surface-2: #161c30;
-  --card: #141a2c;
-  --card-2: #1a2138;
-  --border: #232b42;
-  --border-strong: #2e3854;
-  --foreground: #eef1f8;
-  --foreground-2: #c4cce0;
-  --muted: #7c89a6;
-  --muted-2: #556080;
-  --primary: #34d399;
-  --primary-light: #6ee7b7;
-  --accent: #22d3ee;
-  --accent-2: #a78bfa;
-  --ring: #34d399;
-  --input: #1e2640;
-  --glow-primary: rgba(52, 211, 153, 0.12);
-  --glow-accent: rgba(167, 139, 250, 0.10);
+  --background: #0a0816;
+  --background-2: #0d0a1e;
+  --surface: #13102a;
+  --surface-2: #1a1535;
+  --card: #15112e;
+  --card-2: #1c1638;
+  --border: #2a2048;
+  --border-strong: #362c5a;
+  --foreground: #f0ecfa;
+  --foreground-2: #d4cde8;
+  --muted: #9589b8;
+  --muted-2: #6e6290;
+  --primary: #a78bfa;
+  --primary-light: #c4b5fd;
+  --accent: #c084fc;
+  --accent-2: #d8b4fe;
+  --ring: #a78bfa;
+  --input: #201a3a;
+  --glow-primary: rgba(167, 139, 250, 0.12);
+  --glow-accent: rgba(192, 132, 252, 0.10);
 
   background-image:
-    radial-gradient(120% 60% at 50% -8%, rgba(52, 211, 153, 0.08), transparent 55%),
-    radial-gradient(80% 50% at 80% 20%, rgba(139, 92, 246, 0.06), transparent 50%),
-    linear-gradient(180deg, rgba(22, 28, 48, 0.5), var(--background) 40%);
+    radial-gradient(120% 60% at 50% -8%, rgba(139, 92, 246, 0.10), transparent 55%),
+    radial-gradient(80% 50% at 80% 20%, rgba(168, 85, 247, 0.06), transparent 50%),
+    linear-gradient(180deg, rgba(20, 16, 42, 0.5), var(--background) 40%);
   background-attachment: fixed;
 }
 
@@ -322,8 +322,8 @@
   --foreground-2: #2e3a50;
   --muted: #5e6b82;
   --muted-2: #8d99ae;
-  --primary: #10b981;
-  --accent: #06b6d4;
-  --ring: #10b981;
+  --primary: #8b5cf6;
+  --accent: #c084fc;
+  --ring: #8b5cf6;
   --input: #e2e5ea;
 }
