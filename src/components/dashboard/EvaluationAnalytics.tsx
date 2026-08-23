@@ -49,10 +49,18 @@ export function EvaluationAnalytics({ predictions }: { predictions: PredictionSe
       ) : null}
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <PlotlyChart figure={heat} title="Confusion Matrix" className="animate-chart-in" />
+        <div className="h-[280px]">
+          <PlotlyChart figure={heat} title="Confusion Matrix" className="animate-chart-in" />
+        </div>
         <div className="space-y-3">
-          <PlotlyChart figure={bars} title="Per-class Metrics" className="animate-chart-in" />
-          {hist ? <PlotlyChart figure={hist} title="Confidence Distribution" className="animate-chart-in" /> : null}
+          <div className="h-[260px]">
+            <PlotlyChart figure={bars} title="Per-class Metrics" className="animate-chart-in" />
+          </div>
+          {hist ? (
+            <div className="h-[220px]">
+              <PlotlyChart figure={hist} title="Confidence Distribution" className="animate-chart-in" />
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

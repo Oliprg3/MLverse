@@ -3,20 +3,24 @@
 /* Dynamic icons are resolved from serialized canvas metadata by design. */
 /* eslint-disable react-hooks/static-components */
 
-import { useRef, type ChangeEvent } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import Papa from "papaparse";
 import { useReactFlow } from "@xyflow/react";
 import {
+  Broom,
   CaretRight,
   Folder,
   Images,
   SlidersHorizontal,
   Target,
   UploadSimple,
+  Warning,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { DataCleaningModal } from "./DataCleaningModal";
 import { getCategory } from "@/lib/canvasConfig";
 import { chartsInGroup, CHART_GROUPS, parseChartSelection, serializeChartSelection } from "@/lib/chartCatalog";
+import { analyzeCsv, hasIssues } from "@/lib/dataCleaning";
 import { resolveIcon } from "@/lib/icons";
 import type { CsvDataset, ImageDataset, MLNodeData, NodeParam } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -105,6 +109,20 @@ export function Inspector({ node, onClose }: InspectorProps) {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const imageFolderRef = useRef<HTMLInputElement>(null);
   const imageFilesRef = useRef<HTMLInputElement>(null);
+  const [cleaningOpen, setCleaningOpen] = useState(false);
+
+  const csvIssues = useMemo(
+    () => (node?.data.type === "data:csv" && node.data.dataset ? analyzeCsv(node.data.dataset) : null),
+    [node?.data.type, node?.data.dataset],
+  );
+
+  const applyCleaning = (dataset: CsvDataset, summary: string) => {
+    if (!node) return;
+    updateNodeData(node.id, {
+      dataset,
+      description: `${dataset.nrows.toLocaleString()} rows · ${dataset.columns.length} cols · cleaned (${summary})`,
+    });
+  };
 
   if (!node) return null;
   const data = node.data;
@@ -200,6 +218,34 @@ export function Inspector({ node, onClose }: InspectorProps) {
                   <div className="truncate text-xs font-medium text-foreground-2">{data.dataset.filename}</div>
                   <div className="mt-1 font-mono text-[11px] text-muted">{data.dataset.nrows.toLocaleString()} rows · {data.dataset.columns.length} features</div>
                 </div>
+
+                {/* Data quality + cleaning */}
+                {csvIssues && hasIssues(csvIssues) ? (
+                  <button
+                    type="button"
+                    onClick={() => setCleaningOpen(true)}
+                    className="group w-full rounded-lg border border-amber-500/30 bg-amber-500/[0.07] p-3 text-left transition-colors hover:border-amber-500/50 hover:bg-amber-500/[0.12]"
+                  >
+                    <p className="flex items-center gap-1.5 text-xs font-bold text-amber-500">
+                      <Warning size={13} weight="fill" /> Uncleaned data detected
+                    </p>
+                    <p className="mt-1 text-[10.5px] leading-relaxed text-muted">
+                      {[
+                        csvIssues.missingTotal > 0 ? `${csvIssues.missingTotal} missing cells` : null,
+                        csvIssues.columns.some((c) => c.kind === "text") ? `${csvIssues.columns.filter((c) => c.kind === "text").length} column(s) with text` : null,
+                        csvIssues.duplicateRows > 0 ? `${csvIssues.duplicateRows} duplicate rows` : null,
+                      ].filter(Boolean).join(" · ")}
+                    </p>
+                    <p className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                      <Broom size={12} /> Clean data <CaretRight size={11} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
+                    </p>
+                  </button>
+                ) : csvIssues ? (
+                  <p className="flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/[0.06] px-3 py-2 text-[11px] font-medium text-primary">
+                    <Broom size={12} /> Data looks clean
+                  </p>
+                ) : null}
+
                 <div>
                   <SectionLabel icon={<Target className="h-3.5 w-3.5" />}>Target column</SectionLabel>
                   <select
@@ -269,6 +315,13 @@ export function Inspector({ node, onClose }: InspectorProps) {
           </section>
         ) : null}
       </div>
+
+      <DataCleaningModal
+        dataset={data.dataset ?? null}
+        open={cleaningOpen}
+        onClose={() => setCleaningOpen(false)}
+        onApply={applyCleaning}
+      />
     </aside>
   );
 }

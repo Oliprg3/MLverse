@@ -96,7 +96,7 @@ export function PlotlyChart({ figure, title, className }: PlotlyChartProps) {
     };
   }, [figure, title, resolvedTheme]);
 
-  return <div ref={elRef} className={cn("h-full w-full", className)} />;
+  return <div ref={elRef} className={cn("h-full w-full", className)} style={{ minHeight: 200 }} />;
 }
 
 export default PlotlyChart;

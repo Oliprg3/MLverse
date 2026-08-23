@@ -31,6 +31,7 @@ import {
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
 import { generateAppFiles, type ScaffoldFile } from "@/lib/appScaffold";
 import { generateCode } from "@/lib/codeGen";
+import { trainPreviewModel } from "@/lib/tsEngine";
 import { Highlight, type PrismTheme } from "prism-react-renderer";
 import type { GraphPayload, MLNodeData } from "@/lib/types";
 
@@ -84,7 +85,20 @@ function formatBytes(bytes: number) {
 }
 
 /** Sensible starting point so the preview is meaningful before the first chat message. */
-function defaultSpec(modelName: string, format: string): UiSpec {
+function defaultSpec(modelName: string, format: string, featureNames?: string[]): UiSpec {
+  const features = (featureNames ?? []).slice(0, 6);
+  const fields: UiField[] = features.length > 0
+    ? features.map((name) => ({
+        key: name,
+        label: name.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        type: "number" as const,
+        placeholder: "Enter a value",
+      }))
+    : [
+        { key: "feature_1", label: "Feature 1", type: "number", placeholder: "Enter a value" },
+        { key: "feature_2", label: "Feature 2", type: "number", placeholder: "Enter a value" },
+        { key: "category", label: "Category", type: "select", options: ["Option A", "Option B"] },
+      ];
   return {
     brand: "NeuralForge",
     nav: ["Overview", "Predict", "Activity"],
@@ -93,27 +107,23 @@ function defaultSpec(modelName: string, format: string): UiSpec {
     description: "A focused web application generated around your trained model. Chat with the assistant to refine this experience.",
     submitLabel: "Run prediction",
     accent: format === "onnx" ? "violet" : "sky",
-    fields: [
-      { key: "feature_1", label: "Feature 1", type: "number", placeholder: "Enter a value" },
-      { key: "feature_2", label: "Feature 2", type: "number", placeholder: "Enter a value" },
-      { key: "category", label: "Category", type: "select", options: ["Option A", "Option B"] },
-    ],
+    fields,
     stats: [
-      { label: "Model status", value: "Ready", detail: "Artifact loaded" },
+      { label: "Model status", value: "Ready", detail: "Trained in browser" },
       { label: "Runtime", value: format.toUpperCase(), detail: "Serving target" },
-      { label: "Inputs", value: "03", detail: "Configurable fields" },
+      { label: "Inputs", value: String(features.length || fields.length).padStart(2, "0"), detail: "Configurable fields" },
     ],
     features: [
-      { title: "Private by design", description: "Your model artifact stays in this browser session.", icon: "shield" },
+      { title: "Live predictions", description: "The form runs real inference against your saved dataset — try it now.", icon: "shield" },
       { title: "Fast feedback", description: "Validate the prediction experience before connecting inference.", icon: "activity" },
       { title: "Built for iteration", description: "Keep refining layout, copy, and behavior through chat.", icon: "spark" },
     ],
-    insight: { title: "Ready for your first prediction", description: "Complete the fields to preview the result state." },
+    insight: { title: "Ready for your first prediction", description: "Complete the fields and run a real prediction against your model." },
   };
 }
 
 /** Renders the UiSpec as a believable website inside a browser-chrome frame. */
-function AppPreview({ spec }: { spec: UiSpec }) {
+function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: number[]) => { label: string; confidence: number; probabilities: Array<{ label: string; p: number }> } | null }) {
   const ACCENTS = {
     sky: { text: "text-sky-600", chip: "border-sky-500/25 bg-sky-500/10 text-sky-700", soft: "bg-sky-500/10", solid: "bg-sky-600 hover:bg-sky-500 text-white", dot: "bg-sky-500", glow: "shadow-[0_8px_30px_-12px_rgba(14,165,233,0.45)]" },
     violet: { text: "text-violet-600", chip: "border-violet-500/25 bg-violet-500/10 text-violet-700", soft: "bg-violet-500/10", solid: "bg-violet-600 hover:bg-violet-500 text-white", dot: "bg-violet-500", glow: "shadow-[0_8px_30px_-12px_rgba(139,92,246,0.45)]" },
@@ -122,6 +132,19 @@ function AppPreview({ spec }: { spec: UiSpec }) {
   const a = ACCENTS[spec.accent] ?? ACCENTS.sky;
   const [values, setValues] = useState<Record<string, string>>({});
   const [ran, setRan] = useState(false);
+  const [result, setResult] = useState<ReturnType<typeof onPredict>>(null);
+
+  const runPrediction = () => {
+    // Map the form fields onto the model's feature vector positionally.
+    const features = spec.fields.map((f) => {
+      const raw = values[f.key] ?? "";
+      const n = Number(raw);
+      return raw.trim() !== "" && !Number.isNaN(n) ? n : 0;
+    });
+    const prediction = onPredict(features);
+    setResult(prediction);
+    setRan(true);
+  };
 
   return (
     <div className={`animate-builder-panel overflow-hidden rounded-2xl border border-border bg-card shadow-2xl ${a.glow}`}>
@@ -202,11 +225,35 @@ function AppPreview({ spec }: { spec: UiSpec }) {
             ))}
             <button
               type="button"
-              onClick={() => setRan(true)}
+              onClick={runPrediction}
               className={`mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-bold transition-all active:scale-[0.98] ${a.solid}`}
             >
-              {ran ? <Check size={15} weight="bold" /> : <Sparkle size={15} weight="fill" />} {ran ? "Prediction complete" : spec.submitLabel}
+              {ran && result ? <Check size={15} weight="bold" /> : <Sparkle size={15} weight="fill" />} {ran && result ? "Run another prediction" : spec.submitLabel}
             </button>
+            {ran && result ? (
+              <div className="animate-builder-message mt-4 rounded-xl border border-primary/25 bg-primary/[0.05] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Prediction result</p>
+                <div className="mt-1.5 flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold tracking-tight text-primary">{result.label}</span>
+                  <span className="font-mono text-xs font-semibold text-muted">{(result.confidence * 100).toFixed(1)}% confidence</span>
+                </div>
+                <div className="mt-3 space-y-1.5">
+                  {result.probabilities.slice(0, 4).map((p) => (
+                    <div key={p.label} className="flex items-center gap-2">
+                      <span className="w-20 shrink-0 truncate text-right font-mono text-[10px] text-muted">{p.label}</span>
+                      <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-foreground/[0.08]">
+                        <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-500" style={{ width: `${Math.max(2, p.p * 100)}%` }} />
+                      </div>
+                      <span className="w-11 shrink-0 text-right font-mono text-[10px] text-muted-2">{(p.p * 100).toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : ran ? (
+              <div className="animate-builder-message mt-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] p-3 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                The model could not run — the saved dataset was too large to keep in this session.
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -214,11 +261,6 @@ function AppPreview({ spec }: { spec: UiSpec }) {
           <div className={`rounded-2xl border p-6 ${a.chip}`}>
             <p className="text-sm font-bold">{spec.insight.title}</p>
             <p className="mt-2 text-xs leading-6 opacity-80">{spec.insight.description}</p>
-            {ran ? (
-              <div className="animate-builder-message mt-4 rounded-xl border border-current/20 bg-background/60 px-4 py-3 text-[11px] font-semibold">
-                Result state rendered — connect a serving endpoint to stream real predictions here.
-              </div>
-            ) : null}
           </div>
           <div className="grid gap-2.5">
             {spec.features.map((feature) => (
@@ -271,7 +313,8 @@ export function AIBuilder() {
       setCode(generated.code);
       setFilename(generated.filename);
       const modelNode = saved.nodes.find((node) => (node.data as MLNodeData).category === "classic_ml" || (node.data as MLNodeData).category === "deep_learning");
-      const base = defaultSpec((modelNode?.data as MLNodeData | undefined)?.label ?? "Saved model", (modelNode?.data as MLNodeData | undefined)?.category === "deep_learning" ? "onnx" : "pickle");
+      const previewModel = trainPreviewModel(toGraph(saved));
+      const base = defaultSpec((modelNode?.data as MLNodeData | undefined)?.label ?? "Saved model", (modelNode?.data as MLNodeData | undefined)?.category === "deep_learning" ? "onnx" : "pickle", previewModel?.featureNames);
       try {
         const raw = window.sessionStorage.getItem(SESSION_KEY);
         if (raw) {
@@ -323,6 +366,8 @@ export function AIBuilder() {
   const modelData = modelNode?.data as MLNodeData | undefined;
   const modelLabel = modelData?.label ?? "Saved model";
   const model = modelData ? { name: modelData.label, format: "pickle" as const, size: 0 } : null;
+  // Real in-browser model — trains on the saved dataset so the preview serves live predictions.
+  const previewModel = useMemo(() => (graph ? trainPreviewModel(graph) : null), [graph]);
   const suggestions = ["Create a polished prediction dashboard", "Switch the accent color to violet", "Add validation and a clear result state", "Make it feel like a medical product"];
   const appFiles = useMemo<ScaffoldFile[]>(
     () => (uiSpec ? generateAppFiles(uiSpec, { name: modelLabel, format: modelData?.category === "deep_learning" ? "onnx" : "pickle" }, { trainingCode: code }) : []),
@@ -657,7 +702,7 @@ export function AIBuilder() {
           ) : (
             <div key="preview" className={`scroll-thin min-h-0 flex-1 overflow-auto p-5 ${previewDark ? "preview-dark" : ""}`}>
               <div className={`mx-auto pb-6 ${previewFullscreen ? "h-full max-w-full" : "max-w-4xl"}`}>
-                {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} /> : null}
+                {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} onPredict={(features) => previewModel?.predict(features) ?? null} /> : null}
               </div>
             </div>
           )}
