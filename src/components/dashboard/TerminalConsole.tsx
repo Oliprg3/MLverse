@@ -87,7 +87,7 @@ export function TerminalConsole({ lines, running }: { lines: TerminalLine[]; run
           ) : null}
         </span>
       </div>
-      <div ref={scrollRef} className="scroll-thin max-h-56 min-h-[7rem] overflow-y-auto bg-[#0b0f17] px-4 py-3 font-mono text-[12px] leading-relaxed dark:bg-black/40">
+      <div ref={scrollRef} className="scroll-thin max-h-56 min-h-[7rem] overflow-y-auto bg-[#151021] px-4 py-3 font-mono text-[12px] leading-relaxed dark:bg-black/40">
         {lines.length === 0 && !running ? (
           <p className="text-slate-500">Waiting for a run…</p>
         ) : (
@@ -108,3 +108,4 @@ export function TerminalConsole({ lines, running }: { lines: TerminalLine[]; run
 }
 
 export default TerminalConsole;
+

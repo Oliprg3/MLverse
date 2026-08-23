@@ -730,15 +730,15 @@ function CodeExplorer({
   return (
     <div className="animate-builder-panel flex min-h-0 flex-1">
       {/* Explorer rail */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#262b36] bg-[#0b0e14] md:flex">
-        <p className="border-b border-[#1c212c] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Project</p>
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#2b2340] bg-[#120e1d] md:flex">
+        <p className="border-b border-[#241d36] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Project</p>
         <div className="scroll-thin min-h-0 flex-1 overflow-y-auto p-1.5">{renderNodes(tree)}</div>
-        <p className="border-t border-[#1c212c] px-3 py-2 text-[9.5px] leading-relaxed text-slate-600">{files.length} files · regenerated from your last chat edit</p>
+        <p className="border-t border-[#241d36] px-3 py-2 text-[9.5px] leading-relaxed text-slate-600">{files.length} files · regenerated from your last chat edit</p>
       </aside>
 
       {/* Mobile file picker */}
       <div className="min-w-0 flex-1 md:hidden">
-        <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#262b36] bg-[#0b0e14] px-4 py-2 text-xs text-slate-300 outline-none">
+        <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#2b2340] bg-[#120e1d] px-4 py-2 text-xs text-slate-300 outline-none">
           {files.map((file) => (<option key={file.path} value={file.path}>{file.path}</option>))}
         </select>
         {activeFile ? <EditorBody file={activeFile} lines={lines} onDownload={() => onDownloadFile(activeFile)} /> : null}
@@ -746,8 +746,8 @@ function CodeExplorer({
 
       {/* Editor */}
       {activeFile ? (
-        <div className="hidden min-w-0 flex-1 flex-col bg-[#0d1117] md:flex">
-          <div className="flex items-center justify-between gap-3 border-b border-[#262b36] px-4 py-2">
+        <div className="hidden min-w-0 flex-1 flex-col bg-[#161126] md:flex">
+          <div className="flex items-center justify-between gap-3 border-b border-[#2b2340] px-4 py-2">
             <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-400">
               <span className="shrink-0"><FileGlyph path={activeFile.path} /></span>
               <span className="truncate font-mono">{activeFile.path}</span>
@@ -765,7 +765,7 @@ function CodeExplorer({
           <EditorBody file={activeFile} lines={lines} onDownload={() => onDownloadFile(activeFile)} />
         </div>
       ) : (
-        <div className="hidden flex-1 items-center justify-center bg-[#0d1117] text-xs text-slate-500 md:flex">No project yet — send a chat message to generate one.</div>
+        <div className="hidden flex-1 items-center justify-center bg-[#161126] text-xs text-slate-500 md:flex">No project yet — send a chat message to generate one.</div>
       )}
     </div>
   );
@@ -775,7 +775,7 @@ function EditorBody({ file, lines, onDownload }: { file: ScaffoldFile; lines: st
   void onDownload;
   return (
     <div className="scroll-thin flex min-h-0 flex-1 overflow-auto">
-      <pre aria-hidden className="sticky left-0 select-none border-r border-[#1c212c] bg-[#0b0e14] px-3 py-4 text-right font-mono text-[11.5px] leading-5 text-slate-700">
+      <pre aria-hidden className="sticky left-0 select-none border-r border-[#241d36] bg-[#120e1d] px-3 py-4 text-right font-mono text-[11.5px] leading-5 text-slate-600">
         {lines.map((_, i) => (<div key={i}>{i + 1}</div>))}
       </pre>
       <pre className="min-w-0 flex-1 whitespace-pre-wrap break-words p-4 font-mono text-[11.5px] leading-5 text-slate-300"><code>{file.content}</code></pre>
@@ -784,4 +784,5 @@ function EditorBody({ file, lines, onDownload }: { file: ScaffoldFile; lines: st
 }
 
 export default AIBuilder;
+
 
