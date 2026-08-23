@@ -655,7 +655,7 @@ export function AIBuilder() {
               onDownloadAll={() => void downloadAllAsZip()}
             />
           ) : (
-            <div key="preview" className={`scroll-thin min-h-0 flex-1 overflow-auto p-5 ${previewDark ? "dark" : ""}`}>
+            <div key="preview" className={`scroll-thin min-h-0 flex-1 overflow-auto p-5 ${previewDark ? "preview-dark" : ""}`}>
               <div className={`mx-auto pb-6 ${previewFullscreen ? "h-full max-w-full" : "max-w-4xl"}`}>
                 {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} /> : null}
               </div>

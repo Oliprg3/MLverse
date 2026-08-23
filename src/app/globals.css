@@ -327,3 +327,33 @@
   --ring: #8b5cf6;
   --input: #e2e5ea;
 }
+
+/* ── Preview dark mode — independent from app theme ────────────────── */
+.preview-dark,
+.preview-dark * {
+  color-scheme: dark;
+}
+.preview-dark {
+  --background: #0a0816;
+  --background-2: #0d0a1e;
+  --surface: #13102a;
+  --surface-2: #1a1535;
+  --card: #15112e;
+  --card-2: #1c1638;
+  --border: #2a2048;
+  --border-strong: #362c5a;
+  --foreground: #f0ecfa;
+  --foreground-2: #d4cde8;
+  --muted: #9589b8;
+  --muted-2: #6e6290;
+  --primary: #a78bfa;
+  --primary-light: #c4b5fd;
+  --accent: #c084fc;
+  --accent-2: #d8b4fe;
+  --ring: #a78bfa;
+  --input: #201a3a;
+  background-color: #0a0816;
+  background-image:
+    radial-gradient(120% 60% at 50% -8%, rgba(139, 92, 246, 0.10), transparent 55%),
+    radial-gradient(80% 50% at 80% 20%, rgba(168, 85, 247, 0.06), transparent 50%);
+}
