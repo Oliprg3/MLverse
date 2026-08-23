@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { useRouter } from "next/navigation";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -19,10 +20,10 @@ import { CanvasControls } from "./CanvasControls";
 import { NodeLibrary } from "@/components/sidebar/NodeLibrary";
 import { Header } from "@/components/navigation/Header";
 import { Inspector } from "./Inspector";
-import { IntegrationModal } from "@/components/dashboard/IntegrationModal";
 import { ResultsDrawer } from "@/components/dashboard/ResultsDrawer";
 import { CodeModal } from "@/components/dashboard/CodeModal";
 import { GuideModal } from "@/components/dashboard/GuideModal";
+import { WorkflowPanel } from "@/components/canvas/WorkflowPanel";
 import { Toast, type ToastData } from "@/components/ui/toast";
 import { getPaletteItem, hasModelNode, resolveRoute } from "@/lib/canvasConfig";
 import { generateCode, type GeneratedCode } from "@/lib/codeGen";
@@ -40,7 +41,8 @@ import type {
 const nodeTypes = { custom: CustomCanvasNode };
 
 const DEFAULT_EDGE_OPTIONS = {
-  animated: true,
+  // Animated edges keep a continuous SVG update loop alive even while idle.
+  // Static edges are clearer for this editor and substantially cheaper to render.
   type: "smoothstep",
   style: { strokeWidth: 1.75 },
   markerEnd: { type: MarkerType.ArrowClosed, color: "var(--muted-2)", width: 14, height: 14 },
@@ -122,6 +124,7 @@ function Canvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomFlowNode>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initial.edges);
   const { screenToFlowPosition, fitView } = useReactFlow();
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -130,7 +133,6 @@ function Canvas() {
   const [paletteOpen, setPaletteOpen] = useState(true);
   const [codeOpen, setCodeOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [integrationOpen, setIntegrationOpen] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<GeneratedCode | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [liveMetrics, setLiveMetrics] = useState<Record<string, number>>({});
@@ -378,7 +380,15 @@ function Canvas() {
         onTogglePalette={() => setPaletteOpen((v) => !v)}
         onGuide={() => setGuideOpen(true)}
         onCode={openCode}
-        onIntegrate={() => setIntegrationOpen(true)}
+        onBuildAI={() => {
+          try {
+            saveProject(nodes, edges);
+            setSavedProjectAvailable(true);
+            router.push("/build");
+          } catch {
+            notify("Could not prepare the pipeline for the AI builder", "warn");
+          }
+        }}
         onSave={handleSave}
         onLoad={handleLoad}
         hasSavedProject={storageReady && savedProjectAvailable}
@@ -404,7 +414,7 @@ function Canvas() {
             defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
             proOptions={{ hideAttribution: true }}
             fitView
-            fitViewOptions={{ padding: 0.28 }}
+            fitViewOptions={{ padding: 0.16, maxZoom: 1 }}
             minZoom={0.2}
             maxZoom={2}
             deleteKeyCode={["Backspace", "Delete"]}
@@ -413,10 +423,10 @@ function Canvas() {
             <CanvasControls />
           </ReactFlow>
 
-          <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-lg border border-border bg-surface/90 px-3 py-2 shadow-sm backdrop-blur-md">
-            <span className={hasModel ? "h-2 w-2 rounded-full bg-emerald-400" : "h-2 w-2 rounded-full bg-amber-400"} />
-            <span className="text-[11px] font-medium text-foreground-2">{hasModel ? "Pipeline ready" : "Add a model to run"}</span>
-            <span className="hidden text-[10px] text-muted sm:inline">{nodes.length} steps · {edges.length} connections</span>
+          <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-border bg-surface/95 px-3 py-2 shadow-sm backdrop-blur-md">
+            <span className={hasModel ? "h-1.5 w-1.5 rounded-full bg-emerald-400" : "h-1.5 w-1.5 rounded-full bg-amber-400"} />
+            <span className="text-[11px] font-medium text-foreground-2">{hasModel ? "Ready" : "Incomplete"}</span>
+            <span className="text-[10px] text-muted">{nodes.length} steps · {edges.length} connections</span>
           </div>
 
           {isDragActive ? (
@@ -451,7 +461,11 @@ function Canvas() {
           />
         </main>
 
-        {selectedNode ? <Inspector node={selectedNode} onClose={closeInspector} /> : null}
+        {selectedNode ? (
+          <Inspector node={selectedNode} onClose={closeInspector} />
+        ) : (
+          <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel} onExecute={handleExecute} onCode={openCode} />
+        )}
       </div>
 
       <CodeModal
@@ -465,12 +479,6 @@ function Canvas() {
         onNotify={notify}
       />
       <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
-      <IntegrationModal
-        open={integrationOpen}
-        onClose={() => setIntegrationOpen(false)}
-        graph={buildPayload()}
-        onNotify={notify}
-      />
       <Toast toast={toast} onDone={() => setToast(null)} />
     </div>
   );
