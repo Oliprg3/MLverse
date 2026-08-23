@@ -12,7 +12,6 @@ import {
   Robot,
   Rocket,
   SidebarSimple,
-  SquaresFour,
   Sun,
   Trash,
   UploadSimple,
@@ -91,12 +90,9 @@ export function Header({
           {paletteOpen ? <SidebarSimple size={18} /> : <SidebarSimple size={18} weight="light" />}
         </Button>
 
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/20">
-          <SquaresFour size={16} weight="bold" className="text-white" />
-        </div>
+        <img src="/logo.png" alt="MLverse" className="h-6 w-auto" />
 
         <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
-          <span className="font-bold tracking-tight text-foreground">MLverse</span>
           <CaretRight className="h-3.5 w-3.5 shrink-0 text-muted" />
           <span className="hidden text-muted-2 sm:inline">Canvas</span>
           <CaretRight className="hidden h-3.5 w-3.5 shrink-0 text-muted xl:block" />
