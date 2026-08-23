@@ -258,10 +258,19 @@ function Canvas() {
         const additions = autoConnectChain({
           nodes: nodes.map((n) => ({ id: n.id, type: n.data.type, category: n.data.category, x: n.position.x })),
           edges: edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
-        }).filter((addition) => !edges.some((e) => e.source === addition.source && e.target === addition.target));
+        });
         if (additions.length > 0) {
-          setEdges((eds) => eds.concat(additions.map((a) => ({ id: `${a.id}-${Date.now()}`, source: a.source, target: a.target, ...DEFAULT_EDGE_OPTIONS }))));
-          notify(`Connected ${additions.length} missing link${additions.length === 1 ? "" : "s"}`);
+          // Dedupe inside the updater — "Fix all" fires this several times
+          // against a stale closure, and without this the same link is added twice.
+          let applied = 0;
+          setEdges((eds) => {
+            const seen = new Set(eds.map((e) => `${e.source}->${e.target}`));
+            const fresh = additions.filter((a) => !seen.has(`${a.source}->${a.target}`));
+            if (fresh.length === 0) return eds;
+            applied = fresh.length;
+            return eds.concat(fresh.map((a) => ({ id: `${a.id}-${Date.now()}`, source: a.source, target: a.target, ...DEFAULT_EDGE_OPTIONS })));
+          });
+          notify(applied > 0 ? `Connected ${applied} missing link${applied === 1 ? "" : "s"}` : "Nothing left to connect");
         } else {
           notify("Nothing left to connect");
         }

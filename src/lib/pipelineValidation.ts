@@ -45,6 +45,8 @@ const CATEGORY_ORDER: Record<string, number> = {
 /**
  * Wire a canonical data → preprocessing → model → visualization chain between
  * whatever stages exist, skipping links that are already present.
+ * classic_ml and deep_learning are treated as one "model" stage so deep
+ * learning pipelines get wired too.
  */
 export function autoConnectChain(fragment: GraphFragment): Array<{ id: string; source: string; target: string }> {
   const ordered = [...fragment.nodes].sort((a, b) => {
@@ -54,25 +56,34 @@ export function autoConnectChain(fragment: GraphFragment): Array<{ id: string; s
   const existing = new Set(fragment.edges.map((e) => `${e.source}->${e.target}`));
   const additions: Array<{ id: string; source: string; target: string }> = [];
   let counter = fragment.edges.length;
-  const lastOfStage = new Map<string, string>();
 
+  const modelStageOf = (category: string) => (category === "classic_ml" || category === "deep_learning" ? "model" : category);
+
+  // Chain within the same exact category (scaler → pca …).
+  const lastOfCategory = new Map<string, string>();
   for (const node of ordered) {
-    const prev = lastOfStage.get(node.category);
-    if (prev) {
-      // Chain within the same stage (scaler → pca …).
-      if (!existing.has(`${prev}->${node.id}`)) {
-        additions.push({ id: `autofix-${++counter}`, source: prev, target: node.id });
-        existing.add(`${prev}->${node.id}`);
-      }
+    const prev = lastOfCategory.get(node.category);
+    if (prev && !existing.has(`${prev}->${node.id}`)) {
+      additions.push({ id: `autofix-${++counter}`, source: prev, target: node.id });
+      existing.add(`${prev}->${node.id}`);
     }
-    lastOfStage.set(node.category, node.id);
+    lastOfCategory.set(node.category, node.id);
   }
 
-  const stageSeq = ["data", "preprocessing", "classic_ml", "visualization"].filter((s) => lastOfStage.has(s));
+  // Wire stage → stage (data → preprocessing → model → visualization),
+  // from the LAST node of each stage into the FIRST node of the next.
+  const firstOfStage = new Map<string, string>();
+  const lastOfStage = new Map<string, string>();
+  for (const node of ordered) {
+    const stage = modelStageOf(node.category);
+    if (!firstOfStage.has(stage)) firstOfStage.set(stage, node.id);
+    lastOfStage.set(stage, node.id);
+  }
+  const stageSeq = ["data", "preprocessing", "model", "visualization"].filter((s) => firstOfStage.has(s));
   for (let i = 0; i < stageSeq.length - 1; i += 1) {
     const from = lastOfStage.get(stageSeq[i])!;
-    const to = lastOfStage.get(stageSeq[i + 1])!;
-    if (!existing.has(`${from}->${to}`)) {
+    const to = firstOfStage.get(stageSeq[i + 1])!;
+    if (from !== to && !existing.has(`${from}->${to}`)) {
       additions.push({ id: `autofix-${++counter}`, source: from, target: to });
       existing.add(`${from}->${to}`);
     }
@@ -193,13 +204,17 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
   if (dataNodes.length === 0) {
     diagnostics.push({ id: "no-data", level: "error", title: "No dataset", detail: "Add a data node — every pipeline starts with a data source." });
   } else if (dataNodes.length > 1) {
+    // Prefer deleting a data source that nothing consumes — never the wired one.
+    const removable =
+      dataNodes.find((d) => (outgoing.get(d.id) ?? []).length === 0 && d !== primaryData) ??
+      dataNodes[dataNodes.length - 1];
     diagnostics.push({
       id: "multi-data",
       level: "warning",
-      nodeId: dataNodes[1].id,
+      nodeId: removable.id,
       title: `${dataNodes.length} data sources`,
       detail: "Only one dataset is used per run. Disconnect or delete the extra source.",
-      fix: { kind: "remove-node", nodeId: dataNodes[dataNodes.length - 1].id },
+      fix: { kind: "remove-node", nodeId: removable.id },
     });
   }
 
@@ -291,6 +306,8 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
       syntheticParams: primaryData.type === "data:synthetic" ? primaryData.params : undefined,
     };
 
+    let missingReported = false;
+    let textReported = false;
     for (const node of [...preNodes, ...modelNodes]) {
       const upstream = ancestorsOf(node.id);
       if (!upstream.has(primaryData.id)) continue;
@@ -327,7 +344,8 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
 
       if (facts.csv && node.category !== "visualization") {
         const { textColumns, missingCells, sampledRows } = inspectCsv(facts.csv);
-        if (textColumns.length > 0) {
+        if (textColumns.length > 0 && !textReported) {
+          textReported = true;
           diagnostics.push({
             id: `csv-text-${node.id}`,
             level: "error",
@@ -336,7 +354,8 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
             detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Drop the column in your source file, or re-upload an encoded version — this one needs a human decision.`,
           });
         }
-        if (missingCells > 0 && !preNodes.some((p) => p.type === "pre:impute")) {
+        if (missingCells > 0 && !preNodes.some((p) => p.type === "pre:impute") && !missingReported) {
+          missingReported = true;
           diagnostics.push({
             id: `csv-missing-${node.id}`,
             level: "warning",
