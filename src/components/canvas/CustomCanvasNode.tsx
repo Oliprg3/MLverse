@@ -5,7 +5,7 @@
 
 import { memo } from "react";
 import { Handle, Position, useReactFlow, type Node, type NodeProps } from "@xyflow/react";
-import { Trash2, UploadCloud, FileSpreadsheet } from "lucide-react";
+import { Trash, CloudArrowUp, FileCsv } from "@phosphor-icons/react";
 import { resolveIcon } from "@/lib/icons";
 import { getCategory } from "@/lib/canvasConfig";
 import type { CsvDataset, ImageDataset, MLNodeData } from "@/lib/types";
@@ -59,12 +59,12 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
           selected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
         )}
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash size={13} />
       </button>
 
       {/* Header — bare icon glyph (no box/border/tint) */}
       <div className="flex items-center gap-2.5 pl-2">
-        <Icon className="h-[18px] w-[18px] shrink-0" style={{ color: accent }} strokeWidth={1.75} />
+        <Icon size={18} weight="regular" style={{ color: accent }} className="shrink-0" />
         <div className="min-w-0">
           <h3 className="truncate text-[13px] font-semibold leading-tight tracking-tight text-foreground">{data.label}</h3>
           <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-muted">{category.label}</p>
@@ -76,7 +76,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
         {isCsv ? (
           csv ? (
             <div className="flex items-center gap-2 rounded-md bg-foreground/[0.04] px-2 py-1.5">
-              <FileSpreadsheet className="h-3.5 w-3.5 shrink-0 text-muted-2" />
+              <FileCsv size={14} weight="regular" className="shrink-0 text-muted-2" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[11px] font-medium text-foreground-2">{csv.filename}</div>
                 <div className="font-mono text-[9.5px] text-muted">{csv.nrows.toLocaleString()} rows · {csv.columns.length} cols</div>
@@ -84,7 +84,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
               <span className="rounded bg-foreground/[0.06] px-1.5 py-0.5 font-mono text-[9px] text-muted-2">{csv.targetColumn}</span>
             </div>
           ) : (
-            <UploadHint icon={<UploadCloud className="h-3.5 w-3.5" />} text="Click to import CSV" />
+            <UploadHint icon={<CloudArrowUp size={14} />} text="Click to import CSV" />
           )
         ) : isImage ? (
           images ? (
@@ -98,7 +98,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
                 </div>
               ) : null}
               <div className="flex items-center gap-2 rounded-md bg-foreground/[0.04] px-2 py-1.5">
-                <FileSpreadsheet className="h-3.5 w-3.5 shrink-0 text-muted-2" />
+                <FileCsv size={14} weight="regular" className="shrink-0 text-muted-2" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[11px] font-medium text-foreground-2">{images.nsamples} images</div>
                   <div className="font-mono text-[9.5px] text-muted">{images.width}×{images.height} · {images.classNames.length} classes</div>
@@ -106,7 +106,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
               </div>
             </div>
           ) : (
-            <UploadHint icon={<UploadCloud className="h-3.5 w-3.5" />} text="Click to import images" />
+            <UploadHint icon={<CloudArrowUp size={14} />} text="Click to import images" />
           )
         ) : data.description ? (
           <p className="line-clamp-1 text-[11px] leading-snug text-muted-2">{data.description}</p>
@@ -134,3 +134,4 @@ function UploadHint({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 export const CustomCanvasNode = memo(CustomCanvasNodeBase);
 export default CustomCanvasNode;
+

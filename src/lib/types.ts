@@ -53,7 +53,7 @@ export interface PaletteItem {
   label: string;
   description: string;
   category: NodeCategory;
-  /** lucide-react icon name, resolved at runtime. */
+  /** Icon registry name, resolved at runtime by lib/icons. */
   icon: string;
   accent: string;
   params?: NodeParam[];

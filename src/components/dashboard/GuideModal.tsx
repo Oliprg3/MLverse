@@ -1,16 +1,16 @@
 "use client";
 
 import {
-  BrainCircuit,
-  Code2,
+  Brain,
+  Code,
   Database,
+  FlowArrow,
+  Gear,
   Lightbulb,
-  MousePointerClick,
+  CursorClick,
   Play,
-  Settings2,
   SlidersHorizontal,
-  Workflow,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { Modal } from "@/components/ui/modal";
 
 interface GuideModalProps {
@@ -21,11 +21,11 @@ interface GuideModalProps {
 const STEPS = [
   { icon: Database, title: "1 · Add a data source", body: "Drag a node from the left panel — a built-in dataset, your own CSV, or an image folder (sub-folders = classes)." },
   { icon: SlidersHorizontal, title: "2 · Preprocess", body: "Optionally chain a Scaler, PCA, Polynomial Features, or Imputer between your data and the model." },
-  { icon: BrainCircuit, title: "3 · Choose a model", body: "Pick from the full scikit-learn suite (trains instantly on the CPU) or a PyTorch architecture (runs on Colab GPU)." },
-  { icon: MousePointerClick, title: "4 · Wire the graph", body: "Drag from a node's right handle to the next node's left handle to connect the pipeline." },
-  { icon: Settings2, title: "5 · Configure", body: "Click any node to open the inspector and tune hyperparameters or upload data." },
+  { icon: Brain, title: "3 · Choose a model", body: "Pick from the full scikit-learn suite (trains instantly on the CPU) or a PyTorch architecture (runs on Colab GPU)." },
+  { icon: CursorClick, title: "4 · Wire the graph", body: "Drag from a node's right handle to the next node's left handle to connect the pipeline." },
+  { icon: Gear, title: "5 · Configure", body: "Click any node to open the inspector and tune hyperparameters or upload data." },
   { icon: Play, title: "6 · Run", body: "Hit the action button. Classic ML returns live Plotly dashboards; deep learning exports a Colab notebook." },
-  { icon: Code2, title: "7 · Export", body: "Open Code to view, copy, or download the real Python generated from your canvas." },
+  { icon: Code, title: "7 · Export", body: "Open Code to view, copy, or download the real Python generated from your canvas." },
 ];
 
 export function GuideModal({ open, onClose }: GuideModalProps) {
@@ -34,7 +34,7 @@ export function GuideModal({ open, onClose }: GuideModalProps) {
       <div className="space-y-3 p-5">
         <div className="rounded-lg border border-border bg-muted/40 p-4">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Workflow className="h-4 w-4 text-primary" />
+            <FlowArrow size={16} className="text-primary" />
             The hybrid execution engine
           </div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
@@ -48,7 +48,7 @@ export function GuideModal({ open, onClose }: GuideModalProps) {
           {STEPS.map((s) => (
             <div key={s.title} className="group rounded-lg border border-border p-3.5 transition-colors hover:border-muted-foreground/40">
               <div className="flex items-center gap-2.5">
-                <s.icon className="h-4 w-4 shrink-0 text-muted-2" strokeWidth={1.75} />
+                <s.icon size={16} weight="regular" className="shrink-0 text-muted-2" />
                 <h3 className="text-[13px] font-semibold text-foreground">{s.title}</h3>
               </div>
               <p className="mt-2 text-[12.5px] leading-relaxed text-muted-foreground">{s.body}</p>
@@ -69,3 +69,4 @@ export function GuideModal({ open, onClose }: GuideModalProps) {
 }
 
 export default GuideModal;
+

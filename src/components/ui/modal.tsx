@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface ModalProps {
@@ -54,7 +54,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, classN
               className="-mr-1 shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
               aria-label="Close"
             >
-              <X className="h-4 w-4" />
+              <X size={14} weight="bold" />
             </button>
           </div>
         )}
@@ -66,3 +66,4 @@ export function Modal({ open, onClose, title, subtitle, children, footer, classN
 }
 
 export default Modal;
+

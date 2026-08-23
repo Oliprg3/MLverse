@@ -1,12 +1,33 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  ArrowsCounterClockwise,
+  CaretDown,
+  ChatCenteredDots,
+  Check,
+  CircleNotch,
+  Code,
+  Copy,
+  DownloadSimple,
+  FilePy,
+  Monitor,
+  PaperPlaneRight,
+  PencilSimple,
+  Robot,
+  Sparkle,
+} from "@phosphor-icons/react";
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
 import { generateCode } from "@/lib/codeGen";
 import type { GraphPayload, MLNodeData } from "@/lib/types";
 
-type BuilderMessage = { role: "user" | "assistant"; content: string };
+type BuilderMessage = {
+  role: "user" | "assistant";
+  content: string;
+  versionId?: string;
+};
 
 type UiField = { key: string; label: string; type: "number" | "text" | "select"; placeholder?: string; options?: string[] };
 type UiSpec = {
@@ -23,52 +44,17 @@ type UiSpec = {
   insight: { title: string; description: string };
 };
 
-type IconName = "arrow" | "spark" | "send" | "code" | "preview" | "copy" | "file" | "check" | "download" | "shield" | "activity";
+type SpecVersion = { id: string; label: string; at: number; spec: UiSpec };
 
-function BuilderIcon({ name, size = 16 }: { name: IconName; size?: number }) {
-  const paths: Record<IconName, React.ReactNode> = {
-    arrow: <><path d="m10 17-5-5 5-5" /><path d="M5 12h10" /></>,
-    spark: <><path d="m12 3-1.4 5.1L6 10l4.6 1.9L12 17l1.4-5.1L18 10l-4.6-1.9L12 3Z" /><path d="m19 15-.6 2.4L16 18l2.4.6L19 21l.6-2.4L22 18l-2.4-.6L19 15Z" /></>,
-    send: <><path d="m21 3-7.5 18-3.2-7.3L3 10.5 21 3Z" /><path d="M10.3 13.7 15 9" /></>,
-    code: <><path d="m8 9-3 3 3 3" /><path d="m16 9 3 3-3 3" /><path d="m14 5-4 14" /></>,
-    preview: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 8h18M7 6h.01M10 6h.01M13 6h.01" /></>,
-    copy: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></>,
-    file: <><path d="M6 3h8l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v5h5M8 13h8M8 17h6" /></>,
-    check: <><path d="m5 12 4 4L19 6" /></>,
-    download: <><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></>,
-    shield: <><path d="M12 3 5 6v5c0 4.4 3 8.4 7 10 4-1.6 7-5.6 7-10V6l-7-3Z" /></>,
-    activity: <><path d="M3 12h4l2-7 4 14 2-7h6" /></>,
-  };
-  return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
-}
+const SESSION_KEY = "neuralforge:aibuilder:v1";
 
-/** Static class sets per accent — Tailwind needs literal classes. */
-const ACCENTS = {
-  sky: {
-    text: "text-sky-600 dark:text-sky-400",
-    chip: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300",
-    soft: "bg-sky-500/10",
-    solid: "bg-sky-600 hover:bg-sky-500 text-white",
-    dot: "bg-sky-500",
-    glow: "shadow-[0_8px_30px_-12px_rgba(14,165,233,0.45)]",
-  },
-  violet: {
-    text: "text-violet-600 dark:text-violet-400",
-    chip: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300",
-    soft: "bg-violet-500/10",
-    solid: "bg-violet-600 hover:bg-violet-500 text-white",
-    dot: "bg-violet-500",
-    glow: "shadow-[0_8px_30px_-12px_rgba(139,92,246,0.45)]",
-  },
-  emerald: {
-    text: "text-emerald-600 dark:text-emerald-400",
-    chip: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-    soft: "bg-emerald-500/10",
-    solid: "bg-emerald-600 hover:bg-emerald-500 text-white",
-    dot: "bg-emerald-500",
-    glow: "shadow-[0_8px_30px_-12px_rgba(16,185,129,0.45)]",
-  },
-} as const;
+/** Agent phases shown while a request is in flight. */
+const AGENT_STEPS = [
+  { label: "Reading saved pipeline", hint: "nodes · params · dataset context" },
+  { label: "Drafting interface spec", hint: "layout · copy · field structure" },
+  { label: "Validating fields", hint: "types · options · empty states" },
+  { label: "Applying changes", hint: "hot-swapping the live preview" },
+];
 
 function toGraph(project: SavedProject): GraphPayload {
   return {
@@ -117,6 +103,11 @@ function defaultSpec(modelName: string, format: string): UiSpec {
 
 /** Renders the UiSpec as a believable website inside a browser-chrome frame. */
 function AppPreview({ spec }: { spec: UiSpec }) {
+  const ACCENTS = {
+    sky: { text: "text-sky-600 dark:text-sky-400", chip: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300", soft: "bg-sky-500/10", solid: "bg-sky-600 hover:bg-sky-500 text-white", dot: "bg-sky-500", glow: "shadow-[0_8px_30px_-12px_rgba(14,165,233,0.45)]" },
+    violet: { text: "text-violet-600 dark:text-violet-400", chip: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300", soft: "bg-violet-500/10", solid: "bg-violet-600 hover:bg-violet-500 text-white", dot: "bg-violet-500", glow: "shadow-[0_8px_30px_-12px_rgba(139,92,246,0.45)]" },
+    emerald: { text: "text-emerald-600 dark:text-emerald-400", chip: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300", soft: "bg-emerald-500/10", solid: "bg-emerald-600 hover:bg-emerald-500 text-white", dot: "bg-emerald-500", glow: "shadow-[0_8px_30px_-12px_rgba(16,185,129,0.45)]" },
+  } as const;
   const a = ACCENTS[spec.accent] ?? ACCENTS.sky;
   const [values, setValues] = useState<Record<string, string>>({});
   const [ran, setRan] = useState(false);
@@ -140,7 +131,7 @@ function AppPreview({ spec }: { spec: UiSpec }) {
       {/* Site nav */}
       <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
         <span className="flex items-center gap-2 text-sm font-semibold">
-          <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${a.soft} ${a.text}`}><BuilderIcon name="spark" size={13} /></span>
+          <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${a.soft} ${a.text}`}><Sparkle size={13} weight="fill" /></span>
           {spec.brand}
         </span>
         <nav className="hidden items-center gap-5 sm:flex">
@@ -203,7 +194,7 @@ function AppPreview({ spec }: { spec: UiSpec }) {
               onClick={() => setRan(true)}
               className={`mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all active:scale-[0.98] ${a.solid}`}
             >
-              <BuilderIcon name={ran ? "check" : "spark"} size={14} /> {ran ? "Prediction complete" : spec.submitLabel}
+              {ran ? <Check size={14} weight="bold" /> : <Sparkle size={14} weight="fill" />} {ran ? "Prediction complete" : spec.submitLabel}
             </button>
           </div>
         </div>
@@ -222,7 +213,7 @@ function AppPreview({ spec }: { spec: UiSpec }) {
             {spec.features.map((feature) => (
               <div key={feature.title} className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3.5 transition-colors hover:border-border-strong">
                 <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${a.soft} ${a.text}`}>
-                  <BuilderIcon name={feature.icon === "shield" ? "shield" : feature.icon === "activity" ? "activity" : "spark"} size={14} />
+                  {feature.icon === "shield" ? <Monitor size={14} /> : feature.icon === "activity" ? <Code size={14} /> : <Sparkle size={14} weight="fill" />}
                 </span>
                 <div>
                   <p className="text-xs font-semibold">{feature.title}</p>
@@ -245,58 +236,142 @@ export function AIBuilder() {
   const [draft, setDraft] = useState("");
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
   const [loading, setLoading] = useState(false);
+  const [agentStep, setAgentStep] = useState(0);
   const [notice, setNotice] = useState("");
   const [uiSpec, setUiSpec] = useState<UiSpec | null>(null);
+  const [versions, setVersions] = useState<SpecVersion[]>([]);
   const [previewNonce, setPreviewNonce] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(true);
+  const [typedText, setTypedText] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typeTimerRef = useRef<number | null>(null);
 
+  // Restore session (thread + versions) when it matches the saved project.
   useEffect(() => {
-    const saved = loadProject();
-    setProject(saved);
-    if (saved) {
+    let cancelled = false;
+    void (async () => {
+      const saved = loadProject();
+      if (cancelled || !saved) return;
+      setProject(saved);
       const generated = generateCode(toGraph(saved));
       setCode(generated.code);
       setFilename(generated.filename);
       const modelNode = saved.nodes.find((node) => (node.data as MLNodeData).category === "classic_ml" || (node.data as MLNodeData).category === "deep_learning");
-      setUiSpec(defaultSpec((modelNode?.data as MLNodeData | undefined)?.label ?? "Saved model", (modelNode?.data as MLNodeData | undefined)?.category === "deep_learning" ? "onnx" : "pickle"));
-    }
+      const base = defaultSpec((modelNode?.data as MLNodeData | undefined)?.label ?? "Saved model", (modelNode?.data as MLNodeData | undefined)?.category === "deep_learning" ? "onnx" : "pickle");
+      try {
+        const raw = window.sessionStorage.getItem(SESSION_KEY);
+        if (raw) {
+          const session = JSON.parse(raw) as { projectTitle?: string; messages?: BuilderMessage[]; versions?: SpecVersion[] };
+          if (session.projectTitle === saved.title && Array.isArray(session.versions) && session.versions.length > 0 && typeof session.versions[0]?.spec?.title === "string") {
+            if (cancelled) return;
+            setMessages(session.messages ?? []);
+            setVersions(session.versions);
+            setUiSpec(session.versions[session.versions.length - 1].spec);
+            return;
+          }
+        }
+      } catch {
+        /* corrupted session — fall through to defaults */
+      }
+      if (cancelled) return;
+      setUiSpec(base);
+      setVersions([{ id: "v0", label: "Initial layout", at: Date.now(), spec: base }]);
+    })();
+    return () => { cancelled = true; };
   }, []);
+
+  // Persist thread + versions per project.
+  useEffect(() => {
+    if (!project || versions.length === 0) return;
+    try {
+      window.sessionStorage.setItem(SESSION_KEY, JSON.stringify({ projectTitle: project.title, messages, versions }));
+    } catch {
+      /* storage full or unavailable */
+    }
+  }, [project, messages, versions]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, typedText]);
+
+  // Simulated agent activity while the request is in flight.
+  useEffect(() => {
+    if (!loading) return;
+    setAgentStep(0);
+    const timer = window.setInterval(() => {
+      setAgentStep((step) => Math.min(step + 1, AGENT_STEPS.length - 1));
+    }, 850);
+    return () => window.clearInterval(timer);
+  }, [loading]);
 
   const graph = useMemo(() => project ? toGraph(project) : null, [project]);
   const modelNode = project?.nodes.find((node) => (node.data as MLNodeData).category === "classic_ml" || (node.data as MLNodeData).category === "deep_learning");
   const modelData = modelNode?.data as MLNodeData | undefined;
   const modelLabel = modelData?.label ?? "Saved model";
   const model = modelData ? { name: modelData.label, format: "pickle" as const, size: 0 } : null;
-  const suggestions = ["Create a polished prediction dashboard", "Switch the accent color to violet", "Add validation and a clear result state"];
+  const suggestions = ["Create a polished prediction dashboard", "Switch the accent color to violet", "Add validation and a clear result state", "Make it feel like a medical product"];
+
+  /** Reveal the reply progressively so responses feel streamed. */
+  const typewrite = useCallback((full: string) => {
+    if (typeTimerRef.current) window.clearInterval(typeTimerRef.current);
+    let shown = 0;
+    setTypedText(full.slice(0, 0));
+    typeTimerRef.current = window.setInterval(() => {
+      shown += Math.max(2, Math.round(full.length / 48));
+      if (shown >= full.length) {
+        window.clearInterval(typeTimerRef.current!);
+        typeTimerRef.current = null;
+        setTypedText(null);
+        setMessages((current) => current.map((m, i) => i === current.length - 1 && m.role === "assistant" ? { ...m, content: full } : m));
+      } else {
+        setTypedText(full.slice(0, shown));
+      }
+    }, 18);
+  }, []);
+
+  useEffect(() => () => { if (typeTimerRef.current) window.clearInterval(typeTimerRef.current); }, []);
 
   const send = async (suggestion?: string) => {
     const message = (suggestion ?? draft).trim();
-    if (!message || !model || !graph || loading) return;
+    if (!message || !model || !graph || loading || uiSpec === null) return;
     const next = [...messages, { role: "user" as const, content: message }];
     setMessages(next);
     setDraft("");
     setLoading(true);
-    setNotice("Designing a new interface from your saved pipeline…");
+    setNotice("Agent is redesigning from your saved pipeline…");
     try {
       // currentUi lets the model iterate on what is already rendered in Preview.
       const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, model, history: next, currentUi: uiSpec ?? undefined }) });
       const result = (await response.json()) as { reply?: string; ui?: UiSpec; error?: string };
       if (!response.ok) throw new Error(result.error ?? "The AI builder could not respond.");
-      setMessages((current) => [...current, { role: "assistant", content: result.reply ?? "I updated the app direction." }]);
-      if (result.ui) { setUiSpec(result.ui); setPreviewNonce((n) => n + 1); }
+      const reply = result.reply ?? "I updated the app direction.";
+      let versionId: string | undefined;
+      if (result.ui) {
+        versionId = `v${versions.length}`;
+        const version: SpecVersion = { id: versionId, label: message.length > 42 ? `${message.slice(0, 42)}…` : message, at: Date.now(), spec: result.ui };
+        setVersions((current) => [...current, version]);
+        setUiSpec(result.ui);
+        setPreviewNonce((n) => n + 1);
+      }
+      setMessages((current) => [...current, { role: "assistant", content: "", ...(versionId ? { versionId } : {}) }]);
       setActiveTab("preview");
       setNotice(result.ui?.title ? `Live preview updated · ${result.ui.title}` : "Live preview updated");
+      typewrite(reply);
     } catch (error) {
       setMessages((current) => [...current, { role: "assistant", content: error instanceof Error ? error.message : "The AI builder failed." }]);
       setNotice("The request could not be completed");
     } finally {
       setLoading(false);
     }
+  };
+
+  const restoreVersion = (version: SpecVersion) => {
+    if (loading) return;
+    setUiSpec(version.spec);
+    setPreviewNonce((n) => n + 1);
+    setActiveTab("preview");
+    setNotice(`Restored checkpoint · ${version.label}`);
   };
 
   const regenerateCode = async () => {
@@ -348,12 +423,12 @@ export function AIBuilder() {
         <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/[0.06] blur-3xl" />
         <div className="animate-builder-panel relative w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-500 shadow-[0_0_24px_-6px_rgba(16,185,129,0.5)]">
-            <BuilderIcon name="spark" size={22} />
+            <Robot size={22} />
           </div>
           <h1 className="mt-5 text-xl font-bold tracking-tight">Build with AI</h1>
           <p className="mt-2 text-sm leading-6 text-muted">Save a pipeline with a model node from the canvas first. The builder turns that saved graph into a working app you refine through chat.</p>
-          <Link href="/" className="mt-6 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 px-4 py-2 text-sm font-medium text-emerald-500 transition-colors hover:border-emerald-500/70 hover:bg-emerald-500/10">
-            <BuilderIcon name="arrow" /> Back to canvas
+          <Link href="/canvas" className="mt-6 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 px-4 py-2 text-sm font-medium text-emerald-500 transition-colors hover:border-emerald-500/70 hover:bg-emerald-500/10">
+            <ArrowLeft size={15} weight="bold" /> Back to canvas
           </Link>
         </div>
       </div>
@@ -365,13 +440,13 @@ export function AIBuilder() {
       {/* Header */}
       <header className="glass-panel sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href="/" aria-label="Back to canvas" title="Back to canvas" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-border-strong hover:text-foreground">
-            <BuilderIcon name="arrow" />
+          <Link href="/canvas" aria-label="Back to canvas" title="Back to canvas" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-border-strong hover:text-foreground">
+            <ArrowLeft size={14} weight="bold" />
           </Link>
           <div className="h-5 w-px bg-border" />
           <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-sm"><BuilderIcon name="spark" size={13} /></span>
-            <span className="truncate text-sm font-semibold">Build with AI</span>
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-sm"><Robot size={13} weight="fill" /></span>
+            <span className="truncate text-sm font-semibold">AI Builder</span>
             <span className="hidden max-w-52 truncate rounded-md border border-border bg-surface px-2 py-0.5 text-[11px] text-muted sm:inline">{project.title}</span>
           </div>
         </div>
@@ -379,45 +454,83 @@ export function AIBuilder() {
           <span className="hidden items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] text-muted md:inline-flex">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> {modelLabel} · {formatBytes(model.size)}
           </span>
+          <button type="button" onClick={() => setHistoryOpen((open) => !open)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-foreground-2 transition-all hover:border-border-strong hover:text-foreground active:scale-[0.98]">
+            <ArrowsCounterClockwise size={13} /> Checkpoints
+            <CaretDown size={10} className={`transition-transform duration-200 ${historyOpen ? "" : "-rotate-90"}`} />
+          </button>
           <button type="button" onClick={regenerateCode} disabled={loading} className="inline-flex h-8 items-center gap-2 rounded-lg border border-border px-3 text-xs font-medium text-foreground-2 transition-all hover:border-border-strong hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]">
-            <BuilderIcon name="code" size={14} /> Generate code
+            <Code size={14} /> Generate code
           </button>
         </div>
       </header>
 
+      {/* Checkpoints strip */}
+      {historyOpen ? (
+        <div className="scroll-thin flex shrink-0 items-center gap-2 overflow-x-auto border-b border-border bg-surface/60 px-4 py-2">
+          {versions.map((version, index) => {
+            const active = uiSpec !== null && index === versions.length - 1;
+            return (
+              <button key={version.id} type="button" onClick={() => restoreVersion(version)} title={`Restore "${version.label}"`} className={`group flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium transition-all ${active ? "border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-500" : "border-border text-muted hover:border-border-strong hover:text-foreground"}`}>
+                <span className="font-mono">{version.id}</span>
+                <span className="max-w-40 truncate">{version.label}</span>
+                {index > 0 ? <ArrowsCounterClockwise size={9} className="opacity-0 transition-opacity group-hover:opacity-100" /> : null}
+              </button>
+            );
+          })}
+          {versions.length <= 1 ? <span className="shrink-0 text-[10px] text-muted-2">Every AI edit creates a restore point here.</span> : null}
+        </div>
+      ) : null}
+
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* Chat column */}
-        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border bg-surface lg:w-[360px] lg:border-b-0 lg:border-r">
+        {/* Agent column */}
+        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border bg-surface lg:w-[380px] lg:border-b-0 lg:border-r">
           <div className="border-b border-border px-5 py-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-              <span className="flex h-5 items-center rounded-md bg-gradient-to-r from-emerald-500/15 to-teal-500/15 px-1.5 font-mono text-[9px] text-emerald-500">AI</span>
-              App builder
+              <span className="flex h-5 items-center rounded-md bg-gradient-to-r from-emerald-500/15 to-teal-500/15 px-1.5 font-mono text-[9px] text-emerald-500">AGENT</span>
+              Session
             </div>
-            <p className="mt-1.5 text-xs leading-5 text-muted">Describe changes — the live preview updates with every reply.</p>
+            <p className="mt-1.5 text-xs leading-5 text-muted">Describe changes like you would to an engineer — the preview updates with every reply.</p>
           </div>
 
           <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 py-4">
             {messages.length === 0 ? (
               <div className="animate-builder-message rounded-xl border border-dashed border-border-strong bg-card/60 p-4">
-                <p className="flex items-center gap-2 text-xs font-semibold"><BuilderIcon name="spark" size={13} /> Start with a direction</p>
+                <p className="flex items-center gap-2 text-xs font-semibold"><ChatCenteredDots size={14} /> Start with a direction</p>
                 <p className="mt-1.5 text-xs leading-5 text-muted">Your saved pipeline is attached as context. Ask for layout, copy, or interaction changes.</p>
               </div>
             ) : null}
-            {messages.map((message, index) => (
-              <div key={`${message.role}-${index}`} className={`animate-builder-message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[90%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-xs leading-5 shadow-sm ${message.role === "user" ? "rounded-br-md bg-gradient-to-br from-emerald-600 to-teal-600 text-white" : "rounded-bl-md border border-border bg-card text-foreground-2"}`}>
-                  {message.content}
+            {messages.map((message, index) => {
+              const isLastAssistantTyping = typedText !== null && index === messages.length - 1 && message.role === "assistant";
+              const text = isLastAssistantTyping ? typedText : message.content;
+              return (
+                <div key={`${message.role}-${index}`} className={`animate-builder-message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[90%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-xs leading-5 shadow-sm ${message.role === "user" ? "rounded-br-md bg-gradient-to-br from-emerald-600 to-teal-600 text-white" : "rounded-bl-md border border-border bg-card text-foreground-2"}`}>
+                    {text}
+                    {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse rounded-sm bg-emerald-400 align-middle" /> : null}
+                    {message.versionId && !isLastAssistantTyping ? (
+                      <span className="mt-2 block">
+                        <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/[0.06] px-1.5 py-0.5 font-mono text-[9px] text-emerald-500"><PencilSimple size={9} /> applied {message.versionId}</span>
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {loading ? (
-              <div className="animate-builder-message flex items-center gap-2 text-xs text-muted">
-                <span className="flex gap-1">
-                  <span className="animate-dot-bounce h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  <span className="animate-dot-bounce h-1.5 w-1.5 rounded-full bg-emerald-500" style={{ animationDelay: "120ms" }} />
-                  <span className="animate-dot-bounce h-1.5 w-1.5 rounded-full bg-emerald-500" style={{ animationDelay: "240ms" }} />
-                </span>
-                Working from model context…
+              <div className="animate-builder-message space-y-1.5 rounded-xl border border-border bg-card/70 p-3">
+                {AGENT_STEPS.map((step, index) => {
+                  const done = index < agentStep;
+                  const active = index === agentStep;
+                  return (
+                    <div key={step.label} className={`flex items-start gap-2 text-[11px] transition-colors duration-300 ${done ? "text-muted" : active ? "text-foreground" : "text-muted-2 opacity-50"}`}>
+                      {done ? <Check size={12} weight="bold" className="mt-0.5 shrink-0 text-emerald-500" /> : active ? <CircleNotch size={12} className="mt-0.5 shrink-0 animate-spin text-emerald-500" /> : <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-border-strong" />}
+                      <span className="min-w-0">
+                        <span className="font-medium">{step.label}</span>
+                        {active ? <span className="ml-1.5 font-mono text-[9px] text-muted-2">{step.hint}</span> : null}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             ) : null}
           </div>
@@ -443,7 +556,7 @@ export function AIBuilder() {
               <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
                 <span className="text-[10px] text-muted-2"><kbd className="font-mono">Enter</kbd> to send · <kbd className="font-mono">Shift+Enter</kbd> newline</span>
                 <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm transition-all hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
-                  <BuilderIcon name="send" size={13} />
+                  <PaperPlaneRight size={13} weight="fill" />
                 </button>
               </div>
             </div>
@@ -466,13 +579,13 @@ export function AIBuilder() {
                   onClick={() => setActiveTab(tab)}
                   className={`flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-medium capitalize transition-all duration-200 ${activeTab === tab ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground-2"}`}
                 >
-                  <BuilderIcon name={tab === "preview" ? "preview" : "code"} size={13} /> {tab === "preview" ? "Live preview" : "Code"}
+                  {tab === "preview" ? <Monitor size={13} /> : <FilePy size={13} />} {tab === "preview" ? "Live preview" : "Code"}
                 </button>
               ))}
             </div>
             <div className="hidden items-center gap-2 md:flex">
-              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted">{graph.nodes.length} steps</span>
-              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted">{graph.edges.length} links</span>
+              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted">{versions.length} checkpoints</span>
+              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted">{graph.nodes.length} steps · {graph.edges.length} links</span>
               <span className="ml-1 hidden items-center gap-1.5 text-[10px] text-muted lg:inline-flex">
                 <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" /></span>
                 Model context attached
@@ -485,14 +598,14 @@ export function AIBuilder() {
               <div className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-[#262b36] bg-[#0d1117] shadow-xl">
                 <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
                   <div className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
-                    <BuilderIcon name="file" size={13} /> {filename}
+                    <FilePy size={13} /> {filename}
                   </div>
                   <div className="flex items-center gap-1">
                     <button type="button" onClick={() => void copyCode()} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white">
-                      <BuilderIcon name={copied ? "check" : "copy"} size={12} /> {copied ? "Copied" : "Copy"}
+                      {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />} {copied ? "Copied" : "Copy"}
                     </button>
                     <button type="button" onClick={downloadCode} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white">
-                      <BuilderIcon name="download" size={12} /> Download
+                      <DownloadSimple size={12} /> Download
                     </button>
                   </div>
                 </div>
@@ -502,7 +615,7 @@ export function AIBuilder() {
           ) : (
             <div key="preview" className="scroll-thin min-h-0 flex-1 overflow-auto p-5">
               <div className="mx-auto max-w-4xl pb-6">
-                {uiSpec ? <AppPreview key={previewNonce} spec={uiSpec} /> : null}
+                {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} /> : null}
               </div>
             </div>
           )}

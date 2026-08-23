@@ -1,6 +1,6 @@
 "use client";
 
-import { Code2, Play, SlidersHorizontal } from "lucide-react";
+import { Code, Play, SlidersHorizontal } from "@phosphor-icons/react";
 import type { ExecutionRoute } from "@/lib/types";
 
 interface WorkflowPanelProps {
@@ -17,7 +17,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, onExecute
     <aside className="hidden h-full w-64 shrink-0 flex-col border-l border-border bg-surface lg:flex">
       <div className="border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-muted-2" />
+          <SlidersHorizontal size={16} weight="regular" className="text-muted-2" />
           <h2 className="text-xs font-semibold text-foreground">Workflow</h2>
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-muted">Review the pipeline before running it.</p>
@@ -42,8 +42,8 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, onExecute
       </div>
 
       <div className="mt-auto space-y-2 border-t border-border p-4">
-        <button type="button" onClick={onExecute} disabled={!hasModel} className="flex h-9 w-full items-center justify-center gap-2 rounded-md bg-emerald-500 px-3 text-xs font-semibold text-slate-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"><Play className="h-3.5 w-3.5 fill-current" /> Run workflow</button>
-        <button type="button" onClick={onCode} className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-border px-3 text-xs font-medium text-foreground-2 transition-colors hover:bg-foreground/[0.05] hover:text-foreground"><Code2 className="h-3.5 w-3.5" /> View generated code</button>
+        <button type="button" onClick={onExecute} disabled={!hasModel} className="flex h-9 w-full items-center justify-center gap-2 rounded-md bg-emerald-500 px-3 text-xs font-semibold text-slate-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"><Play size={14} weight="fill" /> Run workflow</button>
+        <button type="button" onClick={onCode} className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-border px-3 text-xs font-medium text-foreground-2 transition-colors hover:bg-foreground/[0.05] hover:text-foreground"><Code size={14} /> View generated code</button>
       </div>
     </aside>
   );
@@ -54,3 +54,4 @@ function Summary({ label, value }: { label: string; value: number }) {
 }
 
 export default WorkflowPanel;
+

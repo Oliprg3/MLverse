@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Clipboard, Download, ExternalLink, Loader2, RefreshCw, Save, Sparkles } from "lucide-react";
+import { Check, ClipboardText, DownloadSimple, ArrowSquareOut, CircleNotch, ArrowsClockwise, FloppyDisk, Sparkle } from "@phosphor-icons/react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import type { GeneratedCode } from "@/lib/codeGen";
@@ -108,12 +108,12 @@ export function CodeModal({ open, onClose, code, graph, onChange, onRegenerate, 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 break-words font-mono text-[11px] text-muted">{provider ? `Source: ${provider}` : "Changes stay in this workspace until you regenerate."}</span>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onRegenerate}><RefreshCw className="h-4 w-4" /> Regenerate</Button>
-            <Button variant="ghost" size="sm" onClick={copy}>{copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Clipboard className="h-4 w-4" />}{copied ? "Copied" : "Copy"}</Button>
-            <Button variant="ghost" size="sm" onClick={save}>{saved ? <Check className="h-4 w-4 text-emerald-400" /> : <Save className="h-4 w-4" />}{saved ? "Saved" : "Keep edits"}</Button>
-            <Button variant="ghost" size="sm" onClick={downloadPython}><Download className="h-4 w-4" /> .py</Button>
-            <Button variant="ghost" size="sm" onClick={downloadNotebook}><Download className="h-4 w-4" /> .ipynb</Button>
-            <Button variant="colab" size="sm" onClick={() => onOpenColab(code.code)}><ExternalLink className="h-4 w-4" /> Open in Colab</Button>
+            <Button variant="ghost" size="sm" onClick={onRegenerate}><ArrowsClockwise size={16} /> Regenerate</Button>
+            <Button variant="ghost" size="sm" onClick={copy}>{copied ? <Check size={16} weight="bold" className="text-emerald-400" /> : <ClipboardText size={16} />}{copied ? "Copied" : "Copy"}</Button>
+            <Button variant="ghost" size="sm" onClick={save}>{saved ? <Check size={16} weight="bold" className="text-emerald-400" /> : <FloppyDisk size={16} />}{saved ? "Saved" : "Keep edits"}</Button>
+            <Button variant="ghost" size="sm" onClick={downloadPython}><DownloadSimple size={16} /> .py</Button>
+            <Button variant="ghost" size="sm" onClick={downloadNotebook}><DownloadSimple size={16} /> .ipynb</Button>
+            <Button variant="colab" size="sm" onClick={() => onOpenColab(code.code)}><ArrowSquareOut size={16} /> Open in Colab</Button>
           </div>
         </div>
       }
@@ -137,7 +137,7 @@ export function CodeModal({ open, onClose, code, graph, onChange, onRegenerate, 
               </select>
             )}
             <input aria-label="AI model" value={aiModel} onChange={(event) => setAiModel(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-xs text-foreground sm:w-52 sm:flex-none" />
-            <Button variant="default" size="sm" onClick={generateWithAi} disabled={aiLoading}>{aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{aiLoading ? "Generating" : "Generate with AI"}</Button>
+            <Button variant="default" size="sm" onClick={generateWithAi} disabled={aiLoading}>{aiLoading ? <CircleNotch size={16} className="animate-spin" /> : <Sparkle size={16} />}{aiLoading ? "Generating" : "Generate with AI"}</Button>
           </div>
         </div>
         <p className="mt-1.5 break-words text-[10px] text-muted">The selected provider runs server-side. Configure its key in environment variables; credentials never enter the browser.</p>
@@ -151,3 +151,4 @@ export function CodeModal({ open, onClose, code, graph, onChange, onRegenerate, 
 }
 
 export default CodeModal;
+

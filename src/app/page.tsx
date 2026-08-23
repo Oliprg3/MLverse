@@ -1,11 +1,11 @@
-import { HybridMLCanvas } from "@/components/canvas/HybridMLCanvas";
+import { Dashboard } from "@/components/dashboard/Dashboard";
 
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
-    <main className="h-screen w-full overflow-hidden">
-      <HybridMLCanvas />
+    <main className="min-h-screen">
+      <Dashboard />
     </main>
   );
 }

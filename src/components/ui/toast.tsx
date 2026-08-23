@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle, Check } from "lucide-react";
+import { Warning, Check } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export interface ToastData {
@@ -18,7 +18,7 @@ export function Toast({ toast, onDone }: { toast: ToastData | null; onDone: () =
   }, [toast, onDone]);
 
   if (!toast) return null;
-  const Icon = toast.tone === "warn" ? AlertTriangle : Check;
+  const Icon = toast.tone === "warn" ? Warning : Check;
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4">

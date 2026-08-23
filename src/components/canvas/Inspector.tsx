@@ -7,13 +7,13 @@ import { useRef, type ChangeEvent } from "react";
 import Papa from "papaparse";
 import { useReactFlow } from "@xyflow/react";
 import {
-  ChevronRight,
-  FolderUp,
+  CaretRight,
+  Folder,
   Images,
   SlidersHorizontal,
   Target,
-  Upload,
-} from "lucide-react";
+  UploadSimple,
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { getCategory } from "@/lib/canvasConfig";
 import { chartsInGroup, CHART_GROUPS, parseChartSelection, serializeChartSelection } from "@/lib/chartCatalog";
@@ -188,10 +188,10 @@ export function Inspector({ node, onClose }: InspectorProps) {
         {/* CSV */}
         {isCsv ? (
           <section className="mt-5 space-y-3">
-            <SectionLabel icon={<Upload className="h-3.5 w-3.5" />}>Dataset</SectionLabel>
+            <SectionLabel icon={<UploadSimple size={14} />}>Dataset</SectionLabel>
             <input ref={csvInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCsv} />
             <Button variant="default" className="w-full" onClick={() => csvInputRef.current?.click()}>
-              <Upload className="h-4 w-4" />
+              <UploadSimple size={16} />
               {data.dataset ? "Replace CSV" : "Upload CSV file"}
             </Button>
             {data.dataset ? (
@@ -229,8 +229,8 @@ export function Inspector({ node, onClose }: InspectorProps) {
             />
             <input ref={imageFilesRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="default" onClick={() => imageFolderRef.current?.click()} title="Pick a folder where each sub-folder is a class"><FolderUp className="h-4 w-4" /> Folder</Button>
-              <Button variant="default" onClick={() => imageFilesRef.current?.click()} title="Pick files named like class_001.jpg"><Upload className="h-4 w-4" /> Files</Button>
+              <Button variant="default" onClick={() => imageFolderRef.current?.click()} title="Pick a folder where each sub-folder is a class"><Folder size={16} /> Folder</Button>
+              <Button variant="default" onClick={() => imageFilesRef.current?.click()} title="Pick files named like class_001.jpg"><UploadSimple size={16} /> Files</Button>
             </div>
             {data.imageDataset ? (
               <div className="space-y-3">
@@ -342,3 +342,4 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
 }
 
 export default Inspector;
+

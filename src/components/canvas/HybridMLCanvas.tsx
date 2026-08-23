@@ -14,7 +14,7 @@ import {
   type Edge,
   type OnConnect,
 } from "@xyflow/react";
-import { Boxes } from "lucide-react";
+import { SquaresFour } from "@phosphor-icons/react";
 import { CustomCanvasNode, type CustomFlowNode } from "./CustomCanvasNode";
 import { CanvasControls } from "./CanvasControls";
 import { NodeLibrary } from "@/components/sidebar/NodeLibrary";
@@ -441,7 +441,7 @@ function Canvas() {
           {nodes.length === 0 ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="animate-slide-up text-center">
-                <Boxes className="mx-auto h-8 w-8 text-muted-2" strokeWidth={1.5} />
+                <SquaresFour size={30} weight="light" className="mx-auto text-muted-2" />
                 <p className="mt-3 text-sm font-semibold tracking-tight text-foreground-2">Start with a dataset</p>
                 <p className="mt-1 text-xs text-muted">Drag a node from the library to begin your pipeline.</p>
               </div>
@@ -493,3 +493,4 @@ export function HybridMLCanvas() {
 }
 
 export default HybridMLCanvas;
+

@@ -2,20 +2,20 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Activity,
   Check,
-  CheckCircle2,
-  Clipboard,
+  CheckCircle,
+  CircleNotch,
+  ClipboardText,
   Clock,
-  Code2,
-  Download,
-  ExternalLink,
+  Code,
+  DownloadSimple,
+  ArrowSquareOut,
   FileText,
-  Loader2,
   Package,
-  Table2,
+  Pulse,
+  Table,
   XCircle,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { PlotlyChart } from "./PlotlyChart";
 import type { PlotlyFigure } from "@/lib/types";
@@ -131,7 +131,7 @@ function LiveConsole({ logs, liveMetrics }: { logs: string[]; liveMetrics: Recor
       {epochState.current > 0 ? (
         <div className="rounded-xl border border-sky-500/25 bg-sky-500/[0.05] p-3">
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="inline-flex items-center gap-2 font-medium text-sky-300"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Epoch {epochState.current}{epochState.total ? ` / ${epochState.total}` : ""}</span>
+            <span className="inline-flex items-center gap-2 font-medium text-sky-300"><CircleNotch size={14} className="animate-spin" /> Epoch {epochState.current}{epochState.total ? ` / ${epochState.total}` : ""}</span>
             <span className="font-mono text-muted-2">{epochState.loss === null ? "loss pending" : `loss ${epochState.loss.toFixed(4)}`} · {epochState.accuracy === null ? "accuracy pending" : `${(epochState.accuracy * 100).toFixed(1)}% val acc`}</span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full bg-sky-400 transition-all duration-500" style={{ width: `${epochState.total ? Math.min(100, (epochState.current / epochState.total) * 100) : 100}%` }} /></div>
@@ -149,7 +149,7 @@ function LiveConsole({ logs, liveMetrics }: { logs: string[]; liveMetrics: Recor
         </div>
         <div className="scroll-thin max-h-56 overflow-y-auto bg-foreground/[0.02] px-4 py-3 font-mono text-[12px] leading-relaxed">
           {logs.length === 0 ? (
-            <div className="flex items-center gap-2 text-muted"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Initializing engine…</div>
+            <div className="flex items-center gap-2 text-muted"><CircleNotch size={14} className="animate-spin" /> Initializing engine…</div>
           ) : (
             logs.map((l, i) => (
               <div key={i} className="flex gap-2 text-foreground-2">
@@ -184,8 +184,8 @@ function PredictionsTable({ preds }: { preds: PredictionSet }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <div className="flex items-center justify-between border-b border-border bg-foreground/[0.03] px-3 py-2">
-        <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground-2"><Table2 className="h-3.5 w-3.5" /> Test predictions</span>
-        <Button variant="ghost" size="sm" onClick={exportCsv}><Download className="h-4 w-4" /> CSV</Button>
+        <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground-2"><Table size={16} weight="regular" className="h-3.5 w-3.5" /> Test predictions</span>
+        <Button variant="ghost" size="sm" onClick={exportCsv}><DownloadSimple size={16} /> CSV</Button>
       </div>
       <div className="scroll-thin max-h-72 overflow-auto">
         <table className="w-full border-collapse text-[12px]">
@@ -207,7 +207,7 @@ function PredictionsTable({ preds }: { preds: PredictionSet }) {
                   <td className="px-3 py-1.5 text-muted">{i + 1}</td>
                   <td className="px-3 py-1.5 text-foreground-2">{actual}</td>
                   <td className={cn("px-3 py-1.5", correct ? "text-emerald-400" : "text-rose-400")}>{pred}</td>
-                  <td className="px-3 py-1.5">{correct ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <XCircle className="h-3.5 w-3.5 text-rose-400" />}</td>
+                  <td className="px-3 py-1.5">{correct ? <Check size={13} weight="bold" className="text-emerald-400" /> : <XCircle className="h-3.5 w-3.5 text-rose-400" />}</td>
                 </tr>
               );
             })}
@@ -257,7 +257,7 @@ function ModelExportBar({ res }: { res: InstantExecutionResponse }) {
             <option value="pickle">Python pickle (.pkl)</option>
             <option value="joblib">Joblib (.joblib)</option>
           </select>
-          <Button variant="default" size="sm" onClick={download} disabled={!artifacts[format]?.base64}><Download className="h-4 w-4" /> {saved ? "Saved" : "Save model"}</Button>
+          <Button variant="default" size="sm" onClick={download} disabled={!artifacts[format]?.base64}><DownloadSimple size={16} /> {saved ? "Saved" : "Save model"}</Button>
         </div>
       </div>
     </div>
@@ -281,13 +281,13 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-2">
-          <span className="inline-flex items-center gap-1.5"><Activity className="h-3.5 w-3.5 text-emerald-400" /> Instant CPU execution</span>
-          <span className="inline-flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> {res.model.framework}</span>
-          <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {(res.timing.total_seconds ?? 0).toFixed(2)}s</span>
+          <span className="inline-flex items-center gap-1.5"><Package size={14} className="text-emerald-400" /> Instant CPU execution</span>
+          <span className="inline-flex items-center gap-1.5"><Package size={14} /> {res.model.framework}</span>
+          <span className="inline-flex items-center gap-1.5"><Clock size={14} className="h-3.5 w-3.5" /> {(res.timing.total_seconds ?? 0).toFixed(2)}s</span>
         </div>
         <div className="flex items-center gap-2">
-          {onViewCode ? <Button variant="ghost" size="sm" onClick={onViewCode}><Code2 className="h-4 w-4" /> Code</Button> : null}
-          <Button variant="ghost" size="sm" onClick={report}><Download className="h-4 w-4" /> JSON</Button>
+          {onViewCode ? <Button variant="ghost" size="sm" onClick={onViewCode}><Code size={16} /> Code</Button> : null}
+          <Button variant="ghost" size="sm" onClick={report}><DownloadSimple size={16} /> JSON</Button>
         </div>
       </div>
 
@@ -312,7 +312,7 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-foreground/[0.02] px-5 py-10 text-center">
-            <Activity className="mx-auto h-5 w-5 text-muted-2" />
+            <Pulse size={14} className="mx-auto h-5 w-5 text-muted-2" />
             <p className="mt-2 text-sm font-medium text-foreground-2">No visualizations selected</p>
             <p className="mt-1 text-xs text-muted">Choose charts in the visualization node before running the pipeline.</p>
           </div>
@@ -367,13 +367,13 @@ function ColabView({ res, onViewCode, onOpenColab, code }: { res: ColabExecution
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-xs text-muted-2">
-          <span className="inline-flex items-center gap-1.5"><Package className="h-3.5 w-3.5 text-indigo-300" /> Notebook ready</span>
+          <span className="inline-flex items-center gap-1.5"><Package size={14} className="text-indigo-300" /> Notebook ready</span>
           <span className="text-muted">{res.recommended_runtime}</span>
         </div>
         <div className="flex items-center gap-2">
-          {onViewCode ? <Button variant="ghost" size="sm" onClick={onViewCode}><Code2 className="h-4 w-4" /> Code</Button> : null}
+          {onViewCode ? <Button variant="ghost" size="sm" onClick={onViewCode}><Code size={16} /> Code</Button> : null}
           <Button variant="default" size="sm" onClick={() => downloadBlob(res.notebook.filename, res.notebook_json, "application/x-ipynb+json")}>
-            <Download className="h-4 w-4" /> Save training notebook
+            <DownloadSimple size={16} /> Save training notebook
           </Button>
         </div>
       </div>
@@ -386,9 +386,9 @@ function ColabView({ res, onViewCode, onOpenColab, code }: { res: ColabExecution
           </div>
           <div className="flex shrink-0 gap-2">
             {onOpenColab ? (
-              <Button variant="colab" size="sm" onClick={onOpenColab}><ExternalLink className="h-4 w-4" /> Open Colab &amp; Copy Code</Button>
+              <Button variant="colab" size="sm" onClick={onOpenColab}><ArrowSquareOut size={16} /> Open Colab &amp; Copy Code</Button>
             ) : (
-              <a href={res.colab_url} target="_blank" rel="noopener noreferrer"><Button variant="colab" size="sm"><ExternalLink className="h-4 w-4" /> Open Colab</Button></a>
+              <a href={res.colab_url} target="_blank" rel="noopener noreferrer"><Button variant="colab" size="sm"><ArrowSquareOut size={16} /> Open Colab</Button></a>
             )}
           </div>
         </div>
@@ -433,10 +433,10 @@ function ColabView({ res, onViewCode, onOpenColab, code }: { res: ColabExecution
       {preview ? (
         <div className="overflow-hidden rounded-xl border border-border">
           <div className="flex items-center justify-between border-b border-border bg-foreground/[0.03] px-3 py-2">
-            <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted-2"><Clipboard className="h-3 w-3" /> generated code (paste into Colab)</span>
+            <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted-2"><ClipboardText size={12} /> generated code (paste into Colab)</span>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" onClick={copyCode}>
-                {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Clipboard className="h-4 w-4" />}{copied ? "Copied" : "Copy"}
+                {copied ? <Check size={15} weight="bold" className="text-emerald-400" /> : <ClipboardText size={15} />}{copied ? "Copied" : "Copy"}
               </Button>
               {onViewCode ? <Button variant="ghost" size="sm" onClick={onViewCode}>View full</Button> : null}
             </div>
@@ -471,7 +471,7 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
             <span className="h-1 w-9 rounded-full bg-border-strong" />
             <div>
               <div className="flex items-center gap-2">
-                {isError ? <XCircle className="h-4 w-4 text-rose-400" /> : loading ? <Loader2 className="h-4 w-4 animate-spin text-muted-2" /> : <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+                {isError ? <XCircle size={15} weight="fill" className="text-rose-400" /> : loading ? <CircleNotch size={16} className="animate-spin text-muted-2" /> : <CheckCircle size={16} weight="fill" className="text-emerald-400" />}
                 <h3 className="text-sm font-semibold tracking-tight text-foreground">
                   {loading ? (route === "colab" ? "Generating Colab notebook…" : "Training model…") : isError ? "Execution error" : route === "colab" ? "Colab Notebook Ready" : "Training Results & Dashboards"}
                 </h3>
@@ -505,3 +505,4 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
 }
 
 export default ResultsDrawer;
+

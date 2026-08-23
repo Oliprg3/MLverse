@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/static-components */
 
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
-import { ChevronDown, Search, X } from "lucide-react";
+import { CaretDown, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { CATEGORIES, NODE_PALETTE } from "@/lib/canvasConfig";
 import { resolveIcon } from "@/lib/icons";
 import type { NodeCategory, PaletteItem } from "@/lib/types";
@@ -34,7 +34,7 @@ function LibraryCard({ item }: { item: PaletteItem }) {
       title={`Drag onto canvas: ${item.label}`}
     >
       {/* Bare icon glyph — no box, no border, no tint. */}
-      <Icon className="h-4 w-4 shrink-0 text-muted-2 transition-colors group-hover:text-foreground" strokeWidth={1.75} />
+      <Icon className="h-4 w-4 shrink-0 text-muted-2 transition-colors group-hover:text-foreground" weight="regular" />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13px] font-medium leading-tight tracking-tight text-foreground">{item.label}</div>
         <div className="truncate text-[10px] leading-tight text-muted">{item.description}</div>
@@ -67,7 +67,7 @@ function Section({ catId, query }: { catId: NodeCategory; query: string }) {
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">{CATEGORIES[catId].label}</span>
         <span className="flex items-center gap-1.5">
           <span className="text-[10px] font-medium text-muted/60">{filtered.length}</span>
-          <ChevronDown className={cn("h-3.5 w-3.5 text-muted transition-transform duration-200", !open && "-rotate-90")} />
+          <CaretDown className={cn("h-3.5 w-3.5 text-muted transition-transform duration-200", !open && "-rotate-90")} />
         </span>
       </button>
       <div className={cn("grid transition-all duration-200", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
@@ -121,7 +121,7 @@ export function NodeLibrary() {
           <span className="rounded-full border border-border bg-foreground/[0.04] px-2 py-0.5 font-mono text-[10px] text-muted-2">{NODE_PALETTE.length}</span>
         </div>
         <div className="group relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
           <input
             ref={inputRef}
             value={query}
@@ -136,7 +136,7 @@ export function NodeLibrary() {
               className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-muted hover:text-foreground"
               aria-label="Clear search"
             >
-              <X className="h-3 w-3" />
+              <X size={11} weight="bold" />
             </button>
           ) : (
             <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px] font-semibold text-muted-2">⌘K</kbd>
@@ -150,7 +150,7 @@ export function NodeLibrary() {
           CATEGORY_ORDER.map((catId) => <Section key={catId} catId={catId} query={query} />)
         ) : (
           <div className="animate-fade-in px-3 py-10 text-center">
-            <Search className="mx-auto h-5 w-5 text-muted-2" />
+            <MagnifyingGlass className="mx-auto h-5 w-5 text-muted-2" />
             <p className="mt-3 text-xs font-medium text-foreground-2">No nodes found</p>
             <p className="mt-1 text-[11px] leading-relaxed text-muted">Try a model, dataset, or visualization name.</p>
             <button type="button" onClick={() => setQuery("")} className="mt-3 text-[11px] font-medium text-primary transition-colors hover:text-foreground">Clear search</button>
@@ -165,3 +165,4 @@ export function NodeLibrary() {
 }
 
 export default NodeLibrary;
+
