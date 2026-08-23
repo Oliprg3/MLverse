@@ -1,0 +1,15 @@
+# Hybrid Execution Engine — Python dependencies
+# Backend for the No-Code AI Canvas platform.
+#
+#   pip install -r requirements.txt
+#   uvicorn main:app --reload --port 8000
+
+fastapi>=0.110
+uvicorn[standard]>=0.29
+scikit-learn>=1.4
+xgboost>=2.0            # optional — engine degrades gracefully if absent
+lightgbm>=4.0           # optional — engine degrades gracefully if absent
+plotly>=5.20
+nbformat>=5.10
+networkx>=3.2
+pydantic>=2.6

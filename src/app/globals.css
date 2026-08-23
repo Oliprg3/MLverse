@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (toggled on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ────────────────────────────────────────────────────────────────────────
+   Design tokens — NeuralForge.
+   Deep slate dark / crisp paper light. Flat, restrained, enterprise.
+   ──────────────────────────────────────────────────────────────────────── */
+:root {
+  --background: #f8fafc;
+  --background-2: #f1f5f9;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card-2: #f8fafc;
+  --border: #e6e8ec;
+  --border-strong: #d1d5db;
+  --foreground: #0f172a;
+  --foreground-2: #334155;
+  --muted: #64748b;
+  --muted-2: #94a3b8;
+  --primary: #10b981;
+  --accent: #22d3ee;
+  --ring: #10b981;
+  --input: #e6e8ec;
+}
+
+.dark {
+  --background: #0b0f17;
+  --background-2: #090d16;
+  --surface: #0f141d;
+  --card: #0d111a;
+  --card-2: #11161f;
+  --border: #1c232f;
+  --border-strong: #28303d;
+  --foreground: #f8fafc;
+  --foreground-2: #cbd5e1;
+  --muted: #6b7785;
+  --muted-2: #9aa5b1;
+  --primary: #10b981;
+  --accent: #22d3ee;
+  --ring: #2dd4bf;
+  --input: #1c232f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-foreground: var(--foreground);
+  --color-foreground-2: var(--foreground-2);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-muted-foreground: var(--muted-2);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --font-sans: var(--font-geist-sans), "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  /* Flat solid background — no dots, no gradients. */
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+    border-radius: 8px;
+  }
+}
+
+/* Subtle glass panels for the app chrome only (header/sidebar) */
+@utility glass-panel {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   React Flow overrides — flat, restrained, monochrome edges
+   ──────────────────────────────────────────────────────────────────────── */
+.react-flow__attribution { display: none; }
+.react-flow__renderer,
+.react-flow { background: transparent; }
+
+/* Edges: subtle slate, no animation flash, brighten on hover */
+.react-flow__edge-path {
+  stroke: color-mix(in srgb, var(--muted) 45%, transparent);
+  stroke-width: 1.5;
+  transition: stroke 0.2s ease;
+}
+.react-flow__edge:hover .react-flow__edge-path,
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--muted-2);
+  stroke-width: 2;
+}
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: none;
+  animation: none;
+}
+
+/* Handles: minimal dots, subtle on hover. No glow. */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: var(--border-strong);
+  border: none;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+}
+.react-flow__handle:hover,
+.react-flow__handle-connecting {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+
+/* Controls: simple flat pill */
+.react-flow__controls {
+  display: flex;
+  gap: 1px;
+  box-shadow: 0 6px 16px -8px rgba(0,0,0,0.5) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  border: 1px solid var(--border) !important;
+  background: color-mix(in srgb, var(--surface) 90%, transparent) !important;
+}
+.react-flow__controls-button {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--muted-2) !important;
+  fill: var(--muted-2) !important;
+  transition: all 0.15s ease;
+}
+.react-flow__controls-button:hover {
+  background: color-mix(in srgb, var(--foreground) 6%, transparent) !important;
+  color: var(--foreground) !important;
+  fill: var(--foreground) !important;
+}
+.react-flow__controls-button svg { max-width: 14px; max-height: 14px; }
+
+/* Minimap: flat dark */
+.react-flow__minimap {
+  background: color-mix(in srgb, var(--surface) 85%, transparent) !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 6px 16px -8px rgba(0,0,0,0.5) !important;
+}
+.react-flow__minimap-mask { fill: color-mix(in srgb, var(--background) 80%, transparent); }
+
+/* Selected node: subtle ring, no glow */
+.react-flow__node.selected .nf-node-shell {
+  border-color: var(--muted-2);
+}
+
+/* Scrollbars */
+.scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+.scroll-thin::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+
+/* Plotly transparent backdrop */
+.js-plotly-plot .plotly .main-svg { background: transparent !important; }
+.modebar { gap: 2px; }
+
+/* Animations */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fade-in 0.18s ease-out; }
+
+@keyframes message-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-message-in { animation: message-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes shimmer {
+  0% { background-position: 140% 0; }
+  100% { background-position: -40% 0; }
+}
+.animate-shimmer {
+  background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 9%, transparent), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent); }
+}
+.animate-pulse-ring { animation: pulse-ring 1.8s ease-in-out infinite; }
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  15%, 75% { opacity: 0.75; }
+  100% { transform: translateY(700%); opacity: 0; }
+}
+.animate-scan-line { animation: scan-line 2.2s ease-in-out infinite; }
+
+@keyframes dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+.animate-dot-bounce { animation: dot-bounce 1.1s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-modal-in { animation: modal-in 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes chart-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-chart-in { animation: chart-in 0.4s ease-out both; }
