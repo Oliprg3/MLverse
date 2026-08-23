@@ -426,6 +426,9 @@ export function AIBuilder() {
           </div>
           <h1 className="mt-5 text-xl font-bold tracking-tight">Build with AI</h1>
           <p className="mt-2 text-sm leading-6 text-muted">Save a pipeline with a model node from the canvas first. The builder turns that saved graph into a working app you refine through chat.</p>
+          <p className="mt-3 rounded-lg border border-border bg-surface px-3 py-2 text-[11px] leading-relaxed text-muted">
+            Opened from the canvas but seeing this? The pipeline could not be shared into the builder — press <span className="font-medium text-foreground-2">Build with AI</span> again after re-opening the canvas. Very large uploaded datasets are trimmed automatically.
+          </p>
           <Link href="/canvas" className="mt-6 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 px-4 py-2 text-sm font-medium text-emerald-500 transition-colors hover:border-emerald-500/70 hover:bg-emerald-500/10">
             <ArrowLeft size={15} weight="bold" /> Back to canvas
           </Link>

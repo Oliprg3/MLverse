@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       if (probe?.available) {
         await send({
           type: "step",
-          message: `Machine check: Python ${probe.version ?? ""} + scikit-learn detected — routing to the native engine…`.replace(/\s+/g, " "),
+          message: `Server check: Python ${probe.version ?? ""} + scikit-learn found on this deployment — routing to the native engine…`.replace(/\s+/g, " "),
         });
         const ok = await pipePython(graph, (line: string) =>
           controller.enqueue(encoder.encode(`${line}\n`)),
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       } else if (probe) {
         await send({
           type: "step",
-          message: `Machine check: native Python engine unavailable (${probe.reason}) — switching to the built-in TypeScript engine…`,
+          message: `Server check: no Python ML stack on this deployment (${probe.reason}) — using the built-in TypeScript engine. Note: training always runs on the server, never on your computer.`,
         });
       }
       // 2) Resilience fallback — synthesize a streamed experience in TS.

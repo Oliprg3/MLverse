@@ -11,10 +11,39 @@ export interface SavedProject {
   edges: Edge[];
 }
 
+/** Drop multi-megabyte payload fields while keeping pipeline structure. */
+function slimNodes(nodes: Node<MLNodeData>[]): Node<MLNodeData>[] {
+  return nodes.map((node) => {
+    const data = node.data;
+    const next: MLNodeData = { ...data };
+    if (next.dataset) {
+      const { csvText, ...rest } = next.dataset;
+      void csvText;
+      next.dataset = rest as typeof next.dataset;
+    }
+    if (next.imageDataset) {
+      next.imageDataset = {
+        ...next.imageDataset,
+        vectors: [],
+        thumbnails: [],
+      };
+    }
+    return { ...node, data: next };
+  });
+}
+
 export function saveProject(nodes: Node<MLNodeData>[], edges: Edge[], title = "NeuralForge Pipeline"): SavedProject {
   const project: SavedProject = { version: 1, savedAt: new Date().toISOString(), title, nodes, edges };
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
-  return project;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+    return project;
+  } catch {
+    // Quota exceeded (large CSV / image payloads) — retry with payloads stripped
+    // so the model structure still reaches the AI builder.
+    const slim: SavedProject = { ...project, nodes: slimNodes(nodes) };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+    return slim;
+  }
 }
 
 export function loadProject(): SavedProject | null {

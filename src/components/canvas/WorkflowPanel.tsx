@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Code, Play, SlidersHorizontal } from "@phosphor-icons/react";
 import type { ExecutionRoute } from "@/lib/types";
 
@@ -14,7 +15,25 @@ interface WorkflowPanelProps {
   onCode: () => void;
 }
 
+interface EngineInfo {
+  engine?: string;
+  python_version?: string | null;
+  machine_check?: string | null;
+}
+
 export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, onExecute, onCode }: WorkflowPanelProps) {
+  const [engine, setEngine] = useState<EngineInfo | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/execute")
+      .then((res) => res.json())
+      .then((data: EngineInfo) => { if (!cancelled) setEngine(data); })
+      .catch(() => { if (!cancelled) setEngine({}); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const native = engine?.engine === "native-python";
   return (
     <aside className="hidden h-full w-64 shrink-0 flex-col border-l border-border bg-surface lg:flex">
       <div className="border-b border-border px-4 py-3">
@@ -49,6 +68,18 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
         <div className="mt-3 flex items-center justify-between text-[11px]"><span className="text-muted">Runtime</span><span className="font-medium text-foreground-2">{route === "colab" ? "Colab GPU" : "Instant CPU"}</span></div>
         <div className="mt-2 flex items-center justify-between text-[11px]"><span className="text-muted">Trigger</span><span className="font-medium text-foreground-2">Manual</span></div>
         <div className="mt-2 flex items-center justify-between text-[11px]"><span className="text-muted">Persistence</span><span className="font-medium text-foreground-2">Local project</span></div>
+        <div className="mt-3 border-t border-border pt-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Server engine</p>
+          {engine === null ? (
+            <p className="mt-1 text-[11px] text-muted">Checking deployment…</p>
+          ) : native ? (
+            <p className="mt-1 text-[11px] leading-snug text-emerald-500">Native Python {engine.python_version} — full model suite trains here.</p>
+          ) : (
+            <p className="mt-1 text-[11px] leading-snug text-amber-500">
+              Built-in TypeScript fallback{engine.machine_check ? ` (${engine.machine_check})` : ""}. Only KNN and Naive Bayes train; add a Python ML stack to this server for the rest. Your own computer is never used for training.
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="mt-auto space-y-2 border-t border-border p-4">

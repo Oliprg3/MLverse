@@ -151,7 +151,7 @@ export function Dashboard() {
               ) : (
                 <p className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-amber-500"><Lightning size={15} weight="fill" /> Built-in TS engine</p>
               )}
-              <p className="mt-0.5 truncate text-[10px] text-muted-2">{engine ? (native ? "Native scikit-learn runtime" : `Machine check: ${engine.machine_check ?? "python unavailable"}`) : "Checking this server…"}</p>
+              <p className="mt-0.5 truncate text-[10px] text-muted-2">{engine ? (native ? "scikit-learn on this deployment" : `Deployment lacks Python ML stack`) : "Checking this deployment…"}</p>
             </div>
           </div>
         </section>

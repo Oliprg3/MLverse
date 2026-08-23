@@ -460,13 +460,16 @@ function Canvas() {
         onGuide={() => setGuideOpen(true)}
         onCode={openCode}
         onBuildAI={() => {
+          // Save is best-effort only — large datasets can overflow local
+          // storage, and that must never block opening the AI builder.
           try {
-            saveProject(nodes, edges);
+            const project = saveProject(nodes, edges);
             setSavedProjectAvailable(true);
-            router.push("/build");
+            void project;
           } catch {
-            notify("Could not prepare the pipeline for the AI builder", "warn");
+            notify("Pipeline too large for browser storage — the builder will attach what it can", "warn");
           }
+          router.push("/build");
         }}
         onSave={handleSave}
         onLoad={handleLoad}
