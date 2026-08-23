@@ -26,6 +26,7 @@ import {
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
 import { generateAppFiles, type ScaffoldFile } from "@/lib/appScaffold";
 import { generateCode } from "@/lib/codeGen";
+import { Highlight, type PrismTheme } from "prism-react-renderer";
 import type { GraphPayload, MLNodeData } from "@/lib/types";
 
 type BuilderMessage = {
@@ -628,6 +629,39 @@ export function AIBuilder() {
 
 /* ── VS Code-style project explorer ─────────────────────────────────────── */
 
+/** "Nebula" — a violet-tuned syntax theme matching the app's dark palette. */
+const NEBULA_THEME: PrismTheme = {
+  plain: { color: "#d8d3ea", backgroundColor: "transparent" },
+  styles: [
+    { types: ["comment", "prolog", "cdata"], style: { color: "#6f6790", fontStyle: "italic" } },
+    { types: ["punctuation"], style: { color: "#8f86ad" } },
+    { types: ["keyword", "control", "directive", "unit", "important"], style: { color: "#c4b5fd" } },
+    { types: ["builtin", "class-name", "maybe-class-name"], style: { color: "#f0abfc" } },
+    { types: ["function", "method", "function-variable"], style: { color: "#7dd3fc" } },
+    { types: ["string", "char", "attr-value", "template-string", "triple-quoted-string"], style: { color: "#6ee7b7" } },
+    { types: ["number", "boolean", "constant", "symbol"], style: { color: "#fcd34d" } },
+    { types: ["operator", "entity", "url"], style: { color: "#a5b4fc" } },
+    { types: ["tag"], style: { color: "#7dd3fc" } },
+    { types: ["attr-name", "property", "variable"], style: { color: "#e2d9ff" } },
+    { types: ["selector", "deleted"], style: { color: "#fca5a5" } },
+    { types: ["inserted"], style: { color: "#6ee7b7" } },
+    { types: ["bold"], style: { fontWeight: "bold" } },
+    { types: ["italic"], style: { fontStyle: "italic" } },
+    { types: ["heading"], style: { color: "#c4b5fd", fontWeight: "bold" } },
+    { types: ["list", "hr"], style: { color: "#8f86ad" } },
+    { types: ["code-snippet", "code"], style: { color: "#6ee7b7" } },
+  ],
+};
+
+const PRISM_LANG: Record<ScaffoldFile["language"], string> = {
+  tsx: "tsx",
+  ts: "typescript",
+  py: "python",
+  json: "json",
+  md: "markdown",
+  text: "bash",
+};
+
 type TreeNode =
   | { kind: "folder"; name: string; path: string; children: TreeNode[] }
   | { kind: "file"; name: string; path: string; file: ScaffoldFile };
@@ -689,7 +723,6 @@ function CodeExplorer({
 
   // Derive the active file — falls back to the first entry after regeneration.
   const activeFile = files.find((f) => f.path === selectedPath) ?? files[0];
-  const lines = (activeFile?.content ?? "").split("\n");
 
   const toggle = (path: string) =>
     setCollapsed((current) => {
@@ -741,7 +774,7 @@ function CodeExplorer({
         <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#2b2340] bg-[#120e1d] px-4 py-2 text-xs text-slate-300 outline-none">
           {files.map((file) => (<option key={file.path} value={file.path}>{file.path}</option>))}
         </select>
-        {activeFile ? <EditorBody file={activeFile} lines={lines} onDownload={() => onDownloadFile(activeFile)} /> : null}
+        {activeFile ? <EditorBody file={activeFile} /> : null}
       </div>
 
       {/* Editor */}
@@ -762,7 +795,7 @@ function CodeExplorer({
               </button>
             </div>
           </div>
-          <EditorBody file={activeFile} lines={lines} onDownload={() => onDownloadFile(activeFile)} />
+          <EditorBody file={activeFile} />
         </div>
       ) : (
         <div className="hidden flex-1 items-center justify-center bg-[#161126] text-xs text-slate-500 md:flex">No project yet — send a chat message to generate one.</div>
@@ -771,18 +804,32 @@ function CodeExplorer({
   );
 }
 
-function EditorBody({ file, lines, onDownload }: { file: ScaffoldFile; lines: string[]; onDownload: () => void }) {
-  void onDownload;
+function EditorBody({ file }: { file: ScaffoldFile }) {
+  const language = PRISM_LANG[file.language] ?? "markup";
   return (
-    <div className="scroll-thin flex min-h-0 flex-1 overflow-auto">
-      <pre aria-hidden className="sticky left-0 select-none border-r border-[#241d36] bg-[#120e1d] px-3 py-4 text-right font-mono text-[11.5px] leading-5 text-slate-600">
-        {lines.map((_, i) => (<div key={i}>{i + 1}</div>))}
-      </pre>
-      <pre className="min-w-0 flex-1 whitespace-pre-wrap break-words p-4 font-mono text-[11.5px] leading-5 text-slate-300"><code>{file.content}</code></pre>
+    <div className="scroll-thin min-h-0 flex-1 overflow-auto py-4">
+      <Highlight theme={NEBULA_THEME} code={file.content.replace(/\n$/, "")} language={language}>
+        {({ style, tokens, getLineProps, getTokenProps }) => (
+          <pre className="min-w-0 px-4 font-mono text-[11.5px] leading-5" style={style}>
+            {tokens.map((line, i) => {
+              const lineProps = getLineProps({ line });
+              return (
+                <div key={i} {...lineProps} className={`${lineProps.className ?? ""} flex hover:bg-white/[0.03]`}>
+                  <span aria-hidden className="w-10 shrink-0 select-none pr-3 text-right text-slate-600">{i + 1}</span>
+                  <span className="min-w-0 whitespace-pre-wrap break-words">
+                    {line.map((token, key) => (<span key={key} {...getTokenProps({ token })} />))}
+                  </span>
+                </div>
+              );
+            })}
+          </pre>
+        )}
+      </Highlight>
     </div>
   );
 }
 
 export default AIBuilder;
+
 
 
