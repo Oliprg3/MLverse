@@ -629,27 +629,27 @@ export function AIBuilder() {
 
 /* ── VS Code-style project explorer ─────────────────────────────────────── */
 
-/** "Nebula" — a violet-tuned syntax theme matching the app's dark palette. */
+/** "Nebula" — high-contrast syntax theme tuned for the violet dark palette. */
 const NEBULA_THEME: PrismTheme = {
-  plain: { color: "#d8d3ea", backgroundColor: "transparent" },
+  plain: { color: "#e3e0f2", backgroundColor: "transparent" },
   styles: [
-    { types: ["comment", "prolog", "cdata"], style: { color: "#6f6790", fontStyle: "italic" } },
-    { types: ["punctuation"], style: { color: "#8f86ad" } },
-    { types: ["keyword", "control", "directive", "unit", "important"], style: { color: "#c4b5fd" } },
-    { types: ["builtin", "class-name", "maybe-class-name"], style: { color: "#f0abfc" } },
-    { types: ["function", "method", "function-variable"], style: { color: "#7dd3fc" } },
-    { types: ["string", "char", "attr-value", "template-string", "triple-quoted-string"], style: { color: "#6ee7b7" } },
-    { types: ["number", "boolean", "constant", "symbol"], style: { color: "#fcd34d" } },
-    { types: ["operator", "entity", "url"], style: { color: "#a5b4fc" } },
-    { types: ["tag"], style: { color: "#7dd3fc" } },
-    { types: ["attr-name", "property", "variable"], style: { color: "#e2d9ff" } },
-    { types: ["selector", "deleted"], style: { color: "#fca5a5" } },
-    { types: ["inserted"], style: { color: "#6ee7b7" } },
+    { types: ["comment", "prolog", "cdata"], style: { color: "#7d76a0", fontStyle: "italic" } },
+    { types: ["punctuation"], style: { color: "#a79fc8" } },
+    { types: ["keyword", "control", "directive", "important"], style: { color: "#c792ea" } },
+    { types: ["builtin", "class-name", "maybe-class-name"], style: { color: "#ffcb8b" } },
+    { types: ["function", "method", "function-variable"], style: { color: "#82aaff" } },
+    { types: ["string", "char", "attr-value", "template-string", "triple-quoted-string", "symbol"], style: { color: "#f0c987" } },
+    { types: ["property", "attr-name", "variable", "property-access"], style: { color: "#8be9c8" } },
+    { types: ["number", "boolean", "constant", "unit"], style: { color: "#f78c6c" } },
+    { types: ["operator", "entity", "url"], style: { color: "#89ddff" } },
+    { types: ["tag"], style: { color: "#f07178" } },
+    { types: ["selector", "deleted"], style: { color: "#f07178" } },
+    { types: ["inserted"], style: { color: "#8be9c8" } },
     { types: ["bold"], style: { fontWeight: "bold" } },
     { types: ["italic"], style: { fontStyle: "italic" } },
-    { types: ["heading"], style: { color: "#c4b5fd", fontWeight: "bold" } },
-    { types: ["list", "hr"], style: { color: "#8f86ad" } },
-    { types: ["code-snippet", "code"], style: { color: "#6ee7b7" } },
+    { types: ["heading"], style: { color: "#c792ea", fontWeight: "bold" } },
+    { types: ["list", "hr"], style: { color: "#a79fc8" } },
+    { types: ["code-snippet", "code"], style: { color: "#f0c987" } },
   ],
 };
 
@@ -810,12 +810,12 @@ function EditorBody({ file }: { file: ScaffoldFile }) {
     <div className="scroll-thin min-h-0 flex-1 overflow-auto py-4">
       <Highlight theme={NEBULA_THEME} code={file.content.replace(/\n$/, "")} language={language}>
         {({ style, tokens, getLineProps, getTokenProps }) => (
-          <pre className="min-w-0 px-4 font-mono text-[11.5px] leading-5" style={style}>
+          <pre className="min-w-0 px-4 font-mono text-[12.5px] leading-[1.65]" style={style}>
             {tokens.map((line, i) => {
               const lineProps = getLineProps({ line });
               return (
-                <div key={i} {...lineProps} className={`${lineProps.className ?? ""} flex hover:bg-white/[0.03]`}>
-                  <span aria-hidden className="w-10 shrink-0 select-none pr-3 text-right text-slate-600">{i + 1}</span>
+                <div key={i} {...lineProps} className={`${lineProps.className ?? ""} flex hover:bg-white/[0.04]`}>
+                  <span aria-hidden className="w-11 shrink-0 select-none pr-4 text-right text-[11px] text-[#575070]">{i + 1}</span>
                   <span className="min-w-0 whitespace-pre-wrap break-words">
                     {line.map((token, key) => (<span key={key} {...getTokenProps({ token })} />))}
                   </span>
