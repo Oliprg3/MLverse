@@ -815,7 +815,7 @@ function EditorBody({ file }: { file: ScaffoldFile }) {
               const lineProps = getLineProps({ line });
               return (
                 <div key={i} {...lineProps} className={`${lineProps.className ?? ""} flex hover:bg-white/[0.04]`}>
-                  <span aria-hidden className="w-11 shrink-0 select-none pr-4 text-right text-[11px] text-[#575070]">{i + 1}</span>
+                  <span aria-hidden className="w-11 shrink-0 select-none pr-4 text-right text-[11px] text-[#9088a8]">{i + 1}</span>
                   <span className="min-w-0 whitespace-pre-wrap break-words">
                     {line.map((token, key) => (<span key={key} {...getTokenProps({ token })} />))}
                   </span>

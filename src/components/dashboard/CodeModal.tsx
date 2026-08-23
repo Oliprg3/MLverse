@@ -221,9 +221,9 @@ function CodeEditor({ code, lines, readOnly, onEdit }: { code: string; lines: nu
     <div className="flex min-h-[58vh] overflow-auto bg-foreground/[0.02]">
       <pre aria-hidden className="select-none border-r border-border px-3 py-4 text-right font-mono text-[12px] leading-[1.65] text-muted/50">{Array.from({ length: Math.max(lines, code.split("\n").length) }, (_, i) => <div key={i}>{i + 1}</div>)}</pre>
       {readOnly ? (
-        <pre className="min-h-[58vh] min-w-0 flex-1 whitespace-pre-wrap break-words px-4 py-4 font-mono text-[12px] leading-[1.65] text-foreground-2">{code}</pre>
+        <pre className="min-h-[58vh] min-w-0 flex-1 whitespace-pre-wrap break-words px-4 py-4 font-mono text-[12px] leading-[1.65] text-foreground">{code}</pre>
       ) : (
-        <textarea aria-label="Editable training code" spellCheck={false} value={code} onChange={(event) => onEdit(event.target.value)} className="min-h-[58vh] min-w-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[12.5px] leading-[1.65] text-foreground-2 outline-none" />
+        <textarea aria-label="Editable training code" spellCheck={false} value={code} onChange={(event) => onEdit(event.target.value)} className="min-h-[58vh] min-w-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[12.5px] leading-[1.65] text-foreground outline-none" />
       )}
     </div>
   );
