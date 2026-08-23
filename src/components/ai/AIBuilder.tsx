@@ -22,9 +22,11 @@ import {
   FileText,
   Gear,
   Monitor,
+  Moon,
   PaperPlaneRight,
   Robot,
   Sparkle,
+  Sun,
 } from "@phosphor-icons/react";
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
 import { generateAppFiles, type ScaffoldFile } from "@/lib/appScaffold";
@@ -254,6 +256,7 @@ export function AIBuilder() {
   const [historyOpen, setHistoryOpen] = useState(true);
   const [typedText, setTypedText] = useState<string | null>(null);
   const [previewFullscreen, setPreviewFullscreen] = useState(false);
+  const [previewDark, setPreviewDark] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typeTimerRef = useRef<number | null>(null);
 
@@ -621,7 +624,10 @@ export function AIBuilder() {
                 <span className="font-mono text-[10px] text-muted-2">{versions.length} checkpoints · {graph.nodes.length} steps · {graph.edges.length} links</span>
                 <span className="hidden text-[10px] text-muted lg:inline">Model context attached</span>
               </div>
-              <button type="button" onClick={() => setPreviewFullscreen((f) => !f)} title={previewFullscreen ? "Exit fullscreen" : "Fullscreen preview"} className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-border-strong hover:text-foreground">
+              <button type="button" onClick={() => setPreviewDark((d) => !d)} title={previewDark ? "Switch to light" : "Switch to dark"} className="flex h-7 w-7 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
+                {previewDark ? <Sun size={14} /> : <Moon size={14} />}
+              </button>
+              <button type="button" onClick={() => setPreviewFullscreen((f) => !f)} title={previewFullscreen ? "Exit fullscreen" : "Fullscreen preview"} className="flex h-7 w-7 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
                 {previewFullscreen ? <ArrowsInSimple size={14} /> : <ArrowsOutSimple size={14} />}
               </button>
             </div>
@@ -649,7 +655,7 @@ export function AIBuilder() {
               onDownloadAll={() => void downloadAllAsZip()}
             />
           ) : (
-            <div key="preview" className="scroll-thin min-h-0 flex-1 overflow-auto p-5 force-light">
+            <div key="preview" className={`scroll-thin min-h-0 flex-1 overflow-auto p-5 ${previewDark ? "dark" : ""}`}>
               <div className={`mx-auto pb-6 ${previewFullscreen ? "h-full max-w-full" : "max-w-4xl"}`}>
                 {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} /> : null}
               </div>
