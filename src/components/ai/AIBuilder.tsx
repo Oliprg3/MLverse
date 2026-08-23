@@ -1,5 +1,6 @@
 "use client";
 
+import JSZip from "jszip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -427,6 +428,26 @@ export function AIBuilder() {
     setNotice(`Downloaded ${filename}`);
   };
 
+  const downloadAllAsZip = async () => {
+    if (!project) return;
+    const zip = new JSZip();
+    const folder = zip.folder(project.title.replace(/[^a-zA-Z0-9-_]/g, "_")) ?? zip;
+    for (const file of appFiles) {
+      folder.file(file.path, file.content);
+    }
+    folder.file(filename, code);
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project.title.replace(/[^a-zA-Z0-9-_]/g, "_")}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setNotice("Downloaded project as ZIP");
+  };
+
   if (!project || !graph || !model) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6">
@@ -613,10 +634,11 @@ export function AIBuilder() {
                 URL.revokeObjectURL(url);
                 setNotice(`Downloaded ${file.path}`);
               }}
+              onDownloadAll={() => void downloadAllAsZip()}
             />
           ) : (
             <div key="preview" className="scroll-thin min-h-0 flex-1 overflow-auto p-5">
-              <div className="mx-auto max-w-4xl pb-6">
+              <div className="mx-auto max-w-4xl pb-6 force-light">
                 {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} /> : null}
               </div>
             </div>
@@ -709,6 +731,7 @@ function CodeExplorer({
   copied,
   onCopyTraining,
   onDownloadFile,
+  onDownloadAll,
 }: {
   files: ScaffoldFile[];
   trainingFilename: string;
@@ -716,6 +739,7 @@ function CodeExplorer({
   copied: boolean;
   onCopyTraining: () => void;
   onDownloadFile: (file: ScaffoldFile) => void;
+  onDownloadAll: () => void;
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string>(files[0]?.path ?? "");
@@ -764,14 +788,19 @@ function CodeExplorer({
     <div className="animate-builder-panel flex min-h-0 flex-1">
       {/* Explorer rail */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-[#2b2340] bg-[#120e1d] md:flex">
-        <p className="border-b border-[#241d36] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Project</p>
+        <p className="border-b border-[#241d36] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-300">Project</p>
         <div className="scroll-thin min-h-0 flex-1 overflow-y-auto p-1.5">{renderNodes(tree)}</div>
-        <p className="border-t border-[#241d36] px-3 py-2 text-[9.5px] leading-relaxed text-slate-600">{files.length} files · regenerated from your last chat edit</p>
+        <div className="border-t border-[#241d36] p-2">
+          <button type="button" onClick={onDownloadAll} className="flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[10px] font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+            <DownloadSimple size={12} /> Download ZIP
+          </button>
+        </div>
+        <p className="border-t border-[#241d36] px-3 py-2 text-[9.5px] leading-relaxed text-slate-400">{files.length} files · regenerated from your last chat edit</p>
       </aside>
 
       {/* Mobile file picker */}
       <div className="min-w-0 flex-1 md:hidden">
-        <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#2b2340] bg-[#120e1d] px-4 py-2 text-xs text-slate-300 outline-none">
+        <select value={activeFile?.path ?? ""} onChange={(e) => setSelectedPath(e.target.value)} className="w-full border-b border-[#2b2340] bg-[#120e1d] px-4 py-2 text-xs text-slate-200 outline-none">
           {files.map((file) => (<option key={file.path} value={file.path}>{file.path}</option>))}
         </select>
         {activeFile ? <EditorBody file={activeFile} /> : null}
@@ -781,16 +810,16 @@ function CodeExplorer({
       {activeFile ? (
         <div className="hidden min-w-0 flex-1 flex-col bg-[#161126] md:flex">
           <div className="flex items-center justify-between gap-3 border-b border-[#2b2340] px-4 py-2">
-            <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-400">
+            <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-300">
               <span className="shrink-0"><FileGlyph path={activeFile.path} /></span>
               <span className="truncate font-mono">{activeFile.path}</span>
               <span className="ml-2 hidden shrink-0 text-slate-600 lg:inline">{EXT_LANGUAGE[activeFile.language] ?? ""}</span>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <button type="button" onClick={onCopyTraining} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white" title={`Copy the training script (${trainingFilename})`}>
+              <button type="button" onClick={onCopyTraining} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-300 transition-colors hover:bg-white/5 hover:text-white" title={`Copy the training script (${trainingFilename})`}>
                 {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />} {copied ? "Copied script" : "Training script"}
               </button>
-              <button type="button" onClick={() => onDownloadFile(activeFile)} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white">
+              <button type="button" onClick={() => onDownloadFile(activeFile)} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
                 <DownloadSimple size={12} /> Download
               </button>
             </div>
@@ -798,7 +827,7 @@ function CodeExplorer({
           <EditorBody file={activeFile} />
         </div>
       ) : (
-        <div className="hidden flex-1 items-center justify-center bg-[#161126] text-xs text-slate-500 md:flex">No project yet — send a chat message to generate one.</div>
+        <div className="hidden flex-1 items-center justify-center bg-[#161126] text-xs text-slate-400 md:flex">No project yet — send a chat message to generate one.</div>
       )}
     </div>
   );
