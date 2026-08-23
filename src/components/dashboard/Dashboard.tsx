@@ -19,7 +19,6 @@ import {
   Stack,
   Sun,
   Target,
-  Waveform,
 } from "@phosphor-icons/react";
 import { useTheme } from "@/components/theme/theme-provider";
 import { NODE_PALETTE, CATEGORIES } from "@/lib/canvasConfig";
@@ -35,26 +34,17 @@ const TEMPLATES = [
   {
     title: "Classic classifier",
     description: "Breast Cancer → Scaler → Random Forest → evaluation charts.",
-    tags: ["Instant CPU", "6 charts"],
-    accent: "emerald" as const,
     icon: Target,
-    seed: "data:breast_cancer",
   },
   {
     title: "Fast baseline",
     description: "Iris → Min-Max → KNN with the built-in TypeScript engine.",
-    tags: ["Runs anywhere", "No setup"],
-    accent: "sky" as const,
     icon: Lightning,
-    seed: "data:iris",
   },
   {
     title: "Deep learning",
     description: "PyTorch MLP pipeline exported as a ready-to-run Colab notebook.",
-    tags: ["Colab GPU", "Notebook export"],
-    accent: "violet" as const,
     icon: Brain,
-    seed: "data:synthetic",
   },
 ];
 
@@ -110,7 +100,6 @@ export function Dashboard() {
           <div className="flex items-center gap-2.5">
             <SquaresFour size={20} weight="bold" className="text-foreground" />
             <span className="text-sm font-semibold tracking-tight">NeuralForge</span>
-            <span className="ml-1 hidden rounded-full border border-border px-2 py-0.5 font-mono text-[10px] text-muted-2 sm:inline">no-code ML studio</span>
           </div>
           <nav className="flex items-center gap-1">
             <Link href="/canvas" className="hidden rounded-lg px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground sm:block">Canvas</Link>
@@ -126,9 +115,7 @@ export function Dashboard() {
         {/* Hero */}
         <section className="relative overflow-hidden pt-16 sm:pt-20">
           <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/[0.07] blur-3xl" />
-          <p className="animate-slide-up inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-500">
-            <Waveform size={13} weight="bold" /> Train · evaluate · ship
-          </p>
+          <p className="animate-slide-up text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">Train · evaluate · ship</p>
           <h1 className="animate-slide-up mt-5 max-w-2xl text-balance text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl" style={{ animationDelay: "60ms" }}>
             Build machine learning pipelines{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">without code</span>
@@ -183,16 +170,9 @@ export function Dashboard() {
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             {TEMPLATES.map((template) => (
               <Link key={template.title} href="/canvas" className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg">
-                <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${template.accent === "emerald" ? "bg-emerald-500/10 text-emerald-500" : template.accent === "sky" ? "bg-sky-500/10 text-sky-500" : "bg-violet-500/10 text-violet-500"}`}>
-                  <template.icon size={18} />
-                </span>
+                <template.icon size={19} className="text-muted-2 transition-colors group-hover:text-foreground" />
                 <h3 className="mt-3.5 text-sm font-semibold tracking-tight">{template.title}</h3>
                 <p className="mt-1.5 text-xs leading-5 text-muted">{template.description}</p>
-                <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
-                  {template.tags.map((tag) => (
-                    <span key={tag} className="rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-2">{tag}</span>
-                  ))}
-                </div>
                 <ArrowRight size={14} weight="bold" className="absolute right-4 top-4 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
             ))}
@@ -205,7 +185,7 @@ export function Dashboard() {
             <h2 className="text-lg font-bold tracking-tight">Recent project</h2>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-5">
               <div className="flex min-w-0 items-center gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stack size={19} /></span>
+                <Stack size={19} className="shrink-0 text-muted-2" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{project.title}</p>
                   <p className="mt-0.5 text-[11px] text-muted">{project.nodes.length} nodes · {project.edges.length} links · saved {formatSavedAt(project.savedAt)}</p>

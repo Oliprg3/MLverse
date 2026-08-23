@@ -15,7 +15,6 @@ import {
   FilePy,
   Monitor,
   PaperPlaneRight,
-  PencilSimple,
   Robot,
   Sparkle,
 } from "@phosphor-icons/react";
@@ -445,14 +444,14 @@ export function AIBuilder() {
           </Link>
           <div className="h-5 w-px bg-border" />
           <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-sm"><Robot size={13} weight="fill" /></span>
+            <Robot size={17} className="shrink-0 text-emerald-500" />
             <span className="truncate text-sm font-semibold">AI Builder</span>
-            <span className="hidden max-w-52 truncate rounded-md border border-border bg-surface px-2 py-0.5 text-[11px] text-muted sm:inline">{project.title}</span>
+            <span className="hidden max-w-52 truncate border-l border-border pl-2 text-[11px] text-muted sm:inline">{project.title}</span>
           </div>
         </div>
         <div className="flex items-center gap-2.5">
-          <span className="hidden items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] text-muted md:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> {modelLabel} · {formatBytes(model.size)}
+          <span className="hidden items-center gap-1.5 text-[11px] text-muted md:inline-flex">
+            {modelLabel} · {formatBytes(model.size)}
           </span>
           <button type="button" onClick={() => setHistoryOpen((open) => !open)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-foreground-2 transition-all hover:border-border-strong hover:text-foreground active:scale-[0.98]">
             <ArrowsCounterClockwise size={13} /> Checkpoints
@@ -465,19 +464,18 @@ export function AIBuilder() {
       </header>
 
       {/* Checkpoints strip */}
-      {historyOpen ? (
-        <div className="scroll-thin flex shrink-0 items-center gap-2 overflow-x-auto border-b border-border bg-surface/60 px-4 py-2">
+      {historyOpen && versions.length > 1 ? (
+        <div className="scroll-thin flex shrink-0 items-center gap-4 overflow-x-auto border-b border-border bg-surface/60 px-5 py-2">
+          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Checkpoints</span>
           {versions.map((version, index) => {
             const active = uiSpec !== null && index === versions.length - 1;
             return (
-              <button key={version.id} type="button" onClick={() => restoreVersion(version)} title={`Restore "${version.label}"`} className={`group flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium transition-all ${active ? "border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-500" : "border-border text-muted hover:border-border-strong hover:text-foreground"}`}>
-                <span className="font-mono">{version.id}</span>
-                <span className="max-w-40 truncate">{version.label}</span>
-                {index > 0 ? <ArrowsCounterClockwise size={9} className="opacity-0 transition-opacity group-hover:opacity-100" /> : null}
+              <button key={version.id} type="button" onClick={() => restoreVersion(version)} title={`Restore "${version.label}"`} className={`flex shrink-0 items-baseline gap-1.5 text-[11px] transition-colors hover:text-foreground ${active ? "font-medium text-foreground" : "text-muted"}`}>
+                <span className="font-mono text-[10px] text-muted-2">{version.id}</span>
+                <span className="max-w-44 truncate">{version.label}</span>
               </button>
             );
           })}
-          {versions.length <= 1 ? <span className="shrink-0 text-[10px] text-muted-2">Every AI edit creates a restore point here.</span> : null}
         </div>
       ) : null}
 
@@ -485,10 +483,7 @@ export function AIBuilder() {
         {/* Agent column */}
         <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border bg-surface lg:w-[380px] lg:border-b-0 lg:border-r">
           <div className="border-b border-border px-5 py-4">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-              <span className="flex h-5 items-center rounded-md bg-gradient-to-r from-emerald-500/15 to-teal-500/15 px-1.5 font-mono text-[9px] text-emerald-500">AGENT</span>
-              Session
-            </div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Agent session</div>
             <p className="mt-1.5 text-xs leading-5 text-muted">Describe changes like you would to an engineer — the preview updates with every reply.</p>
           </div>
 
@@ -508,9 +503,7 @@ export function AIBuilder() {
                     {text}
                     {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse rounded-sm bg-emerald-400 align-middle" /> : null}
                     {message.versionId && !isLastAssistantTyping ? (
-                      <span className="mt-2 block">
-                        <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/[0.06] px-1.5 py-0.5 font-mono text-[9px] text-emerald-500"><PencilSimple size={9} /> applied {message.versionId}</span>
-                      </span>
+                      <span className="mt-1.5 block font-mono text-[9px] text-muted-2">{message.versionId} applied to preview</span>
                     ) : null}
                   </div>
                 </div>
@@ -536,9 +529,9 @@ export function AIBuilder() {
           </div>
 
           <div className="border-t border-border p-4">
-            <div className="mb-3 flex flex-wrap gap-1.5">
+            <div className="mb-2.5 flex flex-wrap gap-x-3 gap-y-1">
               {suggestions.map((suggestion) => (
-                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="rounded-full border border-border px-2.5 py-1 text-[10px] font-medium text-muted transition-all hover:border-emerald-500/40 hover:text-emerald-500 disabled:opacity-50 active:scale-[0.97]">
+                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="text-[11px] text-muted transition-colors hover:text-foreground disabled:opacity-50">
                   {suggestion}
                 </button>
               ))}
@@ -561,9 +554,7 @@ export function AIBuilder() {
               </div>
             </div>
             {notice ? (
-              <p className="animate-fade-in mt-2 flex items-center gap-1.5 truncate text-[10px] text-muted">
-                <span className="h-1 w-1 shrink-0 rounded-full bg-emerald-400" /> {notice}
-              </p>
+              <p className="animate-fade-in mt-2 truncate text-[10px] text-muted">{notice}</p>
             ) : null}
           </div>
         </aside>
@@ -584,12 +575,8 @@ export function AIBuilder() {
               ))}
             </div>
             <div className="hidden items-center gap-2 md:flex">
-              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted">{versions.length} checkpoints</span>
-              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted">{graph.nodes.length} steps · {graph.edges.length} links</span>
-              <span className="ml-1 hidden items-center gap-1.5 text-[10px] text-muted lg:inline-flex">
-                <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" /></span>
-                Model context attached
-              </span>
+              <span className="font-mono text-[10px] text-muted-2">{versions.length} checkpoints · {graph.nodes.length} steps · {graph.edges.length} links</span>
+              <span className="hidden text-[10px] text-muted lg:inline">Model context attached</span>
             </div>
           </div>
 

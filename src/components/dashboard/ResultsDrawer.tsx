@@ -42,13 +42,13 @@ interface ResultsDrawerProps {
   code?: string;
 }
 
-const METRIC_META: { key: keyof MetricSet; label: string; accent: string }[] = [
-  { key: "accuracy", label: "Accuracy", accent: "#10b981" },
-  { key: "roc_auc", label: "ROC-AUC", accent: "#0ea5e9" },
-  { key: "f1", label: "F1 Score", accent: "#8b5cf6" },
-  { key: "precision", label: "Precision", accent: "#f59e0b" },
-  { key: "recall", label: "Recall", accent: "#ec4899" },
-  { key: "average_precision", label: "Avg. Precision", accent: "#6366f1" },
+const METRIC_META: { key: keyof MetricSet; label: string }[] = [
+  { key: "accuracy", label: "Accuracy" },
+  { key: "roc_auc", label: "ROC-AUC" },
+  { key: "f1", label: "F1 Score" },
+  { key: "precision", label: "Precision" },
+  { key: "recall", label: "Recall" },
+  { key: "average_precision", label: "Avg. Precision" },
 ];
 
 function downloadBlob(filename: string, content: string, mime: string) {
@@ -63,13 +63,10 @@ function downloadBlob(filename: string, content: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-function MetricCard({ label, value, accent }: { label: string; value: number | null; accent: string }) {
+function MetricCard({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="animate-chart-in rounded-lg border border-border bg-surface p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</span>
-        <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} />
-      </div>
+      <span className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</span>
       <div className={cn("mt-1 font-mono text-xl font-bold tabular-nums", value === null && "text-muted/40")}>
         {value === null ? "—" : formatPercent(value)}
       </div>
@@ -139,12 +136,11 @@ function LiveConsole({ logs, liveMetrics }: { logs: string[]; liveMetrics: Recor
       ) : null}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
         {METRIC_META.map((m) => (
-          <MetricCard key={m.key} label={m.label} value={m.key in liveMetrics ? liveMetrics[m.key] : null} accent={m.accent} />
+          <MetricCard key={m.key} label={m.label} value={m.key in liveMetrics ? liveMetrics[m.key] : null} />
         ))}
       </div>
       <div className="overflow-hidden rounded-xl border border-border">
         <div className="flex items-center gap-2 border-b border-border bg-foreground/[0.03] px-3 py-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
           <span className="font-mono text-[11px] text-muted-2">training console</span>
         </div>
         <div className="scroll-thin max-h-56 overflow-y-auto bg-foreground/[0.02] px-4 py-3 font-mono text-[12px] leading-relaxed">
@@ -296,7 +292,7 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
         {METRIC_META.map((m) => (
-          <MetricCard key={m.key} label={m.label} value={res.metrics[m.key] ?? 0} accent={m.accent} />
+          <MetricCard key={m.key} label={m.label} value={res.metrics[m.key] ?? 0} />
         ))}
       </div>
 
@@ -505,4 +501,5 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
 }
 
 export default ResultsDrawer;
+
 

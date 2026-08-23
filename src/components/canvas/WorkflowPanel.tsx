@@ -26,7 +26,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, onExecute
       <div className="border-b border-border px-4 py-4">
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-muted">Status</span>
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{hasModel ? "Ready" : "Incomplete"}</span>
+          <span className={`flex items-center text-[11px] font-medium ${hasModel ? "text-emerald-500" : "text-amber-500"}`}>{hasModel ? "Ready" : "Incomplete"}</span>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Summary label="Steps" value={nodeCount} />

@@ -424,8 +424,7 @@ function Canvas() {
           </ReactFlow>
 
           <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-border bg-surface/95 px-3 py-2 shadow-sm backdrop-blur-md">
-            <span className={hasModel ? "h-1.5 w-1.5 rounded-full bg-emerald-400" : "h-1.5 w-1.5 rounded-full bg-amber-400"} />
-            <span className="text-[11px] font-medium text-foreground-2">{hasModel ? "Ready" : "Incomplete"}</span>
+            <span className={`text-[11px] font-medium ${hasModel ? "text-emerald-500" : "text-amber-500"}`}>{hasModel ? "Ready" : "Incomplete"}</span>
             <span className="text-[10px] text-muted">{nodes.length} steps · {edges.length} connections</span>
           </div>
 
