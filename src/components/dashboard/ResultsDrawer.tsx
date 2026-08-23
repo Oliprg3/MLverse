@@ -17,6 +17,8 @@ import {
   XCircle,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { TerminalConsole, type TerminalLine } from "./TerminalConsole";
+import { EvaluationAnalytics } from "./EvaluationAnalytics";
 import { PlotlyChart } from "./PlotlyChart";
 import type { PlotlyFigure } from "@/lib/types";
 import { chartSpec, sortChartKeys } from "@/lib/chartCatalog";
@@ -33,7 +35,7 @@ import type {
 interface ResultsDrawerProps {
   open: boolean;
   loading: boolean;
-  logs: string[];
+  logs: TerminalLine[];
   liveMetrics: Record<string, number>;
   response: ExecutionResponse | null;
   onClose: () => void;
@@ -102,15 +104,14 @@ function PipelineStrip({ steps }: { steps: PipelineStep[] }) {
 }
 
 /** Live training console shown while the stream is running. */
-function LiveConsole({ logs, liveMetrics }: { logs: string[]; liveMetrics: Record<string, number> }) {
-  const endRef = useRef<HTMLDivElement>(null);
+function LiveConsole({ logs, liveMetrics, running }: { logs: TerminalLine[]; liveMetrics: Record<string, number>; running: boolean }) {
   const epochState = useMemo(() => {
     let current = 0;
     let total = 0;
     let loss: number | null = null;
     let accuracy: number | null = null;
     for (const log of logs) {
-      const match = log.match(/epoch\s+(\d+)(?:\s*\/\s*(\d+))?.*loss[=:]\s*([\d.]+).*?(?:val_acc|acc)[=:]\s*([\d.]+)/i);
+      const match = log.text.match(/epoch\s+(\d+)(?:\s*\/\s*(\d+))?.*loss[=:]\s*([\d.]+).*?(?:val_acc|acc)[=:]\s*([\d.]+)/i);
       if (!match) continue;
       current = Number(match[1]);
       total = Number(match[2] ?? total);
@@ -119,19 +120,16 @@ function LiveConsole({ logs, liveMetrics }: { logs: string[]; liveMetrics: Recor
     }
     return { current, total, loss, accuracy };
   }, [logs]);
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [logs]);
 
   return (
     <div className="space-y-4">
       {epochState.current > 0 ? (
-        <div className="rounded-xl border border-sky-500/25 bg-sky-500/[0.05] p-3">
+        <div className="rounded-xl border border-border bg-surface p-3">
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="inline-flex items-center gap-2 font-medium text-sky-300"><CircleNotch size={14} className="animate-spin" /> Epoch {epochState.current}{epochState.total ? ` / ${epochState.total}` : ""}</span>
+            <span className="inline-flex items-center gap-2 font-medium text-foreground"><CircleNotch size={14} className="animate-spin text-sky-400" /> Epoch {epochState.current}{epochState.total ? ` / ${epochState.total}` : ""}</span>
             <span className="font-mono text-muted-2">{epochState.loss === null ? "loss pending" : `loss ${epochState.loss.toFixed(4)}`} · {epochState.accuracy === null ? "accuracy pending" : `${(epochState.accuracy * 100).toFixed(1)}% val acc`}</span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full bg-sky-400 transition-all duration-500" style={{ width: `${epochState.total ? Math.min(100, (epochState.current / epochState.total) * 100) : 100}%` }} /></div>
+          <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full bg-sky-400 transition-all duration-500" style={{ width: `${epochState.total ? Math.min(100, (epochState.current / epochState.total) * 100) : 100}%` }} /></div>
         </div>
       ) : null}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
@@ -139,24 +137,7 @@ function LiveConsole({ logs, liveMetrics }: { logs: string[]; liveMetrics: Recor
           <MetricCard key={m.key} label={m.label} value={m.key in liveMetrics ? liveMetrics[m.key] : null} />
         ))}
       </div>
-      <div className="overflow-hidden rounded-xl border border-border">
-        <div className="flex items-center gap-2 border-b border-border bg-foreground/[0.03] px-3 py-2">
-          <span className="font-mono text-[11px] text-muted-2">training console</span>
-        </div>
-        <div className="scroll-thin max-h-56 overflow-y-auto bg-foreground/[0.02] px-4 py-3 font-mono text-[12px] leading-relaxed">
-          {logs.length === 0 ? (
-            <div className="flex items-center gap-2 text-muted"><CircleNotch size={14} className="animate-spin" /> Initializing engine…</div>
-          ) : (
-            logs.map((l, i) => (
-              <div key={i} className="flex gap-2 text-foreground-2">
-                <span className="select-none text-muted/60">{String(i + 1).padStart(2, "0")}</span>
-                <span>{l}</span>
-              </div>
-            ))
-          )}
-          <div ref={endRef} />
-        </div>
-      </div>
+      <TerminalConsole lines={logs} running={running} />
     </div>
   );
 }
@@ -295,6 +276,8 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
           <MetricCard key={m.key} label={m.label} value={res.metrics[m.key] ?? 0} />
         ))}
       </div>
+
+      <EvaluationAnalytics predictions={res.predictions} />
 
       {(() => {
         const requested = sortChartKeys(res.charts_requested?.length ? res.charts_requested : Object.keys(res.charts));
@@ -480,7 +463,7 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
 
         <div className="scroll-thin overflow-y-auto px-5 py-4">
           {loading ? (
-            <LiveConsole logs={logs} liveMetrics={liveMetrics} />
+            <LiveConsole logs={logs} liveMetrics={liveMetrics} running={loading} />
           ) : isError && response ? (
             <div className="rounded-xl border border-rose-500/30 bg-rose-500/[0.06] p-5">
               <div className="flex items-center gap-2 text-rose-400"><XCircle className="h-5 w-5" /><span className="text-sm font-semibold">The engine reported an error</span></div>
@@ -501,5 +484,7 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
 }
 
 export default ResultsDrawer;
+
+
 
 

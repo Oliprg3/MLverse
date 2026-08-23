@@ -8,11 +8,13 @@ interface WorkflowPanelProps {
   edgeCount: number;
   route: ExecutionRoute;
   hasModel: boolean;
+  errors: number;
+  warnings: number;
   onExecute: () => void;
   onCode: () => void;
 }
 
-export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, onExecute, onCode }: WorkflowPanelProps) {
+export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, onExecute, onCode }: WorkflowPanelProps) {
   return (
     <aside className="hidden h-full w-64 shrink-0 flex-col border-l border-border bg-surface lg:flex">
       <div className="border-b border-border px-4 py-3">
@@ -26,8 +28,16 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, onExecute
       <div className="border-b border-border px-4 py-4">
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-muted">Status</span>
-          <span className={`flex items-center text-[11px] font-medium ${hasModel ? "text-emerald-500" : "text-amber-500"}`}>{hasModel ? "Ready" : "Incomplete"}</span>
+          <span className={`flex items-center text-[11px] font-medium ${errors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500"}`}>
+            {errors > 0 ? `${errors} error${errors === 1 ? "" : "s"}` : hasModel ? "Ready" : "Incomplete"}
+          </span>
         </div>
+        {warnings > 0 ? (
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-[11px] text-muted">Warnings</span>
+            <span className="text-[11px] font-medium text-amber-500">{warnings}</span>
+          </div>
+        ) : null}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Summary label="Steps" value={nodeCount} />
           <Summary label="Connections" value={edgeCount} />

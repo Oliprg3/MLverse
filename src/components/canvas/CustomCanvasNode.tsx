@@ -5,7 +5,7 @@
 
 import { memo } from "react";
 import { Handle, Position, useReactFlow, type Node, type NodeProps } from "@xyflow/react";
-import { Trash, CloudArrowUp, FileCsv } from "@phosphor-icons/react";
+import { CheckCircle, CircleNotch, Trash, CloudArrowUp, FileCsv, XCircle } from "@phosphor-icons/react";
 import { resolveIcon } from "@/lib/icons";
 import { getCategory } from "@/lib/canvasConfig";
 import type { CsvDataset, ImageDataset, MLNodeData } from "@/lib/types";
@@ -57,10 +57,22 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
         className={cn(
           "absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md text-muted opacity-0 transition-all duration-150 hover:bg-foreground/[0.06] hover:text-rose-400",
           selected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+          data.executionStatus && "hidden",
         )}
       >
         <Trash size={13} />
       </button>
+
+      {/* Execution lifecycle indicator replaces the delete button while a run is active. */}
+      {data.executionStatus === "running" ? (
+        <span className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-surface/90 px-1 py-0.5 font-mono text-[9px] text-sky-400" title="Running">
+          <CircleNotch size={11} className="animate-spin" /> run
+        </span>
+      ) : data.executionStatus === "success" ? (
+        <CheckCircle size={15} weight="fill" className="absolute right-2 top-2 text-emerald-500" aria-label="Succeeded" />
+      ) : data.executionStatus === "error" ? (
+        <XCircle size={15} weight="fill" className="absolute right-2 top-2 text-rose-500" aria-label="Failed" />
+      ) : null}
 
       {/* Header — bare icon glyph (no box/border/tint) */}
       <div className="flex items-center gap-2.5 pl-2">

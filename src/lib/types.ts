@@ -115,6 +115,8 @@ export interface MLNodeData {
   dataset?: CsvDataset;
   /** Present on custom image data nodes — grayscale-encoded samples. */
   imageDataset?: ImageDataset;
+  /** Lifecycle marker stamped by the canvas during a training run. */
+  executionStatus?: "running" | "success" | "error";
   /** selection ring / active state */
   selected?: boolean;
   [key: string]: unknown;

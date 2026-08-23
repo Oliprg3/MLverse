@@ -322,8 +322,48 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
   }
   return (
     <label className="block min-w-0">
-      <span className="mb-1 block max-w-full break-words text-xs font-medium tracking-tight text-foreground-2">{param.label}</span>
-      {param.options ? (
+      <span className="mb-1 flex items-baseline justify-between gap-2">
+        <span className="max-w-full break-words text-xs font-medium tracking-tight text-foreground-2">{param.label}</span>
+        {param.kind === "slider" ? <span className="shrink-0 font-mono text-[11px] text-muted">{String(param.value)}</span> : null}
+      </span>
+      {param.kind === "toggle" ? (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={param.value === "true"}
+          onClick={() => onChange(param.value === "true" ? "false" : "true")}
+          className={cn(
+            "relative h-5 w-9 shrink-0 rounded-full border transition-colors",
+            param.value === "true" ? "border-emerald-500/60 bg-emerald-500/80" : "border-border bg-background",
+          )}
+        >
+          <span className={cn("absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-white shadow-sm transition-all", param.value === "true" ? "left-[1.15rem]" : "left-0.5")} />
+        </button>
+      ) : param.kind === "slider" && typeof param.min === "number" && typeof param.max === "number" ? (
+        <span className="flex items-center gap-2">
+          <input
+            type="range"
+            min={param.min}
+            max={param.max}
+            step={param.step ?? 1}
+            value={Number(param.value)}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-foreground/[0.12] accent-emerald-500 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500"
+          />
+          <input
+            type="number"
+            min={param.min}
+            max={param.max}
+            step={param.step ?? 1}
+            value={Number(param.value)}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              if (!Number.isNaN(next)) onChange(Math.min(param.max!, Math.max(param.min!, next)));
+            }}
+            className="w-16 shrink-0 rounded-md border border-input bg-background px-1.5 py-1 text-right font-mono text-[11px] text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </span>
+      ) : param.options ? (
         <select value={String(param.value)} onChange={(e) => onChange(e.target.value)} className="w-full min-w-0 rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground focus-visible:ring-2 focus-visible:ring-ring">
           {param.options.map((o) => (<option key={o} value={o}>{o}</option>))}
         </select>
@@ -342,4 +382,5 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
 }
 
 export default Inspector;
+
 

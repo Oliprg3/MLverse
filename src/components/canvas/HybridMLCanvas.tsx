@@ -20,13 +20,17 @@ import { CanvasControls } from "./CanvasControls";
 import { NodeLibrary } from "@/components/sidebar/NodeLibrary";
 import { Header } from "@/components/navigation/Header";
 import { Inspector } from "./Inspector";
+import { ProblemsPanel } from "./ProblemsPanel";
 import { ResultsDrawer } from "@/components/dashboard/ResultsDrawer";
 import { CodeModal } from "@/components/dashboard/CodeModal";
 import { GuideModal } from "@/components/dashboard/GuideModal";
 import { WorkflowPanel } from "@/components/canvas/WorkflowPanel";
 import { Toast, type ToastData } from "@/components/ui/toast";
 import { getPaletteItem, hasModelNode, resolveRoute } from "@/lib/canvasConfig";
-import { generateCode, type GeneratedCode } from "@/lib/codeGen";
+import { generateCode, generateNodeServer, type GeneratedCode } from "@/lib/codeGen";
+import { summarizeDiagnostics, validatePipeline } from "@/lib/pipelineValidation";
+import { deserializeWorkflow, downloadWorkflow, serializeWorkflow } from "@/lib/workflowSerialization";
+import type { TerminalLine } from "@/components/dashboard/TerminalConsole";
 import { hasSavedProject, loadProject, saveProject } from "@/lib/projectStorage";
 import type {
   ExecutionResponse,
@@ -134,11 +138,14 @@ function Canvas() {
   const [codeOpen, setCodeOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<GeneratedCode | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<TerminalLine[]>([]);
   const [liveMetrics, setLiveMetrics] = useState<Record<string, number>>({});
   const [toast, setToast] = useState<ToastData | null>(null);
   const toastId = useRef(0);
   const idCounter = useRef(100);
+  const lineId = useRef(0);
+  const lastLineAt = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [savedProjectAvailable, setSavedProjectAvailable] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
 
@@ -164,6 +171,30 @@ function Canvas() {
   const route = useMemo(() => resolveRoute(categories), [categories]);
   const hasModel = useMemo(() => hasModelNode(categories), [categories]);
   const selectedNode = useMemo(() => nodes.find((n) => n.selected) ?? null, [nodes]);
+
+  // ── Live pipeline validation ────────────────────────────────────────────────
+  const diagnostics = useMemo(
+    () => validatePipeline(
+      nodes.map<GraphNodePayload>((n) => ({
+        id: n.id,
+        type: n.data.type,
+        category: n.data.category,
+        label: n.data.label,
+        params: n.data.params ? Object.fromEntries(n.data.params.map((p) => [p.key, p.value])) : undefined,
+        dataset: n.data.dataset,
+        imageDataset: n.data.imageDataset,
+        position: n.position,
+      })),
+      edges.map<GraphEdgePayload>((e) => ({ id: e.id, source: e.source, target: e.target })),
+    ),
+    [nodes, edges],
+  );
+  const problemCounts = useMemo(() => summarizeDiagnostics(diagnostics), [diagnostics]);
+  const blockingErrors = problemCounts.errors;
+
+  const focusNode = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === nodeId })));
+  }, [setNodes]);
 
   const onDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
@@ -239,19 +270,43 @@ function Canvas() {
     [notify],
   );
 
+  const pushLine = useCallback((text: string, level: TerminalLine["level"] = "info") => {
+    lineId.current += 1;
+    const now = new Date();
+    const durationMs = lastLineAt.current !== null ? now.getTime() - lastLineAt.current : undefined;
+    lastLineAt.current = now.getTime();
+    setLogs((l) => [...l, { id: lineId.current, text, time: now, durationMs, level }]);
+  }, []);
+
+  /** Stamp every canvas node with a lifecycle status shown on the card. */
+  const stampStatuses = useCallback((status: "running" | "success" | "error" | undefined) => {
+    setNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, executionStatus: status } })));
+  }, [setNodes]);
+
   const handleExecute = useCallback(async () => {
     if (!hasModel) return;
+
+    // Hard-stop on structural problems — the engine would reject them anyway.
+    if (blockingErrors > 0) {
+      notify(`Fix ${blockingErrors} pipeline problem${blockingErrors === 1 ? "" : "s"} before training`, "warn");
+      return;
+    }
+
     const payload = buildPayload();
     setLoading(true);
     setResponse(null);
     setLogs([]);
     setLiveMetrics({});
     setDrawerOpen(true);
+    lastLineAt.current = null;
+    stampStatuses("running");
+    pushLine(`Dispatching ${payload.nodes.length}-step ${route === "colab" ? "Colab GPU" : "instant CPU"} pipeline…`, "system");
 
     // Deep-learning route: open Colab + copy the code SYNCHRONOUSLY (before await).
     if (route === "colab") {
       const gen = handOffToColab(payload);
       setGeneratedCode(gen); // seed the code viewer with the same script
+      pushLine("Training code copied — paste it into the opened Colab notebook.", "system");
     }
 
     try {
@@ -280,9 +335,15 @@ function Canvas() {
           } catch {
             continue;
           }
-          if (evt.type === "step" && evt.message) setLogs((l) => [...l, evt.message!]);
+          if (evt.type === "step" && evt.message) pushLine(evt.message);
           else if (evt.type === "metric" && evt.name) setLiveMetrics((m) => ({ ...m, [evt.name!]: evt.value ?? 0 }));
-          else if (evt.type === "result" && evt.data) setResponse(evt.data);
+          else if (evt.type === "result" && evt.data) {
+            setResponse(evt.data);
+            const ok = evt.data.status === "success";
+            const seconds = "timing" in evt.data ? evt.data.timing.total_seconds ?? 0 : 0;
+            pushLine(ok ? `Run complete in ${seconds.toFixed(2)}s.` : `Engine error: ${evt.data.error ?? "unknown failure"}`, ok ? "success" : "error");
+            stampStatuses(ok ? "success" : "error");
+          }
         }
       }
     } catch (err) {
@@ -300,10 +361,12 @@ function Canvas() {
         timing: { total_seconds: 0, training_seconds: 0 },
         error: err instanceof Error ? err.message : "Network request failed",
       });
+      pushLine(err instanceof Error ? err.message : "Network request failed", "error");
+      stampStatuses("error");
     } finally {
       setLoading(false);
     }
-  }, [buildPayload, hasModel, route, handOffToColab]);
+  }, [blockingErrors, buildPayload, hasModel, notify, pushLine, route, handOffToColab, stampStatuses]);
 
   /** Re-copy + re-open from the drawer button (fresh click gesture). */
   const handleOpenColab = useCallback((editedCode?: string) => {
@@ -355,16 +418,32 @@ function Canvas() {
   const handleFit = useCallback(() => fitView({ padding: 0.28, duration: 450 }), [fitView]);
 
   const handleExport = useCallback(() => {
-    const blob = new Blob([JSON.stringify(buildPayload(), null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "neuralforge-pipeline.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }, [buildPayload]);
+    try {
+      downloadWorkflow(serializeWorkflow(nodes, edges));
+      notify("Workflow exported — positions, parameters, and datasets included");
+    } catch {
+      notify("Could not serialize this workflow", "warn");
+    }
+  }, [edges, nodes, notify]);
+
+  const handleImportFile = useCallback(async (file: File) => {
+    try {
+      const text = await file.text();
+      const result = deserializeWorkflow(text);
+      if (!result.ok) {
+        notify(result.error, "warn");
+        return;
+      }
+      setNodes(result.nodes);
+      setEdges(result.edges);
+      stampStatuses(undefined);
+      setResponse(null);
+      notify(`Imported “${result.title}” · ${result.nodes.length} steps restored`);
+      window.setTimeout(() => fitView({ padding: 0.28, duration: 450 }), 0);
+    } catch {
+      notify("Could not read that workflow file", "warn");
+    }
+  }, [fitView, notify, setEdges, setNodes, stampStatuses]);
 
   const closeInspector = useCallback(() => setNodes((nds) => nds.map((n) => ({ ...n, selected: false }))), [setNodes]);
 
@@ -393,9 +472,21 @@ function Canvas() {
         onLoad={handleLoad}
         hasSavedProject={storageReady && savedProjectAvailable}
         onExport={handleExport}
+        onImportWorkflow={() => fileInputRef.current?.click()}
         onClear={handleClear}
         onFit={handleFit}
         onExecute={handleExecute}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void handleImportFile(file);
+          event.target.value = "";
+        }}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -417,6 +508,8 @@ function Canvas() {
             fitViewOptions={{ padding: 0.16, maxZoom: 1 }}
             minZoom={0.2}
             maxZoom={2}
+            connectionRadius={32}
+            snapGrid={[16, 16]}
             deleteKeyCode={["Backspace", "Delete"]}
             className="bg-transparent"
           >
@@ -424,9 +517,13 @@ function Canvas() {
           </ReactFlow>
 
           <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-border bg-surface/95 px-3 py-2 shadow-sm backdrop-blur-md">
-            <span className={`text-[11px] font-medium ${hasModel ? "text-emerald-500" : "text-amber-500"}`}>{hasModel ? "Ready" : "Incomplete"}</span>
-            <span className="text-[10px] text-muted">{nodes.length} steps · {edges.length} connections</span>
+            <span className={`text-[11px] font-medium ${blockingErrors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500"}`}>
+              {blockingErrors > 0 ? `${blockingErrors} error${blockingErrors === 1 ? "" : "s"}` : hasModel ? "Ready" : "Incomplete"}
+            </span>
+            <span className="text-[10px] text-muted">{nodes.length} steps · {edges.length} connections{problemCounts.warnings > 0 ? ` · ${problemCounts.warnings} warning${problemCounts.warnings === 1 ? "" : "s"}` : ""}</span>
           </div>
+
+          <ProblemsPanel diagnostics={diagnostics} onSelectNode={focusNode} />
 
           {isDragActive ? (
             <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-primary/60 bg-primary/[0.06]">
@@ -463,7 +560,7 @@ function Canvas() {
         {selectedNode ? (
           <Inspector node={selectedNode} onClose={closeInspector} />
         ) : (
-          <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel} onExecute={handleExecute} onCode={openCode} />
+          <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} />
         )}
       </div>
 

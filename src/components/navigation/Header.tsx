@@ -15,6 +15,7 @@ import {
   SquaresFour,
   Sun,
   Trash,
+  UploadSimple,
   FloppyDisk,
   CircleNotch,
 } from "@phosphor-icons/react";
@@ -37,6 +38,7 @@ export interface HeaderProps {
   onLoad: () => void;
   hasSavedProject: boolean;
   onExport: () => void;
+  onImportWorkflow: () => void;
   onClear: () => void;
   onFit: () => void;
   onExecute: () => void;
@@ -74,6 +76,7 @@ export function Header({
   onLoad,
   hasSavedProject,
   onExport,
+  onImportWorkflow,
   onClear,
   onFit,
   onExecute,
@@ -124,7 +127,8 @@ export function Header({
         <IconButton icon={FolderOpen} label={hasSavedProject ? "Load saved project" : "No saved project yet"} onClick={onLoad} />
         <div className="mx-1 hidden h-5 w-px bg-border sm:block" />
         <IconButton icon={ArrowsOut} label="Fit view" onClick={onFit} className="hidden sm:inline-flex" />
-        <IconButton icon={DownloadSimple} label="Export pipeline" onClick={onExport} className="hidden md:inline-flex" />
+        <IconButton icon={UploadSimple} label="Import workflow (.json)" onClick={onImportWorkflow} className="hidden md:inline-flex" />
+        <IconButton icon={DownloadSimple} label="Export workflow (.json)" onClick={onExport} className="hidden md:inline-flex" />
         <IconButton icon={Trash} label="Clear canvas" onClick={onClear} className="hidden sm:inline-flex" />
         <ThemeToggle />
         <div className="mx-1 hidden h-5 w-px bg-border sm:block" />
