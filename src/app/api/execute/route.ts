@@ -10,6 +10,57 @@ export const dynamic = "force-dynamic";
 
 const EXEC_TIMEOUT_MS = 90_000;
 
+type EngineProbe = { available: boolean; version: string | null; reason: string | null };
+
+let probeCache: { at: number; probe: EngineProbe } | null = null;
+const PROBE_TTL_MS = 60_000;
+
+/** Probe the host machine for a usable Python engine (sklearn + helpers).
+ *  Result is cached briefly so repeated Train clicks don't re-pay the cost. */
+function probePythonEngine(): Promise<EngineProbe> {
+  if (probeCache && Date.now() - probeCache.at < PROBE_TTL_MS) {
+    return Promise.resolve(probeCache.probe);
+  }
+  const bin = process.platform === "win32" ? "python" : "python3";
+  return new Promise<EngineProbe>((resolve) => {
+    let settled = false;
+    let stdout = "";
+    let stderr = "";
+    const finish = (probe: EngineProbe) => {
+      if (settled) return;
+      settled = true;
+      probeCache = { at: Date.now(), probe };
+      resolve(probe);
+    };
+    let child;
+    try {
+      child = spawn(
+        bin,
+        ["-c", "import sys, sklearn, plotly, nbformat, networkx; print(sys.version.split()[0])"],
+        { cwd: process.cwd(), env: process.env, stdio: ["ignore", "pipe", "pipe"], timeout: 20_000 },
+      );
+    } catch {
+      finish({ available: false, version: null, reason: `${bin} runtime not found on this machine` });
+      return;
+    }
+    child.stdout?.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
+    child.stderr?.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
+    child.on("error", () => finish({ available: false, version: null, reason: `${bin} runtime not found on this machine` }));
+    child.on("close", (code) => {
+      if (code === 0) {
+        finish({ available: true, version: stdout.trim() || null, reason: null });
+        return;
+      }
+      const missing = stderr.match(/No module named ['"]([\w.]+)['"]/);
+      finish({
+        available: false,
+        version: null,
+        reason: missing ? `missing Python package "${missing[1]}"` : "required Python packages are not installed",
+      });
+    });
+  });
+}
+
 /**
  * Streams newline-delimited JSON events so the UI can show the training
  * happening live (step logs + metrics) before the final result:
@@ -35,8 +86,14 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       const send = (obj: unknown) => controller.enqueue(encoder.encode(`${JSON.stringify(obj)}\n`));
 
-      // 1) Real Python engine streams its own NDJSON — forward each line.
-      if (!forceTs) {
+      // 1) Machine check — detect whether this server can run the native
+      //    Python engine, say so in the live console, then use it if present.
+      const probe = forceTs ? null : await probePythonEngine();
+      if (probe?.available) {
+        await send({
+          type: "step",
+          message: `Machine check: Python ${probe.version ?? ""} + scikit-learn detected — routing to the native engine…`.replace(/\s+/g, " "),
+        });
         const ok = await pipePython(graph, (line: string) =>
           controller.enqueue(encoder.encode(`${line}\n`)),
         );
@@ -44,9 +101,14 @@ export async function POST(req: NextRequest) {
           controller.close();
           return;
         }
+      } else if (probe) {
+        await send({
+          type: "step",
+          message: `Machine check: native Python engine unavailable (${probe.reason}) — switching to the built-in TypeScript engine…`,
+        });
       }
       // 2) Resilience fallback — synthesize a streamed experience in TS.
-      await streamTs(graph, send);
+      await streamTs(graph, send, probe ?? undefined);
       controller.close();
     },
   });
@@ -130,13 +192,15 @@ function pipePython(graph: GraphPayload, pushLine: (line: string) => void): Prom
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Never manufacture metrics when the real Python engine is unavailable. */
-async function streamTs(graph: GraphPayload, send: (obj: unknown) => void) {
+async function streamTs(graph: GraphPayload, send: (obj: unknown) => void, probe?: EngineProbe) {
   const model = graph.nodes.find((node) => node.category === "classic_ml");
   const supportedFallback = model?.type === "ml:knn" || model?.type === "ml:naive_bayes";
   if (graph.nodes.some((node) => node.category === "deep_learning") || !supportedFallback) {
-    const message = graph.nodes.some((node) => node.category === "deep_learning"
+    const isDeepLearning = graph.nodes.some((node) => node.category === "deep_learning");
+    const probeNote = probe && !probe.available && probe.reason ? ` Machine check failed: ${probe.reason}.` : "";
+    const message = isDeepLearning
       ? "Deep-learning training requires the Python runtime with PyTorch. Open the editable notebook in Colab to train on GPU."
-      : `The selected model (${model?.label ?? "classical ML"}) requires the Python scikit-learn engine. Install backend requirements and restart the app.`);
+      : `The selected model (${model?.label ?? "classical ML"}) requires the Python scikit-learn engine.${probeNote} Install backend requirements on this machine and restart the app.`;
     const error = {
       route: "instant",
       status: "error",
@@ -178,5 +242,11 @@ async function streamTs(graph: GraphPayload, send: (obj: unknown) => void) {
 }
 
 export async function GET() {
-  return NextResponse.json({ service: "Hybrid Execution Router (streaming NDJSON)" });
+  const probe = await probePythonEngine();
+  return NextResponse.json({
+    service: "Hybrid Execution Router (streaming NDJSON)",
+    engine: probe.available ? "native-python" : "typescript-fallback",
+    python_version: probe.version,
+    machine_check: probe.available ? "ok" : probe.reason,
+  });
 }
