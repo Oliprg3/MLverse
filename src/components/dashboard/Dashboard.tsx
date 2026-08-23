@@ -107,7 +107,7 @@ export function Dashboard() {
       <header className="glass-panel sticky top-0 z-30 border-b border-border">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="MLverse" className="h-7 w-auto dark:invert" />
+            <img src="/logo.png" alt="MLverse" className="-mt-0.5 h-6 w-auto dark:invert" />
           </div>
           <nav className="flex items-center gap-1">
             <Link href="/canvas" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Canvas</Link>

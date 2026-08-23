@@ -90,7 +90,7 @@ export function Header({
           {paletteOpen ? <SidebarSimple size={18} /> : <SidebarSimple size={18} weight="light" />}
         </Button>
 
-        <img src="/logo.png" alt="MLverse" className="h-7 w-auto dark:invert" />
+        <img src="/logo.png" alt="MLverse" className="-mt-0.5 h-6 w-auto dark:invert" />
 
         <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
           <CaretRight className="h-3.5 w-3.5 shrink-0 text-muted" />
