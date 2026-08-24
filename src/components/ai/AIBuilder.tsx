@@ -62,9 +62,9 @@ const SESSION_KEY = "neuralforge:aibuilder:v1";
 
 /** Agent phases shown while a request is in flight. */
 const AGENT_STEPS = [
-  { label: "Reading saved pipeline", hint: "nodes · params · dataset context" },
-  { label: "Drafting interface spec", hint: "layout · copy · field structure" },
-  { label: "Validating fields", hint: "types · options · empty states" },
+  { label: "Reading saved pipeline", hint: "nodes, params, dataset context" },
+  { label: "Drafting interface spec", hint: "layout, copy, field structure" },
+  { label: "Validating fields", hint: "types, options, empty states" },
   { label: "Applying changes", hint: "hot-swapping the live preview" },
 ];
 
@@ -114,7 +114,7 @@ function defaultSpec(modelName: string, format: string, featureNames?: string[])
       { label: "Inputs", value: String(features.length || fields.length).padStart(2, "0"), detail: "Configurable fields" },
     ],
     features: [
-      { title: "Live predictions", description: "The form runs real inference against your saved dataset — try it now.", icon: "shield" },
+      { title: "Live predictions", description: "The form runs real inference against your saved dataset. Try it now.", icon: "shield" },
       { title: "Fast feedback", description: "Validate the prediction experience before connecting inference.", icon: "activity" },
       { title: "Built for iteration", description: "Keep refining layout, copy, and behavior through chat.", icon: "spark" },
     ],
@@ -125,9 +125,9 @@ function defaultSpec(modelName: string, format: string, featureNames?: string[])
 /** Renders the UiSpec as a believable website inside a browser-chrome frame. */
 function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: number[]) => { label: string; confidence: number; probabilities: Array<{ label: string; p: number }> } | null }) {
   const ACCENTS = {
-    sky: { text: "text-sky-600", chip: "border-sky-500/25 bg-sky-500/10 text-sky-700", soft: "bg-sky-500/10", solid: "bg-sky-600 hover:bg-sky-500 text-white", dot: "bg-sky-500", glow: "shadow-[0_8px_30px_-12px_rgba(14,165,233,0.45)]" },
-    violet: { text: "text-violet-600", chip: "border-violet-500/25 bg-violet-500/10 text-violet-700", soft: "bg-violet-500/10", solid: "bg-violet-600 hover:bg-violet-500 text-white", dot: "bg-violet-500", glow: "shadow-[0_8px_30px_-12px_rgba(139,92,246,0.45)]" },
-    emerald: { text: "text-emerald-600", chip: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700", soft: "bg-emerald-500/10", solid: "bg-emerald-600 hover:bg-emerald-500 text-white", dot: "bg-emerald-500", glow: "shadow-[0_8px_30px_-12px_rgba(16,185,129,0.45)]" },
+    sky: { text: "text-sky-600 dark:text-sky-400", chip: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300", soft: "bg-sky-500/10", solid: "bg-sky-600 hover:bg-sky-500 text-white", bar: "bg-gradient-to-r from-sky-500 to-cyan-400" },
+    violet: { text: "text-violet-600 dark:text-violet-400", chip: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300", soft: "bg-violet-500/10", solid: "bg-violet-600 hover:bg-violet-500 text-white", bar: "bg-gradient-to-r from-violet-500 to-purple-400" },
+    emerald: { text: "text-emerald-600 dark:text-emerald-400", chip: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300", soft: "bg-emerald-500/10", solid: "bg-emerald-600 hover:bg-emerald-500 text-white", bar: "bg-gradient-to-r from-emerald-500 to-teal-400" },
   } as const;
   const a = ACCENTS[spec.accent] ?? ACCENTS.sky;
   const [values, setValues] = useState<Record<string, string>>({});
@@ -147,16 +147,13 @@ function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: n
   };
 
   return (
-    <div className={`animate-builder-panel overflow-hidden rounded-2xl border border-border bg-card shadow-2xl ${a.glow}`}>
+    <div className="animate-builder-panel overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
       {/* Browser chrome */}
       <div className="flex items-center gap-3 border-b border-border bg-surface px-4 py-3">
-        <div className="flex gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-rose-400/80 shadow-sm shadow-rose-400/20" />
-          <span className="h-3 w-3 rounded-full bg-amber-400/80 shadow-sm shadow-amber-400/20" />
-          <span className="h-3 w-3 rounded-full bg-emerald-400/80 shadow-sm shadow-emerald-400/20" />
+        <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-2">
+          <Monitor size={12} /> Preview
         </div>
-        <div className="mx-auto flex max-w-xs flex-1 items-center justify-center gap-1.5 truncate rounded-xl border border-border bg-background px-3 py-1.5 text-[11px] font-medium text-muted">
-          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${a.dot}`} />
+        <div className="mx-auto flex max-w-xs flex-1 items-center justify-center gap-1.5 truncate rounded-xl border border-border bg-background px-3 py-1.5 font-mono text-[11px] font-medium text-muted">
           {spec.brand.toLowerCase().replace(/\s+/g, "")}.app
         </div>
         <div className="w-10" />
@@ -165,7 +162,7 @@ function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: n
       {/* Site nav */}
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <span className="flex items-center gap-2.5 text-sm font-bold">
-          <span className={`flex h-7 w-7 items-center justify-center rounded-xl ${a.soft} ${a.text}`}><Sparkle size={14} weight="fill" /></span>
+          <span className={`flex h-7 w-7 items-center justify-center rounded-lg border border-border ${a.text}`}><Sparkle size={14} weight="fill" /></span>
           {spec.brand}
         </span>
         <nav className="hidden items-center gap-6 sm:flex">
@@ -173,12 +170,12 @@ function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: n
             <span key={item} className="cursor-default text-xs font-semibold text-muted transition-colors hover:text-foreground">{item}</span>
           ))}
         </nav>
-        <span className={`rounded-xl border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${a.chip}`}>{spec.eyebrow.split(" ")[0]}</span>
+        <span className={`rounded-lg border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${a.text}`}>{spec.eyebrow.split(" ")[0]}</span>
       </div>
 
       {/* Hero */}
       <div className="relative overflow-hidden px-6 py-10 sm:px-10">
-        <div className={`pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-[0.08] blur-3xl ${a.dot}`} />
+        <div className={`pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-[0.16] blur-3xl ${a.soft}`} />
         <p className={`text-[11px] font-bold uppercase tracking-[0.2em] ${a.text}`}>{spec.eyebrow}</p>
         <h1 className="mt-3 max-w-xl text-balance text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">{spec.title}</h1>
         <p className="mt-4 max-w-xl text-sm leading-7 text-muted">{spec.description}</p>
@@ -242,7 +239,7 @@ function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: n
                     <div key={p.label} className="flex items-center gap-2">
                       <span className="w-20 shrink-0 truncate text-right font-mono text-[10px] text-muted">{p.label}</span>
                       <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-foreground/[0.08]">
-                        <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-500" style={{ width: `${Math.max(2, p.p * 100)}%` }} />
+                        <div className={`h-full rounded-full ${a.bar}`} style={{ width: `${Math.max(2, p.p * 100)}%` }} />
                       </div>
                       <span className="w-11 shrink-0 text-right font-mono text-[10px] text-muted-2">{(p.p * 100).toFixed(1)}%</span>
                     </div>
@@ -251,21 +248,22 @@ function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: n
               </div>
             ) : ran ? (
               <div className="animate-builder-message mt-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] p-3 text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                The model could not run — the saved dataset was too large to keep in this session.
+                The model could not run: the saved dataset was too large to keep in this session.
               </div>
             ) : null}
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className={`rounded-2xl border p-6 ${a.chip}`}>
-            <p className="text-sm font-bold">{spec.insight.title}</p>
-            <p className="mt-2 text-xs leading-6 opacity-80">{spec.insight.description}</p>
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+            <p className={`text-[10px] font-bold uppercase tracking-widest ${a.text}`}>Insight</p>
+            <p className="mt-2 text-sm font-bold">{spec.insight.title}</p>
+            <p className="mt-2 text-xs leading-6 text-muted">{spec.insight.description}</p>
           </div>
           <div className="grid gap-2.5">
             {spec.features.map((feature) => (
               <div key={feature.title} className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm transition-all duration-200 hover:border-border-strong hover:shadow-md">
-                <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${a.soft} ${a.text}`}>
+                <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border ${a.text}`}>
                   {feature.icon === "shield" ? <Monitor size={15} /> : feature.icon === "activity" ? <Code size={15} /> : <Sparkle size={15} weight="fill" />}
                 </span>
                 <div>
@@ -293,6 +291,7 @@ export function AIBuilder() {
   const [notice, setNotice] = useState("");
   const [uiSpec, setUiSpec] = useState<UiSpec | null>(null);
   const [versions, setVersions] = useState<SpecVersion[]>([]);
+  const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
   const [previewNonce, setPreviewNonce] = useState(0);
   const [copied, setCopied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(true);
@@ -323,7 +322,9 @@ export function AIBuilder() {
             if (cancelled) return;
             setMessages(session.messages ?? []);
             setVersions(session.versions);
-            setUiSpec(session.versions[session.versions.length - 1].spec);
+            const latest = session.versions[session.versions.length - 1];
+            setUiSpec(latest.spec);
+            setActiveVersionId(latest.id);
             return;
           }
         }
@@ -333,6 +334,7 @@ export function AIBuilder() {
       if (cancelled) return;
       setUiSpec(base);
       setVersions([{ id: "v0", label: "Initial layout", at: Date.now(), spec: base }]);
+      setActiveVersionId("v0");
     })();
     return () => { cancelled = true; };
   }, []);
@@ -414,11 +416,12 @@ export function AIBuilder() {
         const version: SpecVersion = { id: versionId, label: message.length > 42 ? `${message.slice(0, 42)}…` : message, at: Date.now(), spec: result.ui };
         setVersions((current) => [...current, version]);
         setUiSpec(result.ui);
+        setActiveVersionId(versionId);
         setPreviewNonce((n) => n + 1);
       }
       setMessages((current) => [...current, { role: "assistant", content: "", ...(versionId ? { versionId } : {}) }]);
       setActiveTab("preview");
-      setNotice(result.ui?.title ? `Live preview updated · ${result.ui.title}` : "Live preview updated");
+      setNotice(result.ui?.title ? `Live preview updated: ${result.ui.title}` : "Live preview updated");
       typewrite(reply);
     } catch (error) {
       setMessages((current) => [...current, { role: "assistant", content: error instanceof Error ? error.message : "The AI builder failed." }]);
@@ -431,9 +434,10 @@ export function AIBuilder() {
   const restoreVersion = (version: SpecVersion) => {
     if (loading) return;
     setUiSpec(version.spec);
+    setActiveVersionId(version.id);
     setPreviewNonce((n) => n + 1);
     setActiveTab("preview");
-    setNotice(`Restored checkpoint · ${version.label}`);
+    setNotice(`Restored checkpoint: ${version.label}`);
   };
 
   const regenerateCode = async () => {
@@ -503,15 +507,15 @@ export function AIBuilder() {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background bg-[radial-gradient(circle_at_50%_-10%,color-mix(in_srgb,var(--primary)_12%,transparent),transparent_45%)] p-6">
         <div className="animate-builder-panel relative w-full max-w-lg rounded-[28px] border border-border/70 bg-card/80 p-9 shadow-2xl backdrop-blur-xl">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/[0.08] text-primary">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-surface text-muted">
             <Robot size={24} />
           </div>
           <h1 className="mt-6 text-xl font-bold tracking-tight">Build with AI</h1>
           <p className="mt-2.5 text-sm leading-7 text-muted">Save a pipeline with a model node from the canvas first. The builder turns that saved graph into a working app you refine through chat.</p>
           <p className="mt-4 rounded-xl border border-border bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted shadow-sm">
-            Opened from the canvas but seeing this? The pipeline could not be shared into the builder — press <span className="font-semibold text-foreground-2">Build with AI</span> again after re-opening the canvas. Very large uploaded datasets are trimmed automatically.
+            Opened from the canvas but seeing this? The pipeline could not be shared into the builder. Press <span className="font-semibold text-foreground-2">Build with AI</span> again after re-opening the canvas. Very large uploaded datasets are trimmed automatically.
           </p>
-          <Link href="/canvas" className="mt-6 inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-all hover:bg-primary/20 hover:border-primary/50">
+          <Link href="/canvas" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
             <ArrowLeft size={15} weight="bold" /> Back to canvas
           </Link>
         </div>
@@ -529,25 +533,26 @@ export function AIBuilder() {
           </Link>
           <div className="h-6 w-px bg-border/70" />
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/[0.08] text-primary">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background/50 text-muted">
               <Robot size={16} />
-            </div>
+            </span>
             <div className="min-w-0">
               <span className="block truncate text-sm font-semibold tracking-tight">AI Builder</span>
               <span className="hidden text-[10px] uppercase tracking-[0.16em] text-muted sm:block">Shape the product around your model</span>
             </div>
-            <span className="hidden max-w-52 truncate border-l border-border pl-2.5 text-[11px] text-muted sm:inline">{project.title}</span>
+            <span className="hidden max-w-52 truncate border-l border-border pl-2.5 font-mono text-[11px] text-muted sm:inline">{project.title}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden items-center gap-1.5 text-[11px] font-medium text-muted md:inline-flex">
-            {modelLabel} · {formatBytes(model.size)}
+        <div className="flex items-center gap-3">
+          <span className="hidden flex-col items-end leading-tight md:flex">
+            <span className="max-w-44 truncate text-[11px] font-semibold text-foreground-2">{modelLabel}</span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted">{formatBytes(model.size)}</span>
           </span>
           <button type="button" onClick={() => setHistoryOpen((open) => !open)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border/80 bg-background/45 px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-border-strong hover:bg-foreground/[0.04] hover:text-foreground active:scale-[0.98]">
             <ArrowsCounterClockwise size={13} /> Checkpoints
             <CaretDown size={10} className={`transition-transform duration-200 ${historyOpen ? "" : "-rotate-90"}`} />
           </button>
-          <button type="button" onClick={regenerateCode} disabled={loading} className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/25 bg-primary/[0.07] px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-primary/40 hover:bg-primary/[0.12] hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]">
+          <button type="button" onClick={regenerateCode} disabled={loading} className="inline-flex h-9 items-center gap-2 rounded-xl border border-border/80 bg-background/45 px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-border-strong hover:bg-foreground/[0.04] hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]">
             <Code size={14} /> Generate code
           </button>
         </div>
@@ -557,10 +562,10 @@ export function AIBuilder() {
       {historyOpen && versions.length > 1 ? (
         <div className="scroll-thin flex shrink-0 items-center gap-4 overflow-x-auto border-b border-border bg-surface/60 px-5 py-2">
           <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Checkpoints</span>
-          {versions.map((version, index) => {
-            const active = uiSpec !== null && index === versions.length - 1;
+          {versions.map((version) => {
+            const active = version.id === activeVersionId;
             return (
-              <button key={version.id} type="button" onClick={() => restoreVersion(version)} title={`Restore "${version.label}"`} className={`flex shrink-0 items-baseline gap-1.5 text-[11px] transition-colors hover:text-foreground ${active ? "font-medium text-foreground" : "text-muted"}`}>
+              <button key={version.id} type="button" onClick={() => restoreVersion(version)} title={`Restore "${version.label}"`} className={`flex shrink-0 items-baseline gap-1.5 rounded-md px-1 py-0.5 text-[11px] transition-colors hover:text-foreground ${active ? "font-semibold text-foreground underline underline-offset-4" : "text-muted"}`}>
                 <span className="font-mono text-[10px] text-muted-2">{version.id}</span>
                 <span className="max-w-44 truncate">{version.label}</span>
               </button>
@@ -590,9 +595,9 @@ export function AIBuilder() {
               const text = isLastAssistantTyping ? typedText : message.content;
               return (
                 <div key={`${message.role}-${index}`} className={`animate-builder-message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[90%] whitespace-pre-wrap px-4 py-3 text-xs leading-6 shadow-sm ${message.role === "user" ? "rounded-2xl rounded-br-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-violet-500/20" : "rounded-2xl rounded-bl-lg border border-border bg-card text-foreground-2"}`}>
+                  <div className={`max-w-[90%] whitespace-pre-wrap px-4 py-3 text-xs leading-6 shadow-sm ${message.role === "user" ? "rounded-2xl rounded-br-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900" : "rounded-2xl rounded-bl-lg border border-border bg-card text-foreground-2"}`}>
                     {text}
-                    {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-full bg-emerald-400 align-middle" /> : null}
+                    {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-full bg-current align-middle opacity-60" /> : null}
                     {message.versionId && !isLastAssistantTyping ? (
                       <span className="mt-2 block font-mono text-[9px] font-medium text-muted-2">{message.versionId} applied to preview</span>
                     ) : null}
@@ -607,7 +612,7 @@ export function AIBuilder() {
                   const active = index === agentStep;
                   return (
                     <div key={step.label} className={`flex items-start gap-2.5 text-[11px] transition-colors duration-300 ${done ? "text-muted" : active ? "text-foreground" : "text-muted-2 opacity-50"}`}>
-                      {done ? <Check size={13} weight="bold" className="mt-0.5 shrink-0 text-primary" /> : active ? <CircleNotch size={13} className="mt-0.5 shrink-0 animate-spin text-primary" /> : <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-border-strong" />}
+                      {done ? <Check size={13} weight="bold" className="mt-0.5 shrink-0 text-emerald-500" /> : active ? <CircleNotch size={13} className="mt-0.5 shrink-0 animate-spin text-foreground" /> : <span className="mt-1 h-2 w-2 shrink-0 rounded-[3px] border border-border-strong" />}
                       <span className="min-w-0">
                         <span className="font-semibold">{step.label}</span>
                         {active ? <span className="ml-1.5 font-mono text-[9px] text-muted-2">{step.hint}</span> : null}
@@ -620,9 +625,9 @@ export function AIBuilder() {
           </div>
 
           <div className="border-t border-border/70 bg-surface/45 p-5">
-            <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1.5">
+            <div className="mb-3 flex flex-wrap gap-1.5">
               {suggestions.map((suggestion) => (
-                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="border-b border-transparent px-0.5 py-1 text-left text-[11px] font-medium text-muted transition-all hover:border-primary/40 hover:text-foreground disabled:opacity-50">
+                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-left text-[11px] font-medium text-muted transition-all hover:border-border-strong hover:text-foreground disabled:opacity-50">
                   {suggestion}
                 </button>
               ))}
@@ -637,9 +642,12 @@ export function AIBuilder() {
                 placeholder="Describe the app you want…"
                 className="w-full resize-none bg-transparent px-1 text-xs leading-6 outline-none placeholder:text-muted-2"
               />
-              <div className="mt-2 flex items-center justify-between border-t border-border pt-2.5">
-                <span className="text-[10px] text-muted-2"><kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd> to send · <kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Shift+Enter</kbd> newline</span>
-                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5 text-[10px] text-muted-2">
+                  <kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd> send
+                  <kbd className="ml-1 rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Shift+Enter</kbd> new line
+                </span>
+                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-900 text-white transition-all hover:bg-neutral-700 disabled:pointer-events-none disabled:opacity-40 active:scale-95 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
                   <PaperPlaneRight size={14} weight="fill" />
                 </button>
               </div>
@@ -667,9 +675,12 @@ export function AIBuilder() {
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden items-center gap-2 md:flex">
-                <span className="font-mono text-[10px] text-muted-2">{versions.length} checkpoints · {graph.nodes.length} steps · {graph.edges.length} links</span>
-                <span className="hidden text-[10px] text-muted lg:inline">Model context attached</span>
+              <div className="hidden items-center gap-3 font-mono text-[10px] text-muted-2 md:flex">
+                <span>{versions.length} checkpoints</span>
+                <span className="h-2.5 w-px bg-border" />
+                <span>{graph.nodes.length} steps</span>
+                <span className="h-2.5 w-px bg-border" />
+                <span>{graph.edges.length} links</span>
               </div>
               <button type="button" onClick={() => setPreviewDark((d) => !d)} title={previewDark ? "Switch to light" : "Switch to dark"} className="flex h-7 w-7 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
                 {previewDark ? <Sun size={14} /> : <Moon size={14} />}
@@ -843,7 +854,7 @@ function CodeExplorer({
           className={`flex w-full items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all ${active ? "bg-white/10 text-white shadow-sm" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
           style={{ paddingLeft: 8 + depth * 12 }}
         >
-          <span className={active ? "text-emerald-400" : "text-slate-500 shrink-0"}><FileGlyph path={node.path} /></span>
+          <span className={active ? "shrink-0 text-white" : "shrink-0 text-slate-500"}><FileGlyph path={node.path} /></span>
           <span className="truncate">{node.name}</span>
         </button>
       );
@@ -860,7 +871,7 @@ function CodeExplorer({
             <DownloadSimple size={12} /> Download ZIP
           </button>
         </div>
-        <p className="border-t border-[#2a2244] px-4 py-2 text-[9.5px] leading-relaxed text-slate-500">{files.length} files · regenerated from your last chat edit</p>
+        <p className="border-t border-[#2a2244] px-4 py-2 text-[9.5px] leading-relaxed text-slate-500">{files.length} files, regenerated from your last chat edit</p>
       </aside>
 
       {/* Mobile file picker */}
@@ -892,7 +903,7 @@ function CodeExplorer({
           <EditorBody file={activeFile} />
         </div>
       ) : (
-        <div className="hidden flex-1 items-center justify-center bg-[#161126] text-xs text-slate-400 md:flex">No project yet — send a chat message to generate one.</div>
+        <div className="hidden flex-1 items-center justify-center bg-[#161126] text-xs text-slate-400 md:flex">No project yet. Send a chat message to generate one.</div>
       )}
     </div>
   );

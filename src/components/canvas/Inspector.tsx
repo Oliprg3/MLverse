@@ -120,7 +120,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
     if (!node) return;
     updateNodeData(node.id, {
       dataset,
-      description: `${dataset.nrows.toLocaleString()} rows · ${dataset.columns.length} cols · cleaned (${summary})`,
+      description: `${dataset.nrows.toLocaleString()} rows, ${dataset.columns.length} cols, cleaned (${summary})`,
     });
   };
 
@@ -148,7 +148,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
     updateNodeData(node.id, {
       dataset,
       label: file.name.replace(/\.[^.]+$/, "") || "Custom CSV",
-      description: `${dataset.nrows.toLocaleString()} rows · ${columns.length} cols · target: ${dataset.targetColumn}`,
+      description: `${dataset.nrows.toLocaleString()} rows, ${columns.length} cols, target: ${dataset.targetColumn}`,
     });
     e.target.value = "";
   };
@@ -158,11 +158,11 @@ export function Inspector({ node, onClose }: InspectorProps) {
     if (!files || !files.length) return;
     const dataset = await processImageFiles(files);
     if (!dataset) return;
-    const counts = dataset.classNames.map((c, i) => `${c}:${dataset.labels.filter((l) => l === i).length}`).join(" · ");
+    const counts = dataset.classNames.map((c, i) => `${c}: ${dataset.labels.filter((l) => l === i).length}`).join(", ");
     updateNodeData(node.id, {
       imageDataset: dataset,
       label: "Image Dataset",
-      description: `${dataset.nsamples} images · ${dataset.classNames.length} classes (${counts})`,
+      description: `${dataset.nsamples} images, ${dataset.classNames.length} classes (${counts})`,
     });
     e.target.value = "";
   };
@@ -176,7 +176,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
     if (!data.dataset) return;
     updateNodeData(node.id, {
       dataset: { ...data.dataset, targetColumn },
-      description: `${data.dataset.nrows.toLocaleString()} rows · ${data.dataset.columns.length} cols · target: ${targetColumn}`,
+      description: `${data.dataset.nrows.toLocaleString()} rows, ${data.dataset.columns.length} cols, target: ${targetColumn}`,
     });
   };
 
@@ -194,10 +194,12 @@ export function Inspector({ node, onClose }: InspectorProps) {
       <div className="scroll-thin flex-1 overflow-y-auto p-4">
         {/* Identity — bare icon glyph */}
         <div className="flex items-center gap-3">
-          <Icon className="h-6 w-6 shrink-0" style={{ color: category.accent }} strokeWidth={1.75} />
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-neutral-200/90 dark:border-white/[0.1]">
+            <Icon className="h-5 w-5 text-neutral-500 dark:text-zinc-400" strokeWidth={1.75} />
+          </span>
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold tracking-tight text-neutral-900 dark:text-white">{data.label}</div>
-            <div className="nf-hud-label mt-0.5" style={{ color: `color-mix(in srgb, ${category.accent} 75%, var(--muted))` }}>{category.label}</div>
+            <div className="nf-hud-label mt-0.5">{category.label}</div>
           </div>
         </div>
 
@@ -216,7 +218,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
               <div className="space-y-3">
                 <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/60 p-3 dark:border-white/[0.07] dark:bg-white/[0.02]">
                   <div className="truncate text-xs font-medium text-neutral-800 dark:text-zinc-200">{data.dataset.filename}</div>
-                  <div className="mt-1 font-mono text-[11px] text-neutral-400 dark:text-zinc-500">{data.dataset.nrows.toLocaleString()} rows · {data.dataset.columns.length} features</div>
+                  <div className="mt-1 font-mono text-[11px] text-neutral-400 dark:text-zinc-500">{data.dataset.nrows.toLocaleString()} rows, {data.dataset.columns.length} features</div>
                 </div>
 
                 {/* Data quality + cleaning */}
@@ -234,7 +236,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
                         csvIssues.missingTotal > 0 ? `${csvIssues.missingTotal} missing cells` : null,
                         csvIssues.columns.some((c) => c.kind === "text") ? `${csvIssues.columns.filter((c) => c.kind === "text").length} column(s) with text` : null,
                         csvIssues.duplicateRows > 0 ? `${csvIssues.duplicateRows} duplicate rows` : null,
-                      ].filter(Boolean).join(" · ")}
+                      ].filter(Boolean).join(", ")}
                     </p>
                     <p className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-amber-500">
                       <Broom size={12} /> Clean data <CaretRight size={11} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
@@ -289,11 +291,11 @@ export function Inspector({ node, onClose }: InspectorProps) {
                   </div>
                 ) : null}
                 <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/60 p-3 dark:border-white/[0.07] dark:bg-white/[0.02]">
-                  <div className="font-mono text-[11px] text-neutral-400 dark:text-zinc-500">{data.imageDataset.nsamples} samples · {data.imageDataset.width}×{data.imageDataset.height} · {data.imageDataset.classNames.length} classes</div>
+                  <div className="font-mono text-[11px] text-neutral-400 dark:text-zinc-500">{data.imageDataset.nsamples} samples, {data.imageDataset.width}×{data.imageDataset.height}, {data.imageDataset.classNames.length} classes</div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {data.imageDataset.classNames.map((c, i) => {
                       const count = data.imageDataset!.labels.filter((l) => l === i).length;
-                      return (<span key={c} className="rounded-md border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-zinc-400">{c} · {count}</span>);
+                      return (<span key={c} className="rounded-md border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-zinc-400">{c}: {count}</span>);
                     })}
                   </div>
                 </div>

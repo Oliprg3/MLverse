@@ -19,13 +19,13 @@ interface GuideModalProps {
 }
 
 const STEPS = [
-  { icon: Database, title: "1 · Add a data source", body: "Drag a node from the left panel — a built-in dataset, your own CSV, or an image folder (sub-folders = classes)." },
-  { icon: SlidersHorizontal, title: "2 · Preprocess", body: "Optionally chain a Scaler, PCA, Polynomial Features, or Imputer between your data and the model." },
-  { icon: Brain, title: "3 · Choose a model", body: "Pick from the full scikit-learn suite (trains instantly on the CPU) or a PyTorch architecture (runs on Colab GPU)." },
-  { icon: CursorClick, title: "4 · Wire the graph", body: "Drag from a node's right handle to the next node's left handle to connect the pipeline." },
-  { icon: Gear, title: "5 · Configure", body: "Click any node to open the inspector and tune hyperparameters or upload data." },
-  { icon: Play, title: "6 · Run", body: "Hit the action button. Classic ML returns live Plotly dashboards; deep learning exports a Colab notebook." },
-  { icon: Code, title: "7 · Export", body: "Open Code to view, copy, or download the real Python generated from your canvas." },
+  { icon: Database, title: "1. Add a data source", body: "Drag a node from the left panel: a built-in dataset, your own CSV, or an image folder (sub-folders = classes)." },
+  { icon: SlidersHorizontal, title: "2. Preprocess", body: "Optionally chain a Scaler, PCA, Polynomial Features, or Imputer between your data and the model." },
+  { icon: Brain, title: "3. Choose a model", body: "Pick from the full scikit-learn suite (trains instantly on the CPU) or a PyTorch architecture (runs on Colab GPU)." },
+  { icon: CursorClick, title: "4. Wire the graph", body: "Drag from a node's right handle to the next node's left handle to connect the pipeline." },
+  { icon: Gear, title: "5. Configure", body: "Click any node to open the inspector and tune hyperparameters or upload data." },
+  { icon: Play, title: "6. Run", body: "Hit the action button. Classic ML returns live Plotly dashboards; deep learning exports a Colab notebook." },
+  { icon: Code, title: "7. Export", body: "Open Code to view, copy, or download the real Python generated from your canvas." },
 ];
 
 export function GuideModal({ open, onClose }: GuideModalProps) {

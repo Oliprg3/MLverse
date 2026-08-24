@@ -64,7 +64,7 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
     const parts: string[] = [];
     if (replacements > 0) parts.push(`${replacements} value${replacements === 1 ? "" : "s"} filled`);
     if (rowsDropped > 0) parts.push(`${rowsDropped} row${rowsDropped === 1 ? "" : "s"} dropped`);
-    onApply(cleaned, parts.join(" · ") || "Data cleaned");
+    onApply(cleaned, parts.join(", ") || "Data cleaned");
     setStrategies({});
     onClose();
   };
@@ -75,7 +75,7 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
       onClose={onClose}
       title={
         <span className="flex items-center gap-2">
-          <Broom size={16} className="text-primary" /> Data cleaning — {dataset.filename}
+          <Broom size={16} className="text-primary" /> Data cleaning: {dataset.filename}
         </span>
       }
       subtitle="Review the detected issues, choose how to fill each column, then apply."
@@ -84,7 +84,7 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
         <div className="flex items-center justify-between gap-3">
           <p className="text-[11px] text-muted">
             {plan && plan.totalReplacements + plan.rowsDropped > 0
-              ? `${plan.totalReplacements} value${plan.totalReplacements === 1 ? "" : "s"} to fill${plan.rowsDropped > 0 ? ` · ${plan.rowsDropped} row${plan.rowsDropped === 1 ? "" : "s"} dropped` : ""}`
+              ? `${plan.totalReplacements} value${plan.totalReplacements === 1 ? "" : "s"} to fill${plan.rowsDropped > 0 ? `, ${plan.rowsDropped} row${plan.rowsDropped === 1 ? "" : "s"} dropped` : ""}`
               : "Nothing selected to clean"}
           </p>
           <Button variant="primary" size="sm" onClick={apply} disabled={!plan || plan.totalReplacements + plan.rowsDropped === 0}>
@@ -161,7 +161,7 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
             {/* Replacement preview */}
             {plan && plan.preview.length > 0 ? (
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-muted">Preview — what gets written</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted">Preview: what gets written</p>
                 <div className="mt-2 overflow-hidden rounded-xl border border-border">
                   <table className="w-full text-[11.5px]">
                     <thead className="bg-foreground/[0.04] text-left text-muted">

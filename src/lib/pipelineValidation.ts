@@ -202,7 +202,7 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
     })();
 
   if (dataNodes.length === 0) {
-    diagnostics.push({ id: "no-data", level: "error", title: "No dataset", detail: "Add a data node — every pipeline starts with a data source." });
+    diagnostics.push({ id: "no-data", level: "error", title: "No dataset", detail: "Add a data node: every pipeline starts with a data source." });
   } else if (dataNodes.length > 1) {
     // Prefer deleting a data source that nothing consumes — never the wired one.
     const removable =
@@ -232,8 +232,8 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
         nodeId: node.id,
         title: "Dataset is not connected",
         detail: needsChain
-          ? `“${node.label}” has no outgoing link — auto-connect will wire it into the chain.`
-          : `“${node.label}” has no outgoing link — nothing consumes this data.`,
+          ? `“${node.label}” has no outgoing link, auto-connect will wire it into the chain.`
+          : `“${node.label}” has no outgoing link, nothing consumes this data.`,
         fix: needsChain ? { kind: "auto-connect" } : undefined,
       });
     }
@@ -351,7 +351,7 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
             level: "error",
             nodeId: node.id,
             title: "Text column feeds a numeric pipeline",
-            detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Drop the column in your source file, or re-upload an encoded version — this one needs a human decision.`,
+            detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Drop the column in your source file, or re-upload an encoded version, this one needs a human decision.`,
           });
         }
         if (missingCells > 0 && !preNodes.some((p) => p.type === "pre:impute") && !missingReported) {
@@ -377,7 +377,7 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
           level: "warning",
           nodeId: node.id,
           title: "Very small dataset",
-          detail: `“${facts.name}” has ${facts.n_samples} rows — metrics will be noisy. Consider cross-validation in Colab.`,
+          detail: `“${facts.name}” has ${facts.n_samples} rows, so metrics will be noisy. Consider cross-validation in Colab.`,
         });
       } else if (facts.n_samples > 0 && facts.n_samples * testSize < 10) {
         diagnostics.push({

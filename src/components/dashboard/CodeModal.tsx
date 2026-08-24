@@ -123,7 +123,7 @@ export function CodeModal({ open, onClose, code, graph, onChange, onRegenerate, 
       onClose={onClose}
       size="xl"
       title="Export workspace"
-      subtitle={`${activeCode.filename} · ${lines} lines${readOnly ? " · generated read-only" : " · editable"}`}
+      subtitle={`${activeCode.filename}, ${lines} lines${readOnly ? ", generated read-only" : ", editable"}`}
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 break-words font-mono text-[11px] text-muted">{provider && target === "python" ? `Source: ${provider}` : readOnly ? "Regenerated from the current canvas on every change." : "Changes stay in this workspace until you regenerate."}</span>
@@ -196,7 +196,7 @@ export function CodeModal({ open, onClose, code, graph, onChange, onRegenerate, 
       ) : target === "notebook" ? (
         <div className="bg-foreground/[0.02]">
           <p className="border-b border-border bg-surface px-5 py-2.5 text-[11px] leading-relaxed text-muted">
-            A single-cell Jupyter notebook wrapping the Python script above — the same payload copied into Colab.
+            A single-cell Jupyter notebook wrapping the Python script above: the same payload copied into Colab.
             The notebook requests a GPU accelerator for deep-learning graphs.
           </p>
           <CodeViewerStatic content={notebookFromCode(code.code, code.filename)} />

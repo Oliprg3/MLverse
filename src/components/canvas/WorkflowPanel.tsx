@@ -50,8 +50,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
       <div className="border-b border-neutral-200/80 px-5 py-5 dark:border-white/[0.06]">
         <div className="flex items-center justify-between">
           <span className="nf-hud-label">status</span>
-          <span className={cn("flex items-center gap-1.5 text-[11px] font-semibold", statusTone)}>
-            <span className={cn("h-1.5 w-1.5 rounded-full", errors > 0 ? "bg-rose-500" : hasModel ? "bg-emerald-500" : "bg-amber-500")} />
+          <span className={cn("text-[11px] font-semibold", statusTone)}>
             {errors > 0 ? `${errors} error${errors === 1 ? "" : "s"}` : hasModel ? "Ready" : "Incomplete"}
           </span>
         </div>
@@ -77,7 +76,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
           {engine === null ? (
             <p className="mt-1.5 text-[11px] text-neutral-400 dark:text-zinc-500">Checking deployment…</p>
           ) : native ? (
-            <p className="mt-1.5 text-[11px] font-medium leading-snug text-emerald-500">Native Python {engine.python_version} — full model suite trains here.</p>
+            <p className="mt-1.5 text-[11px] font-medium leading-snug text-emerald-500">Native Python {engine.python_version}: the full model suite trains here.</p>
           ) : (
             <p className="mt-1.5 text-[11px] font-medium leading-snug text-amber-500">
               Built-in TypeScript fallback{engine.machine_check ? ` (${engine.machine_check})` : ""}. Only KNN and Naive Bayes train; add a Python ML stack to this server for the rest. Your own computer is never used for training.

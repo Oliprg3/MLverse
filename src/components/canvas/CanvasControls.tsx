@@ -1,14 +1,13 @@
 "use client";
 
-import { Controls, MiniMap, useReactFlow, type Node } from "@xyflow/react";
-import type { MLNodeData } from "@/lib/types";
+import { Controls, MiniMap, useReactFlow } from "@xyflow/react";
 
 /**
  * Floating glassmorphism controls + minimap for the canvas.
  *
  * The visual styling (glass blur, accent hovers, dark minimap) is defined in
  * `globals.css` via React Flow class overrides; this component wires the
- * behaviour and node colouring.
+ * behaviour and keeps node colouring neutral.
  */
 export function CanvasControls() {
   return (
@@ -24,14 +23,8 @@ export function CanvasControls() {
         pannable
         zoomable
         ariaLabel="Canvas minimap"
-        nodeColor={(n: Node) => {
-          const accent = (n.data as MLNodeData | undefined)?.accent;
-          return accent ? `color-mix(in srgb, ${accent} 55%, var(--surface))` : "var(--muted-2)";
-        }}
-        nodeStrokeColor={(n: Node) => {
-          const accent = (n.data as MLNodeData | undefined)?.accent;
-          return accent ?? "var(--muted-2)";
-        }}
+        nodeColor={() => "var(--muted-2)"}
+        nodeStrokeColor={() => "var(--border-strong)"}
         nodeStrokeWidth={1.5}
         nodeBorderRadius={2}
       />

@@ -32,7 +32,7 @@ export function EvaluationAnalytics({ predictions }: { predictions: PredictionSe
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h4 className="text-[13px] font-semibold tracking-tight text-foreground">Prediction analytics</h4>
         <p className="font-mono text-[10px] text-muted-2">
-          {cm.correct}/{cm.total} correct · {(accuracy * 100).toFixed(1)}% on the held-out split
+          {cm.correct}/{cm.total} correct, {(accuracy * 100).toFixed(1)}% on the held-out split
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export function EvaluationAnalytics({ predictions }: { predictions: PredictionSe
           Most confused:{" "}
           {confusions.map((pair, i) => (
             <span key={`${pair.truth}-${pair.predicted}`}>
-              {i > 0 ? " · " : ""}
+              {i > 0 ? ", " : ""}
               <span className="font-medium text-foreground-2">{pair.truth}</span> → {pair.predicted} ({pair.count})
             </span>
           ))}

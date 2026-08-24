@@ -22,7 +22,7 @@ export interface ChartGroupConfig {
 export const CHART_GROUPS: Record<ChartGroup, ChartGroupConfig> = {
   core: { id: "core", label: "Evaluation", accent: "#0ea5e9", description: "How well did it classify?" },
   scatter: { id: "scatter", label: "Scatter & Geometry", accent: "#ec4899", description: "Where do the samples sit in feature space?" },
-  knn: { id: "knn", label: "KNN Analysis", accent: "#f59e0b", description: "Neighbourhood structure — needs a KNN model." },
+  knn: { id: "knn", label: "KNN Analysis", accent: "#f59e0b", description: "Neighbourhood structure: needs a KNN model." },
   diagnostics: { id: "diagnostics", label: "Diagnostics", accent: "#8b5cf6", description: "Is the model trustworthy / well-fit?" },
 };
 
@@ -50,30 +50,30 @@ export const CHART_CATALOG: ChartSpec[] = [
   /* ── Evaluation ─────────────────────────────────────────────────────── */
   { key: "confusion_matrix", label: "Confusion Matrix", short: "Confusion matrix", subtitle: "Counts + row-normalised share per true/predicted class", group: "core" },
   { key: "roc_curve", label: "ROC Curve", short: "ROC curve", subtitle: "Per-class one-vs-rest + macro average", group: "core" },
-  { key: "pr_curve", label: "Precision-Recall Curve", short: "Precision-recall curve", subtitle: "Per-class + micro average — better than ROC when classes are imbalanced", group: "core" },
+  { key: "pr_curve", label: "Precision-Recall Curve", short: "Precision-recall curve", subtitle: "Per-class + micro average, better than ROC when classes are imbalanced", group: "core" },
   { key: "feature_importance", label: "Feature Importance", short: "Feature importance", subtitle: "Top contributing features (native, coefficient, or permutation)", group: "core" },
   { key: "per_class_metrics", label: "Per-class Metrics", short: "Per-class metrics", subtitle: "Precision / recall / F1 side by side for every class", group: "core" },
   { key: "threshold_curve", label: "Threshold Sweep", short: "Threshold sweep", subtitle: "Precision, recall and F1 as the decision threshold moves", group: "core", requires: "binary target" },
 
   /* ── Scatter & geometry ─────────────────────────────────────────────── */
-  { key: "scatter_2d", label: "2D Scatter", short: "2D scatter", subtitle: "Test samples in 2D — misclassified points marked with ✕", group: "scatter", selectable: true },
-  { key: "scatter_3d", label: "3D Scatter", short: "3D scatter (rotatable)", subtitle: "Drag to orbit · three components coloured by true class", group: "scatter", height: 420, requires: "≥3 features", selectable: true },
+  { key: "scatter_2d", label: "2D Scatter", short: "2D scatter", subtitle: "Test samples in 2D, misclassified points marked with ✕", group: "scatter", selectable: true },
+  { key: "scatter_3d", label: "3D Scatter", short: "3D scatter (rotatable)", subtitle: "Drag to orbit, three components coloured by true class", group: "scatter", height: 420, requires: "≥3 features", selectable: true },
   { key: "splom", label: "Scatter Matrix", short: "Scatter matrix (pair plot)", subtitle: "Every pairwise feature combination, coloured by class", group: "scatter", span: 2, height: 520 },
-  { key: "decision_boundary", label: "Decision Boundary", short: "Decision boundary", subtitle: "The model refit in 2D — regions it assigns to each class", group: "scatter", height: 400, slow: true },
-  { key: "embedding", label: "t-SNE Embedding", short: "t-SNE embedding", subtitle: "Non-linear 2D map — reveals clusters PCA flattens", group: "scatter", height: 400, slow: true, selectable: true },
-  { key: "confidence_scatter", label: "Confidence vs Margin", short: "Confidence / margin scatter", subtitle: "Where the model hesitates — low margin points are the risky ones", group: "scatter", selectable: true },
+  { key: "decision_boundary", label: "Decision Boundary", short: "Decision boundary", subtitle: "The model refit in 2D, showing regions it assigns to each class", group: "scatter", height: 400, slow: true },
+  { key: "embedding", label: "t-SNE Embedding", short: "t-SNE embedding", subtitle: "Non-linear 2D map revealing clusters PCA flattens", group: "scatter", height: 400, slow: true, selectable: true },
+  { key: "confidence_scatter", label: "Confidence vs Margin", short: "Confidence / margin scatter", subtitle: "Where the model hesitates: low margin points are the risky ones", group: "scatter", selectable: true },
 
   /* ── KNN analysis ───────────────────────────────────────────────────── */
-  { key: "knn_k_sweep", label: "k Sweep (elbow)", short: "k sweep / elbow curve", subtitle: "Accuracy across k for uniform vs distance weighting — the best k is starred", group: "knn", height: 360, requires: "KNN model", slow: true },
+  { key: "knn_k_sweep", label: "k Sweep (elbow)", short: "k sweep / elbow curve", subtitle: "Accuracy across k for uniform vs distance weighting, the best k starred", group: "knn", height: 360, requires: "KNN model", slow: true },
   { key: "knn_boundary", label: "KNN Decision Regions", short: "KNN decision regions", subtitle: "Neighbourhood vote regions in 2D with the training points that create them", group: "knn", height: 400, requires: "KNN model" },
   { key: "knn_neighbor_graph", label: "Neighbour Links", short: "Neighbour link graph", subtitle: "Probe samples joined to each of their k nearest training neighbours", group: "knn", span: 2, height: 480, requires: "KNN model", selectable: true },
-  { key: "knn_distance_hist", label: "Neighbour Distance", short: "Neighbour distance histogram", subtitle: "Distance to the k-th neighbour — far points are the ones KNN gets wrong", group: "knn", requires: "KNN model" },
+  { key: "knn_distance_hist", label: "Neighbour Distance", short: "Neighbour distance histogram", subtitle: "Distance to the k-th neighbour: far points are the ones KNN gets wrong", group: "knn", requires: "KNN model" },
   { key: "knn_vote_scatter", label: "Vote Share vs Distance", short: "Vote share scatter", subtitle: "Neighbour agreement against mean neighbour distance, split by correctness", group: "knn", requires: "KNN model", selectable: true },
 
   /* ── Diagnostics ────────────────────────────────────────────────────── */
-  { key: "learning_curve", label: "Learning Curve", short: "Learning curve", subtitle: "Train vs validation accuracy as data grows — diagnoses over/underfitting", group: "diagnostics", height: 360, slow: true },
-  { key: "cv_scores", label: "Cross-validation Spread", short: "Cross-validation spread", subtitle: "Per-fold accuracy — a wide box means an unstable model", group: "diagnostics", slow: true },
-  { key: "calibration", label: "Calibration Curve", short: "Calibration curve", subtitle: "Predicted probability vs observed frequency — is 80% really 80%?", group: "diagnostics" },
+  { key: "learning_curve", label: "Learning Curve", short: "Learning curve", subtitle: "Train vs validation accuracy as data grows, diagnoses over/underfitting", group: "diagnostics", height: 360, slow: true },
+  { key: "cv_scores", label: "Cross-validation Spread", short: "Cross-validation spread", subtitle: "Per-fold accuracy: a wide box means an unstable model", group: "diagnostics", slow: true },
+  { key: "calibration", label: "Calibration Curve", short: "Calibration curve", subtitle: "Predicted probability vs observed frequency: is 80% really 80%?", group: "diagnostics" },
   { key: "class_balance", label: "Class Balance", short: "Class balance", subtitle: "Train / test / predicted counts per class", group: "diagnostics" },
   { key: "correlation", label: "Feature Correlation", short: "Feature correlation", subtitle: "Pearson correlation between the most important features", group: "diagnostics", height: 400 },
 ];

@@ -70,7 +70,7 @@ function MetricCard({ label, value }: { label: string; value: number | null }) {
     <div className="animate-chart-in rounded-lg border border-border bg-surface p-3">
       <span className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</span>
       <div className={cn("mt-1 font-mono text-xl font-bold tabular-nums", value === null && "text-muted/40")}>
-        {value === null ? "—" : formatPercent(value)}
+        {value === null ? "n/a" : formatPercent(value)}
       </div>
     </div>
   );
@@ -127,7 +127,7 @@ function LiveConsole({ logs, liveMetrics, running }: { logs: TerminalLine[]; liv
         <div className="rounded-xl border border-border bg-surface p-3">
           <div className="flex items-center justify-between gap-3 text-xs">
             <span className="inline-flex items-center gap-2 font-medium text-foreground"><CircleNotch size={14} className="animate-spin text-sky-400" /> Epoch {epochState.current}{epochState.total ? ` / ${epochState.total}` : ""}</span>
-            <span className="font-mono text-muted-2">{epochState.loss === null ? "loss pending" : `loss ${epochState.loss.toFixed(4)}`} · {epochState.accuracy === null ? "accuracy pending" : `${(epochState.accuracy * 100).toFixed(1)}% val acc`}</span>
+            <span className="font-mono text-muted-2">{epochState.loss === null ? "loss pending" : `loss ${epochState.loss.toFixed(4)}`} <span className="opacity-40">|</span> {epochState.accuracy === null ? "accuracy pending" : `${(epochState.accuracy * 100).toFixed(1)}% val acc`}</span>
           </div>
           <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full bg-sky-400 transition-all duration-500" style={{ width: `${epochState.total ? Math.min(100, (epochState.current / epochState.total) * 100) : 100}%` }} /></div>
         </div>
@@ -192,7 +192,7 @@ function PredictionsTable({ preds }: { preds: PredictionSet }) {
         </table>
       </div>
       <div className="border-t border-border bg-foreground/[0.02] px-3 py-1.5 text-[10.5px] text-muted">
-        Showing {rows} of {preds.n_test} test samples · download CSV for all {preds.n_test}
+        Showing {rows} of {preds.n_test} test samples, download CSV for all {preds.n_test}
       </div>
     </div>
   );
@@ -361,7 +361,7 @@ function ColabView({ res, onViewCode, onOpenColab, code }: { res: ColabExecution
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h4 className="text-sm font-semibold tracking-tight text-foreground">Open in Google Colab</h4>
-            <p className="mt-0.5 text-[12px] text-muted-2">Opens a fresh notebook and copies the full training code — just paste into the first cell.</p>
+            <p className="mt-0.5 text-[12px] text-muted-2">Opens a fresh notebook and copies the full training code, ready to paste into the first cell.</p>
           </div>
           <div className="flex shrink-0 gap-2">
             {onOpenColab ? (
@@ -435,10 +435,10 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
     if (!response || response.status !== "success") return null;
     if (response.route === "instant") {
       const r = response as InstantExecutionResponse;
-      return `${r.model.name} · ${r.dataset.name} · ${(r.timing.total_seconds ?? 0).toFixed(2)}s`;
+      return `${r.model.name} on ${r.dataset.name}, ${(r.timing.total_seconds ?? 0).toFixed(2)}s`;
     }
     const r = response as ColabExecutionResponse;
-    return `${r.notebook.filename} · ${r.notebook.cells} cells`;
+    return `${r.notebook.filename}, ${r.notebook.cells} cells`;
   }, [response]);
 
   return (

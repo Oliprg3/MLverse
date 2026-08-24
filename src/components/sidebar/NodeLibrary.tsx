@@ -33,14 +33,8 @@ function LibraryCard({ item }: { item: PaletteItem }) {
       className="group flex cursor-grab items-center gap-2.5 rounded-lg border border-transparent px-2 py-2 transition-all duration-200 hover:border-neutral-200/80 hover:bg-white/60 active:cursor-grabbing active:scale-[0.98] dark:hover:border-white/[0.07] dark:hover:bg-white/[0.03]"
       title={`Drag onto canvas: ${item.label}`}
     >
-      <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border transition-transform duration-200 group-hover:scale-105"
-        style={{
-          background: `color-mix(in srgb, ${item.accent} 9%, transparent)`,
-          borderColor: `color-mix(in srgb, ${item.accent} 24%, transparent)`,
-        }}
-      >
-        <Icon className="h-3.5 w-3.5" weight="regular" style={{ color: item.accent }} />
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-neutral-200/90 transition-transform duration-200 group-hover:scale-105 dark:border-white/[0.1]">
+        <Icon className="h-3.5 w-3.5 text-neutral-500 transition-colors group-hover:text-neutral-800 dark:text-zinc-400 dark:group-hover:text-white" weight="regular" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[12.5px] font-medium leading-tight tracking-tight text-neutral-800 transition-colors group-hover:text-neutral-950 dark:text-zinc-200 dark:group-hover:text-white">{item.label}</div>
@@ -53,7 +47,6 @@ function LibraryCard({ item }: { item: PaletteItem }) {
 function Section({ catId, query }: { catId: NodeCategory; query: string }) {
   const [open, setOpen] = useState(true);
   const items = useMemo(() => NODE_PALETTE.filter((i) => i.category === catId), [catId]);
-  const accent = CATEGORIES[catId].accent;
 
   const filtered = useMemo(() => {
     if (!query.trim()) return items;
@@ -72,10 +65,7 @@ function Section({ catId, query }: { catId: NodeCategory; query: string }) {
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left transition-colors hover:bg-neutral-100/60 dark:hover:bg-white/[0.03]"
       >
-        <span className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-[2px]" style={{ background: accent, opacity: 0.85 }} aria-hidden />
-          <span className="nf-hud-label">{CATEGORIES[catId].label}</span>
-        </span>
+        <span className="nf-hud-label">{CATEGORIES[catId].label}</span>
         <span className="flex items-center gap-1.5">
           <span className="font-mono text-[9.5px] font-medium text-neutral-400 dark:text-zinc-600">{filtered.length}</span>
           <CaretDown className={cn("h-3 w-3 text-neutral-400 transition-transform duration-200 dark:text-zinc-600", !open && "-rotate-90")} />
@@ -169,7 +159,7 @@ export function NodeLibrary() {
         )}
       </div>
       <div className="border-t border-neutral-200/80 px-4 py-3 dark:border-white/[0.06]">
-        <p className="nf-hud-label">tip · press ⌘K to search</p>
+        <p className="nf-hud-label">Press ⌘K to search nodes</p>
       </div>
     </aside>
   );

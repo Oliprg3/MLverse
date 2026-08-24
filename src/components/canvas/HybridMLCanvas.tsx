@@ -344,9 +344,9 @@ function Canvas() {
       if (!win) {
         notify("Allow pop-ups for this site to open Colab", "warn");
       } else if (ok) {
-        notify("Colab opened · training code copied — paste (⌘V / Ctrl+V) into the first cell");
+        notify("Colab opened and training code copied. Paste it into the first cell");
       } else {
-        notify("Colab opened · click “Copy code” to grab the script", "warn");
+        notify("Colab opened. Click Copy code to grab the script", "warn");
       }
       return gen;
     },
@@ -389,7 +389,7 @@ function Canvas() {
     if (route === "colab") {
       const gen = handOffToColab(payload);
       setGeneratedCode(gen); // seed the code viewer with the same script
-      pushLine("Training code copied — paste it into the opened Colab notebook.", "system");
+      pushLine("Training code copied, paste it into the opened Colab notebook.", "system");
     }
 
     try {
@@ -398,7 +398,7 @@ function Canvas() {
       // 3) server's built-in TypeScript fallback (last resort).
       const native = await serverHasNativePython();
       if (!native && route === "instant" && pyodideSupported()) {
-        pushLine("No Python stack on the deployment — training locally in your browser (nothing is uploaded)…", "system");
+        pushLine("No Python stack on the deployment, training locally in your browser (nothing is uploaded)…", "system");
         try {
           const local = await trainInBrowser(payload, (message) => pushLine(message));
           setResponse(local);
@@ -410,7 +410,7 @@ function Canvas() {
           stampStatuses(ok ? "success" : "error");
           return;
         } catch (localError) {
-          pushLine(`Local engine unavailable (${localError instanceof Error ? localError.message : "failed"}) — trying the server engine…`, "system");
+          pushLine(`Local engine unavailable (${localError instanceof Error ? localError.message : "failed"}), trying the server engine…`, "system");
         }
       }
 
@@ -524,7 +524,7 @@ function Canvas() {
   const handleExport = useCallback(() => {
     try {
       downloadWorkflow(serializeWorkflow(nodes, edges));
-      notify("Workflow exported — positions, parameters, and datasets included");
+      notify("Workflow exported with positions, parameters, and datasets");
     } catch {
       notify("Could not serialize this workflow", "warn");
     }
@@ -542,7 +542,7 @@ function Canvas() {
       setEdges(result.edges);
       stampStatuses(undefined);
       setResponse(null);
-      notify(`Imported “${result.title}” · ${result.nodes.length} steps restored`);
+      notify(`Imported “${result.title}”, ${result.nodes.length} steps restored`);
       window.setTimeout(() => fitView({ padding: 0.28, duration: 450 }), 0);
     } catch {
       notify("Could not read that workflow file", "warn");
@@ -571,7 +571,7 @@ function Canvas() {
             setSavedProjectAvailable(true);
             void project;
           } catch {
-            notify("Pipeline too large for browser storage — the builder will attach what it can", "warn");
+            notify("Pipeline too large for browser storage, the builder will attach what it can", "warn");
           }
           router.push("/build");
         }}
@@ -631,12 +631,19 @@ function Canvas() {
           </ReactFlow>
 
           <div className="pointer-events-none absolute left-5 top-5 z-10 flex items-center gap-3 rounded-xl border border-neutral-200/80 bg-white/80 px-4 py-2.5 shadow-lg shadow-black/[0.05] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0d]/80 dark:shadow-black/40">
-            <span className={`flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] ${blockingErrors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500"}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${blockingErrors > 0 ? "bg-rose-500" : hasModel ? "animate-pulse bg-emerald-500" : "bg-amber-500"}`} aria-hidden />
+            <span className={`font-mono text-[10px] font-semibold uppercase tracking-[0.16em] ${blockingErrors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500"}`}>
               {blockingErrors > 0 ? `${blockingErrors} error${blockingErrors === 1 ? "" : "s"}` : hasModel ? "Ready" : "Incomplete"}
             </span>
             <span className="h-3 w-px bg-neutral-200 dark:bg-white/10" aria-hidden />
-            <span className="font-mono text-[10px] tracking-wide text-neutral-400 dark:text-zinc-500">{nodes.length} steps · {edges.length} links{problemCounts.warnings > 0 ? ` · ${problemCounts.warnings} warning${problemCounts.warnings === 1 ? "" : "s"}` : ""}</span>
+            <span className="font-mono text-[10px] tracking-wide text-neutral-400 dark:text-zinc-500">{nodes.length} steps</span>
+            <span className="h-3 w-px bg-neutral-200 dark:bg-white/10" aria-hidden />
+            <span className="font-mono text-[10px] tracking-wide text-neutral-400 dark:text-zinc-500">{edges.length} links</span>
+            {problemCounts.warnings > 0 ? (
+              <>
+                <span className="h-3 w-px bg-neutral-200 dark:bg-white/10" aria-hidden />
+                <span className="font-mono text-[10px] tracking-wide text-amber-500">{problemCounts.warnings} warning{problemCounts.warnings === 1 ? "" : "s"}</span>
+              </>
+            ) : null}
           </div>
 
           <ProblemsPanel diagnostics={diagnostics} onSelectNode={focusNode} onApplyFix={handleApplyFix} />
@@ -659,7 +666,7 @@ function Canvas() {
                 </div>
                 <p className="mt-5 text-base font-semibold tracking-tight text-neutral-900 dark:text-white">Start with a dataset</p>
                 <p className="mt-1.5 text-xs text-neutral-400 dark:text-zinc-500">Drag a node from the library to begin your pipeline.</p>
-                <p className="nf-hud-label mt-6">canvas://untitled — awaiting first node</p>
+                <p className="nf-hud-label mt-6">canvas://untitled, awaiting first node</p>
               </div>
             </div>
           ) : null}

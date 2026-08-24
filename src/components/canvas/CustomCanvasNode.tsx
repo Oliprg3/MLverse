@@ -26,7 +26,6 @@ function ParamPill({ label, value }: { label: string; value: string | number }) 
 function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>) {
   const { deleteElements } = useReactFlow();
   const category = getCategory(data.category);
-  const accent = category.accent;
   const Icon = resolveIcon(data.icon);
 
   const isCsv = data.type === "data:csv";
@@ -41,13 +40,9 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
         "nf-node-shell nf-node-corners group relative w-[252px] rounded-xl p-3.5",
         running && "border-sky-400/50 dark:border-sky-400/40",
       )}
-      style={selected ? { borderColor: `color-mix(in srgb, ${accent} 70%, transparent)`, boxShadow: `0 0 0 1px color-mix(in srgb, ${accent} 45%, transparent), 0 18px 40px -16px rgba(0,0,0,0.55)` } : undefined}
     >
-      {/* Accent glow (revealed on hover/selection) */}
-      <span className="nf-node-glow" style={{ ["--accent" as string]: accent }} aria-hidden />
-
-      <Handle type="target" position={Position.Left} style={selected ? { borderColor: accent } : undefined} />
-      <Handle type="source" position={Position.Right} style={selected ? { borderColor: accent } : undefined} />
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
 
       {/* Delete control */}
       <button
@@ -84,18 +79,12 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
-          style={{
-            background: `color-mix(in srgb, ${accent} 10%, transparent)`,
-            borderColor: `color-mix(in srgb, ${accent} 28%, transparent)`,
-          }}
-        >
-          <Icon size={17} weight="regular" style={{ color: accent }} />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200/90 bg-transparent dark:border-white/[0.1]">
+          <Icon size={17} weight="regular" className="text-neutral-500 dark:text-zinc-400" />
         </div>
         <div className="min-w-0 pr-6">
           <h3 className="truncate text-[13px] font-semibold leading-tight tracking-tight text-neutral-900 dark:text-white">{data.label}</h3>
-          <p className="nf-hud-label mt-1 !text-[8.5px]" style={{ color: `color-mix(in srgb, ${accent} 75%, var(--muted))` }}>{category.label}</p>
+          <p className="nf-hud-label mt-1 !text-[8.5px]">{category.label}</p>
         </div>
       </div>
 
@@ -107,7 +96,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
               <FileCsv size={14} weight="regular" className="shrink-0 text-neutral-400 dark:text-zinc-500" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{csv.filename}</div>
-                <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{csv.nrows.toLocaleString()} rows · {csv.columns.length} cols</div>
+                <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{csv.nrows.toLocaleString()} rows, {csv.columns.length} cols</div>
               </div>
               <span className="shrink-0 rounded-md border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 font-mono text-[9px] font-medium text-neutral-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-400">{csv.targetColumn}</span>
             </div>
@@ -129,7 +118,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
                 <FileCsv size={14} weight="regular" className="shrink-0 text-neutral-400 dark:text-zinc-500" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{images.nsamples} images</div>
-                  <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{images.width}×{images.height} · {images.classNames.length} classes</div>
+                  <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{images.width}×{images.height}, {images.classNames.length} classes</div>
                 </div>
               </div>
             </div>

@@ -146,13 +146,13 @@ export function Header({
         <span className="hidden h-4 w-px bg-neutral-200 dark:bg-white/10 md:block" aria-hidden />
 
         <div className="hidden min-w-0 items-center gap-2 md:flex">
-          <span className="nf-hud-label truncate">canvas://{nodeCount > 0 ? `pipeline-${nodeCount}-step` : "untitled"}</span>
+          <span className="nf-hud-label truncate">canvas://{nodeCount > 0 ? `pipeline (${nodeCount} steps)` : "untitled"}</span>
           <span
             className={cn(
               "hidden shrink-0 items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] 2xl:inline-flex",
               route === "colab"
-                ? "border-violet-500/30 bg-violet-500/[0.08] text-violet-500"
-                : "border-emerald-500/30 bg-emerald-500/[0.08] text-emerald-500",
+                ? "border-violet-500/40 text-violet-500"
+                : "border-emerald-500/40 text-emerald-500",
             )}
             title={route === "colab" ? "Deep-learning nodes route to a Colab GPU runtime" : "Classic ML trains instantly on CPU"}
           >
