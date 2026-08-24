@@ -501,10 +501,9 @@ export function AIBuilder() {
 
   if (!project || !graph || !model) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6">
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/[0.08] blur-[100px]" />
-        <div className="animate-builder-panel relative w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background bg-[radial-gradient(circle_at_50%_-10%,color-mix(in_srgb,var(--primary)_12%,transparent),transparent_45%)] p-6">
+        <div className="animate-builder-panel relative w-full max-w-lg rounded-[28px] border border-border/70 bg-card/80 p-9 shadow-2xl backdrop-blur-xl">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/[0.08] text-primary">
             <Robot size={24} />
           </div>
           <h1 className="mt-6 text-xl font-bold tracking-tight">Build with AI</h1>
@@ -521,19 +520,22 @@ export function AIBuilder() {
   }
 
   return (
-    <main className="flex h-screen min-h-[620px] flex-col overflow-hidden bg-background text-foreground">
+    <main className="flex h-screen min-h-[620px] flex-col overflow-hidden bg-background bg-[radial-gradient(circle_at_55%_-20%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_40%)] text-foreground">
       {/* Header */}
-      <header className="glass-panel sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface/80 px-4">
+      <header className="glass-panel sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-surface/70 px-5">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href="/canvas" aria-label="Back to canvas" title="Back to canvas" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
+          <Link href="/canvas" aria-label="Back to canvas" title="Back to canvas" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-background/50 text-muted transition-all hover:border-border-strong hover:bg-foreground/[0.04] hover:text-foreground">
             <ArrowLeft size={14} weight="bold" />
           </Link>
-          <div className="h-5 w-px bg-border" />
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-sm shadow-violet-500/20">
-              <Robot size={14} className="text-white" />
+          <div className="h-6 w-px bg-border/70" />
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/[0.08] text-primary">
+              <Robot size={16} />
             </div>
-            <span className="truncate text-sm font-bold">AI Builder</span>
+            <div className="min-w-0">
+              <span className="block truncate text-sm font-semibold tracking-tight">AI Builder</span>
+              <span className="hidden text-[10px] uppercase tracking-[0.16em] text-muted sm:block">Shape the product around your model</span>
+            </div>
             <span className="hidden max-w-52 truncate border-l border-border pl-2.5 text-[11px] text-muted sm:inline">{project.title}</span>
           </div>
         </div>
@@ -541,11 +543,11 @@ export function AIBuilder() {
           <span className="hidden items-center gap-1.5 text-[11px] font-medium text-muted md:inline-flex">
             {modelLabel} · {formatBytes(model.size)}
           </span>
-          <button type="button" onClick={() => setHistoryOpen((open) => !open)} className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-border-strong hover:text-foreground hover:shadow-sm active:scale-[0.98]">
+          <button type="button" onClick={() => setHistoryOpen((open) => !open)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border/80 bg-background/45 px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-border-strong hover:bg-foreground/[0.04] hover:text-foreground active:scale-[0.98]">
             <ArrowsCounterClockwise size={13} /> Checkpoints
             <CaretDown size={10} className={`transition-transform duration-200 ${historyOpen ? "" : "-rotate-90"}`} />
           </button>
-          <button type="button" onClick={regenerateCode} disabled={loading} className="inline-flex h-8 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-border-strong hover:text-foreground hover:shadow-sm disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]">
+          <button type="button" onClick={regenerateCode} disabled={loading} className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/25 bg-primary/[0.07] px-3 text-xs font-semibold text-foreground-2 transition-all hover:border-primary/40 hover:bg-primary/[0.12] hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]">
             <Code size={14} /> Generate code
           </button>
         </div>
@@ -570,15 +572,15 @@ export function AIBuilder() {
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Agent column — hidden in fullscreen preview */}
         {!previewFullscreen && (
-        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border bg-surface lg:w-[380px] lg:border-b-0 lg:border-r">
-            <div className="border-b border-border px-5 py-4">
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Agent session</div>
-            <p className="mt-1.5 text-xs leading-6 text-muted">Describe changes like you would to an engineer — the preview updates with every reply.</p>
+        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border/70 bg-surface/55 lg:w-[400px] lg:border-b-0 lg:border-r">
+          <div className="border-b border-border/70 px-6 py-5">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Design session</div>
+            <p className="mt-2 text-xs leading-6 text-muted">Describe the product you want. The agent uses your saved pipeline as context and updates the live interface as you iterate.</p>
           </div>
 
-          <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+          <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {messages.length === 0 ? (
-              <div className="animate-builder-message rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-5">
+              <div className="animate-builder-message rounded-2xl border border-primary/20 bg-primary/[0.05] p-5 shadow-sm">
                 <p className="flex items-center gap-2 text-xs font-bold"><ChatCenteredDots size={15} className="text-primary" /> Start with a direction</p>
                 <p className="mt-2 text-xs leading-6 text-muted">Your saved pipeline is attached as context. Ask for layout, copy, or interaction changes.</p>
               </div>
@@ -617,15 +619,15 @@ export function AIBuilder() {
             ) : null}
           </div>
 
-          <div className="border-t border-border p-4">
+          <div className="border-t border-border/70 bg-surface/45 p-5">
             <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1.5">
               {suggestions.map((suggestion) => (
-                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="rounded-lg px-2 py-1 text-[11px] font-medium text-muted transition-all hover:bg-foreground/[0.05] hover:text-foreground disabled:opacity-50">
+                <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="border-b border-transparent px-0.5 py-1 text-left text-[11px] font-medium text-muted transition-all hover:border-primary/40 hover:text-foreground disabled:opacity-50">
                   {suggestion}
                 </button>
               ))}
             </div>
-            <div className="rounded-2xl border border-input bg-background p-3 transition-all focus-within:border-primary/30 focus-within:shadow-[0_0_16px_-4px_var(--glow-primary)] focus-within:ring-2 focus-within:ring-ring/40">
+            <div className="rounded-2xl border border-input bg-background/70 p-3.5 transition-all focus-within:border-primary/40 focus-within:shadow-[0_0_24px_-8px_var(--glow-primary)] focus-within:ring-2 focus-within:ring-ring/30">
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -637,7 +639,7 @@ export function AIBuilder() {
               />
               <div className="mt-2 flex items-center justify-between border-t border-border pt-2.5">
                 <span className="text-[10px] text-muted-2"><kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd> to send · <kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Shift+Enter</kbd> newline</span>
-                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/25 transition-all hover:shadow-lg hover:shadow-violet-500/30 hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
+                <button type="button" aria-label="Send request" onClick={() => void send()} disabled={!draft.trim() || loading} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:pointer-events-none disabled:opacity-40 active:scale-95">
                   <PaperPlaneRight size={14} weight="fill" />
                 </button>
               </div>
@@ -650,15 +652,15 @@ export function AIBuilder() {
         )}
 
         {/* Preview / Code column */}
-        <section className={`flex min-h-0 min-w-0 flex-1 flex-col bg-background-2 ${previewFullscreen ? "fixed inset-0 z-50" : ""}`}>
-          <div className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-surface px-4">
-            <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-1">
+        <section className={`flex min-h-0 min-w-0 flex-1 flex-col bg-background-2/80 ${previewFullscreen ? "fixed inset-0 z-50" : ""}`}>
+          <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-surface/55 px-5">
+            <div className="flex items-center gap-1 rounded-xl border border-border/70 bg-background/60 p-1">
               {(["preview", "code"] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-medium capitalize transition-all duration-200 ${activeTab === tab ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground-2"}`}
+                  className={`flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-xs font-medium capitalize transition-all duration-200 ${activeTab === tab ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground-2"}`}
                 >
                   {tab === "preview" ? <Monitor size={13} /> : <FilePy size={13} />} {tab === "preview" ? "Live preview" : "Code"}
                 </button>
@@ -700,7 +702,7 @@ export function AIBuilder() {
               onDownloadAll={() => void downloadAllAsZip()}
             />
           ) : (
-            <div key="preview" className={`scroll-thin min-h-0 flex-1 overflow-auto p-5 ${previewDark ? "preview-dark" : ""}`}>
+            <div key="preview" className={`scroll-thin min-h-0 flex-1 overflow-auto p-6 ${previewDark ? "preview-dark" : ""}`}>
               <div className={`mx-auto pb-6 ${previewFullscreen ? "h-full max-w-full" : "max-w-4xl"}`}>
                 {uiSpec ? <AppPreview key={`${previewNonce}-${versions.length}`} spec={uiSpec} onPredict={(features) => previewModel?.predict(features) ?? null} /> : null}
               </div>

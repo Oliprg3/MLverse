@@ -26,14 +26,14 @@ export function CanvasControls() {
         ariaLabel="Canvas minimap"
         nodeColor={(n: Node) => {
           const accent = (n.data as MLNodeData | undefined)?.accent;
-          return accent ?? "#64748b";
+          return accent ? `color-mix(in srgb, ${accent} 55%, var(--surface))` : "var(--muted-2)";
         }}
         nodeStrokeColor={(n: Node) => {
           const accent = (n.data as MLNodeData | undefined)?.accent;
-          return accent ? `color-mix(in srgb, ${accent} 60%, transparent)` : "#64748b";
+          return accent ?? "var(--muted-2)";
         }}
-        nodeStrokeWidth={3}
-        nodeBorderRadius={6}
+        nodeStrokeWidth={1.5}
+        nodeBorderRadius={2}
       />
     </>
   );

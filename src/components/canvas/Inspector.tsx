@@ -181,9 +181,9 @@ export function Inspector({ node, onClose }: InspectorProps) {
   };
 
   return (
-    <aside className="animate-slide-up flex h-full w-80 shrink-0 flex-col border-l border-border bg-surface/70 backdrop-blur-xl">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-2">
+    <aside className="animate-slide-up flex h-full w-80 shrink-0 flex-col border-l border-neutral-200/80 bg-white/75 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0a0a0d]/75">
+      <div className="flex items-center justify-between border-b border-neutral-200/80 px-4 py-3 dark:border-white/[0.06]">
+        <span className="nf-hud-label flex items-center gap-1.5">
           <SlidersHorizontal className="h-3.5 w-3.5" /> Node Settings
         </span>
         <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close inspector">
@@ -196,12 +196,12 @@ export function Inspector({ node, onClose }: InspectorProps) {
         <div className="flex items-center gap-3">
           <Icon className="h-6 w-6 shrink-0" style={{ color: category.accent }} strokeWidth={1.75} />
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold tracking-tight text-foreground">{data.label}</div>
-            <div className="text-[11px] text-muted-2">{category.label}</div>
+            <div className="truncate text-sm font-semibold tracking-tight text-neutral-900 dark:text-white">{data.label}</div>
+            <div className="nf-hud-label mt-0.5" style={{ color: `color-mix(in srgb, ${category.accent} 75%, var(--muted))` }}>{category.label}</div>
           </div>
         </div>
 
-        <p className="mt-3 text-xs leading-relaxed text-muted-2">{data.description}</p>
+        <p className="mt-3 text-xs leading-relaxed text-neutral-400 dark:text-zinc-500">{data.description}</p>
 
         {/* CSV */}
         {isCsv ? (
@@ -214,9 +214,9 @@ export function Inspector({ node, onClose }: InspectorProps) {
             </Button>
             {data.dataset ? (
               <div className="space-y-3">
-                <div className="rounded-lg border border-border bg-card-2/50 p-3">
-                  <div className="truncate text-xs font-medium text-foreground-2">{data.dataset.filename}</div>
-                  <div className="mt-1 font-mono text-[11px] text-muted">{data.dataset.nrows.toLocaleString()} rows · {data.dataset.columns.length} features</div>
+                <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/60 p-3 dark:border-white/[0.07] dark:bg-white/[0.02]">
+                  <div className="truncate text-xs font-medium text-neutral-800 dark:text-zinc-200">{data.dataset.filename}</div>
+                  <div className="mt-1 font-mono text-[11px] text-neutral-400 dark:text-zinc-500">{data.dataset.nrows.toLocaleString()} rows · {data.dataset.columns.length} features</div>
                 </div>
 
                 {/* Data quality + cleaning */}
@@ -251,14 +251,14 @@ export function Inspector({ node, onClose }: InspectorProps) {
                   <select
                     value={data.dataset.targetColumn}
                     onChange={(e) => updateCsvTarget(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    className="mt-1 w-full rounded-lg border border-neutral-200 bg-white/70 px-2.5 py-2 text-sm text-neutral-900 transition-colors focus:border-neutral-400 dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white"
                   >
                     {data.dataset.columns.map((c) => (<option key={c} value={c}>{c}</option>))}
                   </select>
                 </div>
               </div>
             ) : (
-              <p className="rounded-lg border border-dashed border-border bg-card-2/40 p-3 text-xs leading-relaxed text-muted-2">
+              <p className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50/50 p-3 text-xs leading-relaxed text-neutral-400 dark:border-white/[0.12] dark:bg-white/[0.015] dark:text-zinc-500">
                 Upload a CSV with a header row. The last column (or one named target / label / class) is auto-selected as the prediction target.
               </p>
             )}
@@ -284,24 +284,24 @@ export function Inspector({ node, onClose }: InspectorProps) {
                   <div className="grid grid-cols-4 gap-1.5">
                     {data.imageDataset.thumbnails.slice(0, 8).map((src, i) => (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img key={i} src={src} alt="" className="aspect-square w-full rounded border border-border object-cover" />
+                      <img key={i} src={src} alt="" className="aspect-square w-full rounded-md border border-neutral-200/70 object-cover dark:border-white/[0.08]" />
                     ))}
                   </div>
                 ) : null}
-                <div className="rounded-lg border border-border bg-card-2/50 p-3">
-                  <div className="font-mono text-[11px] text-muted-2">{data.imageDataset.nsamples} samples · {data.imageDataset.width}×{data.imageDataset.height} · {data.imageDataset.classNames.length} classes</div>
+                <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/60 p-3 dark:border-white/[0.07] dark:bg-white/[0.02]">
+                  <div className="font-mono text-[11px] text-neutral-400 dark:text-zinc-500">{data.imageDataset.nsamples} samples · {data.imageDataset.width}×{data.imageDataset.height} · {data.imageDataset.classNames.length} classes</div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {data.imageDataset.classNames.map((c, i) => {
                       const count = data.imageDataset!.labels.filter((l) => l === i).length;
-                      return (<span key={c} className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-2">{c} · {count}</span>);
+                      return (<span key={c} className="rounded-md border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-zinc-400">{c} · {count}</span>);
                     })}
                   </div>
                 </div>
-                <p className="text-[11px] leading-relaxed text-muted-2">Instant path trains a grayscale baseline on the CPU. For a CNN, add a Deep Learning node to export a Colab notebook.</p>
+                <p className="text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">Instant path trains a grayscale baseline on the CPU. For a CNN, add a Deep Learning node to export a Colab notebook.</p>
               </div>
             ) : (
-              <p className="rounded-lg border border-dashed border-border bg-card-2/40 p-3 text-xs leading-relaxed text-muted-2">
-                Pick a <span className="font-medium text-foreground-2">folder</span> where each sub-folder is a class, or pick <span className="font-medium text-foreground-2">files</span> named like <code>class_001.jpg</code>.
+              <p className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50/50 p-3 text-xs leading-relaxed text-neutral-400 dark:border-white/[0.12] dark:bg-white/[0.015] dark:text-zinc-500">
+                Pick a <span className="font-medium text-neutral-700 dark:text-zinc-300">folder</span> where each sub-folder is a class, or pick <span className="font-medium text-neutral-700 dark:text-zinc-300">files</span> named like <code>class_001.jpg</code>.
               </p>
             )}
           </section>
@@ -328,7 +328,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
 
 function SectionLabel({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-2">
+    <div className="nf-hud-label flex items-center gap-1.5">
       {icon}{children}
     </div>
   );
@@ -341,15 +341,15 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
     const group = CHART_GROUPS[param.chartGroup];
     return (
       <fieldset className="min-w-0">
-        <legend className="mb-1 block max-w-full text-xs font-medium tracking-tight text-foreground-2">{param.label}</legend>
-        <div className="overflow-hidden rounded-lg border border-border bg-background/50">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-foreground/[0.03] px-2.5 py-2">
-            <span className="min-w-0 text-[10px] leading-relaxed text-muted">{group.description}</span>
-            <span className="shrink-0 font-mono text-[10px] text-muted-2">{selected.size}/{chartsInGroup(param.chartGroup).length}</span>
+        <legend className="mb-1 block max-w-full text-xs font-medium tracking-tight text-neutral-700 dark:text-zinc-300">{param.label}</legend>
+        <div className="overflow-hidden rounded-lg border border-neutral-200/80 bg-white/50 dark:border-white/[0.07] dark:bg-white/[0.02]">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200/80 bg-neutral-100/50 px-2.5 py-2 dark:border-white/[0.06] dark:bg-white/[0.02]">
+            <span className="min-w-0 text-[10px] leading-relaxed text-neutral-400 dark:text-zinc-500">{group.description}</span>
+            <span className="shrink-0 font-mono text-[10px] text-neutral-400 dark:text-zinc-500">{selected.size}/{chartsInGroup(param.chartGroup).length}</span>
           </div>
-          <div className="divide-y divide-border/60">
+          <div className="divide-y divide-neutral-200/60 dark:divide-white/[0.05]">
             {chartsInGroup(param.chartGroup).map((chart) => (
-              <label key={chart.key} className="flex min-w-0 cursor-pointer items-start gap-2 px-2.5 py-2 transition-colors hover:bg-foreground/[0.04]">
+              <label key={chart.key} className="flex min-w-0 cursor-pointer items-start gap-2 px-2.5 py-2 transition-colors hover:bg-neutral-100/50 dark:hover:bg-white/[0.03]">
                 <input
                   type="checkbox"
                   checked={selected.has(chart.key)}
@@ -359,25 +359,25 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
                     else next.delete(chart.key);
                     onChange(serializeChartSelection([...next]));
                   }}
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-sky-500"
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-neutral-900 dark:accent-white"
                 />
                 <span className="min-w-0">
-                  <span className="block break-words text-[11px] font-medium text-foreground-2">{chart.short}</span>
-                  <span className="block break-words text-[10px] leading-relaxed text-muted">{chart.subtitle}</span>
+                  <span className="block break-words text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{chart.short}</span>
+                  <span className="block break-words text-[10px] leading-relaxed text-neutral-400 dark:text-zinc-500">{chart.subtitle}</span>
                 </span>
               </label>
             ))}
           </div>
         </div>
-        {param.hint ? <span className="mt-1 block break-words text-[11px] text-muted">{param.hint}</span> : null}
+        {param.hint ? <span className="mt-1 block break-words text-[11px] text-neutral-400 dark:text-zinc-500">{param.hint}</span> : null}
       </fieldset>
     );
   }
   return (
     <label className="block min-w-0">
       <span className="mb-1 flex items-baseline justify-between gap-2">
-        <span className="max-w-full break-words text-xs font-medium tracking-tight text-foreground-2">{param.label}</span>
-        {param.kind === "slider" ? <span className="shrink-0 font-mono text-[11px] text-muted">{String(param.value)}</span> : null}
+        <span className="max-w-full break-words text-xs font-medium tracking-tight text-neutral-700 dark:text-zinc-300">{param.label}</span>
+        {param.kind === "slider" ? <span className="shrink-0 font-mono text-[11px] text-neutral-400 dark:text-zinc-500">{String(param.value)}</span> : null}
       </span>
       {param.kind === "toggle" ? (
         <button
@@ -387,10 +387,10 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
           onClick={() => onChange(param.value === "true" ? "false" : "true")}
           className={cn(
             "relative h-5 w-9 shrink-0 rounded-full border transition-colors",
-            param.value === "true" ? "border-emerald-500/60 bg-emerald-500/80" : "border-border bg-background",
+            param.value === "true" ? "border-neutral-800 bg-neutral-800 dark:border-white dark:bg-white" : "border-neutral-300 bg-neutral-100 dark:border-white/15 dark:bg-white/[0.05]",
           )}
         >
-          <span className={cn("absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-white shadow-sm transition-all", param.value === "true" ? "left-[1.15rem]" : "left-0.5")} />
+          <span className={cn("absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-white shadow-sm transition-all dark:bg-neutral-900", param.value === "true" ? "left-[1.15rem]" : "left-0.5")} />
         </button>
       ) : param.kind === "slider" && typeof param.min === "number" && typeof param.max === "number" ? (
         <span className="flex items-center gap-2">
@@ -401,7 +401,7 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
             step={param.step ?? 1}
             value={Number(param.value)}
             onChange={(e) => onChange(Number(e.target.value))}
-            className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-foreground/[0.12] accent-emerald-500 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500"
+            className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-neutral-200 accent-neutral-900 dark:bg-white/10 dark:accent-white [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-neutral-900 dark:[&::-webkit-slider-thumb]:bg-white"
           />
           <input
             type="number"
@@ -413,11 +413,11 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
               const next = Number(e.target.value);
               if (!Number.isNaN(next)) onChange(Math.min(param.max!, Math.max(param.min!, next)));
             }}
-            className="w-16 shrink-0 rounded-md border border-input bg-background px-1.5 py-1 text-right font-mono text-[11px] text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-16 shrink-0 rounded-md border border-neutral-200 bg-white/70 px-1.5 py-1 text-right font-mono text-[11px] text-neutral-900 transition-colors focus:border-neutral-400 dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white"
           />
         </span>
       ) : param.options ? (
-        <select value={String(param.value)} onChange={(e) => onChange(e.target.value)} className="w-full min-w-0 rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+        <select value={String(param.value)} onChange={(e) => onChange(e.target.value)} className="w-full min-w-0 rounded-lg border border-neutral-200 bg-white/70 px-2.5 py-2 text-sm text-neutral-900 transition-colors focus:border-neutral-400 dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white">
           {param.options.map((o) => (<option key={o} value={o}>{o}</option>))}
         </select>
       ) : (
@@ -426,10 +426,10 @@ function ParamRow({ param, onChange }: { param: NodeParam; onChange: (value: str
           step={isNumber && typeof param.value === "number" && param.value < 1 ? 0.05 : 1}
           value={String(param.value)}
           onChange={(e) => onChange(isNumber ? Number(e.target.value) : e.target.value)}
-          className="w-full min-w-0 rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="w-full min-w-0 rounded-lg border border-neutral-200 bg-white/70 px-2.5 py-2 text-sm text-neutral-900 transition-colors focus:border-neutral-400 dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white"
         />
       )}
-      {param.hint ? <span className="mt-1 block break-words text-[11px] text-muted">{param.hint}</span> : null}
+      {param.hint ? <span className="mt-1 block break-words text-[11px] text-neutral-400 dark:text-zinc-500">{param.hint}</span> : null}
     </label>
   );
 }

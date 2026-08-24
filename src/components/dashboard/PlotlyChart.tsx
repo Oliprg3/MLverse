@@ -70,25 +70,27 @@ export function PlotlyChart({ figure, title, className }: PlotlyChartProps) {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
+    const el = elRef.current;
+    if (!el) return;
     let active = true;
     (async () => {
       const mod = await import("plotly.js-dist-min");
       const Plotly = mod.default;
-      if (!active || !elRef.current) return;
+      if (!active) return;
       plotlyLib = Plotly;
-      if (title) elRef.current.dataset.title = title;
+      if (title) el.dataset.title = title;
       const themed = buildThemedLayout(figure, resolvedTheme);
       try {
-        Plotly.react(elRef.current, figure.data, themed, BASE_CONFIG);
+        Plotly.react(el, figure.data, themed, BASE_CONFIG);
       } catch (err) {
         console.error("[PlotlyChart] render error", err);
       }
     })();
     return () => {
       active = false;
-      if (plotlyLib && elRef.current) {
+      if (plotlyLib) {
         try {
-          plotlyLib.purge(elRef.current);
+          plotlyLib.purge(el);
         } catch {
           /* noop */
         }

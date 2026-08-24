@@ -30,13 +30,21 @@ function LibraryCard({ item }: { item: PaletteItem }) {
     <div
       draggable
       onDragStart={onDragStart}
-      className="group flex cursor-grab items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-200 hover:bg-foreground/[0.05] active:cursor-grabbing active:scale-[0.98]"
+      className="group flex cursor-grab items-center gap-2.5 rounded-lg border border-transparent px-2 py-2 transition-all duration-200 hover:border-neutral-200/80 hover:bg-white/60 active:cursor-grabbing active:scale-[0.98] dark:hover:border-white/[0.07] dark:hover:bg-white/[0.03]"
       title={`Drag onto canvas: ${item.label}`}
     >
-      <Icon className="h-4 w-4 shrink-0 text-muted-2 transition-colors group-hover:text-foreground" weight="regular" />
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border transition-transform duration-200 group-hover:scale-105"
+        style={{
+          background: `color-mix(in srgb, ${item.accent} 9%, transparent)`,
+          borderColor: `color-mix(in srgb, ${item.accent} 24%, transparent)`,
+        }}
+      >
+        <Icon className="h-3.5 w-3.5" weight="regular" style={{ color: item.accent }} />
+      </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13px] font-semibold leading-tight tracking-tight text-foreground">{item.label}</div>
-        <div className="truncate text-[10px] leading-tight text-muted">{item.description}</div>
+        <div className="truncate text-[12.5px] font-medium leading-tight tracking-tight text-neutral-800 transition-colors group-hover:text-neutral-950 dark:text-zinc-200 dark:group-hover:text-white">{item.label}</div>
+        <div className="truncate text-[10px] leading-tight text-neutral-400 dark:text-zinc-500">{item.description}</div>
       </div>
     </div>
   );
@@ -45,6 +53,7 @@ function LibraryCard({ item }: { item: PaletteItem }) {
 function Section({ catId, query }: { catId: NodeCategory; query: string }) {
   const [open, setOpen] = useState(true);
   const items = useMemo(() => NODE_PALETTE.filter((i) => i.category === catId), [catId]);
+  const accent = CATEGORIES[catId].accent;
 
   const filtered = useMemo(() => {
     if (!query.trim()) return items;
@@ -57,16 +66,19 @@ function Section({ catId, query }: { catId: NodeCategory; query: string }) {
   if (filtered.length === 0) return null;
 
   return (
-    <div className="mb-1">
+    <div className="mb-2">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-foreground/[0.04]"
+        className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left transition-colors hover:bg-neutral-100/60 dark:hover:bg-white/[0.03]"
       >
-        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{CATEGORIES[catId].label}</span>
+        <span className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-[2px]" style={{ background: accent, opacity: 0.85 }} aria-hidden />
+          <span className="nf-hud-label">{CATEGORIES[catId].label}</span>
+        </span>
         <span className="flex items-center gap-1.5">
-          <span className="text-[10px] font-semibold text-muted/60">{filtered.length}</span>
-          <CaretDown className={cn("h-3.5 w-3.5 text-muted transition-transform duration-200", !open && "-rotate-90")} />
+          <span className="font-mono text-[9.5px] font-medium text-neutral-400 dark:text-zinc-600">{filtered.length}</span>
+          <CaretDown className={cn("h-3 w-3 text-neutral-400 transition-transform duration-200 dark:text-zinc-600", !open && "-rotate-90")} />
         </span>
       </button>
       <div className={cn("grid transition-all duration-250", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
@@ -109,36 +121,36 @@ export function NodeLibrary() {
   }).length;
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-surface/80 glass-panel max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-20 max-md:shadow-2xl">
+    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-neutral-200/80 bg-white/70 glass-panel max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-20 max-md:shadow-2xl dark:bg-[#050506]/60">
       {/* Search */}
-      <div className="border-b border-border p-3.5">
-        <div className="mb-2.5 flex items-center justify-between px-1">
+      <div className="border-b border-neutral-200/80 p-4 dark:border-white/[0.06]">
+        <div className="mb-3 flex items-center justify-between px-1">
           <div>
-            <p className="text-xs font-bold tracking-tight text-foreground">Node library</p>
-            <p className="mt-0.5 text-[10px] text-muted">Build your pipeline from reusable steps</p>
+            <p className="text-[13px] font-semibold tracking-tight text-neutral-900 dark:text-white">Node library</p>
+            <p className="mt-0.5 text-[10px] leading-relaxed text-neutral-400 dark:text-zinc-500">Drag a step into the workspace.</p>
           </div>
-          <span className="rounded-lg border border-border bg-foreground/[0.04] px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-2">{NODE_PALETTE.length}</span>
+          <span className="nf-hud-label shrink-0">{NODE_PALETTE.length} nodes</span>
         </div>
         <div className="group relative">
-          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+          <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400 dark:text-zinc-500" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search nodes…"
-            className="h-9 w-full rounded-xl border border-border bg-foreground/[0.03] pl-8 pr-9 text-[13px] text-foreground placeholder:text-muted transition-all focus:border-border-strong focus:bg-foreground/[0.05] focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="h-9 w-full rounded-lg border border-neutral-200 bg-white/70 pl-8 pr-9 text-[12px] text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-neutral-400 focus:bg-white dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white/30"
           />
           {hasQuery ? (
             <button
               type="button"
               onClick={() => setQuery("")}
-              className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-lg text-muted hover:text-foreground"
+              className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md text-neutral-400 hover:text-neutral-900 dark:text-zinc-500 dark:hover:text-white"
               aria-label="Clear search"
             >
               <X size={11} weight="bold" />
             </button>
           ) : (
-            <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px] font-semibold text-muted-2">⌘K</kbd>
+            <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-neutral-200 bg-neutral-100/70 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-neutral-400 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-500">⌘K</kbd>
           )}
         </div>
       </div>
@@ -149,15 +161,15 @@ export function NodeLibrary() {
           CATEGORY_ORDER.map((catId) => <Section key={catId} catId={catId} query={query} />)
         ) : (
           <div className="animate-fade-in px-3 py-10 text-center">
-            <MagnifyingGlass className="mx-auto h-5 w-5 text-muted-2" />
-            <p className="mt-3 text-xs font-bold text-foreground-2">No nodes found</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-muted">Try a model, dataset, or visualization name.</p>
-            <button type="button" onClick={() => setQuery("")} className="mt-3 text-[11px] font-semibold text-primary transition-colors hover:text-foreground">Clear search</button>
+            <MagnifyingGlass className="mx-auto h-5 w-5 text-neutral-300 dark:text-zinc-600" />
+            <p className="mt-3 text-xs font-semibold text-neutral-800 dark:text-zinc-200">No nodes found</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">Try a model, dataset, or visualization name.</p>
+            <button type="button" onClick={() => setQuery("")} className="mt-3 text-[11px] font-semibold text-neutral-600 underline underline-offset-4 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-white">Clear search</button>
           </div>
         )}
       </div>
-      <div className="border-t border-border px-3.5 py-2.5 text-[10px] text-muted">
-        <span className="font-semibold text-muted-2">Tip</span> · Press <kbd className="font-mono text-foreground-2">⌘K</kbd> to search nodes
+      <div className="border-t border-neutral-200/80 px-4 py-3 dark:border-white/[0.06]">
+        <p className="nf-hud-label">tip · press ⌘K to search</p>
       </div>
     </aside>
   );

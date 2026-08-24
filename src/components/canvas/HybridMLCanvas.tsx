@@ -552,7 +552,7 @@ function Canvas() {
   const closeInspector = useCallback(() => setNodes((nds) => nds.map((n) => ({ ...n, selected: false }))), [setNodes]);
 
   return (
-    <div className="flex h-screen w-full flex-col bg-background">
+    <div className="nf-canvas-bg flex h-screen w-full flex-col">
       <Header
         route={route}
         hasModel={hasModel}
@@ -596,9 +596,16 @@ function Canvas() {
         }}
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative flex flex-1 overflow-hidden">
+        {/* Cinematic backdrop — HUD grid + aurora, matching the landing hero */}
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div className="nf-canvas-aurora absolute inset-0" aria-hidden />
+          <div className="nf-canvas-grid absolute inset-0 opacity-60" aria-hidden />
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[var(--background)] to-transparent" aria-hidden />
+        </div>
+
         {paletteOpen ? <NodeLibrary /> : null}
-        <main className="relative flex-1 bg-background">
+        <main className="relative flex-1">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -623,20 +630,23 @@ function Canvas() {
             <CanvasControls />
           </ReactFlow>
 
-          <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-border bg-surface/95 px-3 py-2 shadow-sm backdrop-blur-md">
-            <span className={`text-[11px] font-medium ${blockingErrors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500"}`}>
+          <div className="pointer-events-none absolute left-5 top-5 z-10 flex items-center gap-3 rounded-xl border border-neutral-200/80 bg-white/80 px-4 py-2.5 shadow-lg shadow-black/[0.05] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0d]/80 dark:shadow-black/40">
+            <span className={`flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] ${blockingErrors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500"}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${blockingErrors > 0 ? "bg-rose-500" : hasModel ? "animate-pulse bg-emerald-500" : "bg-amber-500"}`} aria-hidden />
               {blockingErrors > 0 ? `${blockingErrors} error${blockingErrors === 1 ? "" : "s"}` : hasModel ? "Ready" : "Incomplete"}
             </span>
-            <span className="text-[10px] text-muted">{nodes.length} steps · {edges.length} connections{problemCounts.warnings > 0 ? ` · ${problemCounts.warnings} warning${problemCounts.warnings === 1 ? "" : "s"}` : ""}</span>
+            <span className="h-3 w-px bg-neutral-200 dark:bg-white/10" aria-hidden />
+            <span className="font-mono text-[10px] tracking-wide text-neutral-400 dark:text-zinc-500">{nodes.length} steps · {edges.length} links{problemCounts.warnings > 0 ? ` · ${problemCounts.warnings} warning${problemCounts.warnings === 1 ? "" : "s"}` : ""}</span>
           </div>
 
           <ProblemsPanel diagnostics={diagnostics} onSelectNode={focusNode} onApplyFix={handleApplyFix} />
 
           {isDragActive ? (
-            <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-primary/60 bg-primary/[0.06]">
-              <div className="animate-slide-up rounded-lg border border-border bg-surface px-5 py-3 text-center shadow-lg">
-                <p className="text-sm font-semibold text-foreground">Drop to add this step</p>
-                <p className="mt-1 text-xs text-muted">Connect it to the nearest node when ready</p>
+            <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-neutral-400/60 bg-white/[0.04] dark:border-white/25">
+              <div className="animate-slide-up rounded-2xl border border-neutral-200/80 bg-white/90 px-7 py-5 text-center shadow-2xl backdrop-blur-xl dark:border-white/[0.1] dark:bg-[#0a0a0d]/90">
+                <p className="nf-hud-label">drop zone</p>
+                <p className="mt-1.5 text-sm font-semibold tracking-tight text-neutral-900 dark:text-white">Drop to add this step</p>
+                <p className="mt-1 text-xs text-neutral-400 dark:text-zinc-500">Connect it to the nearest node when ready</p>
               </div>
             </div>
           ) : null}
@@ -644,9 +654,12 @@ function Canvas() {
           {nodes.length === 0 ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="animate-slide-up text-center">
-                <SquaresFour size={30} weight="light" className="mx-auto text-muted-2" />
-                <p className="mt-3 text-sm font-semibold tracking-tight text-foreground-2">Start with a dataset</p>
-                <p className="mt-1 text-xs text-muted">Drag a node from the library to begin your pipeline.</p>
+                <div className="nf-hud-corners relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-neutral-200/80 bg-white/70 backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.03]">
+                  <SquaresFour size={26} weight="light" className="text-neutral-400 dark:text-zinc-500" />
+                </div>
+                <p className="mt-5 text-base font-semibold tracking-tight text-neutral-900 dark:text-white">Start with a dataset</p>
+                <p className="mt-1.5 text-xs text-neutral-400 dark:text-zinc-500">Drag a node from the library to begin your pipeline.</p>
+                <p className="nf-hud-label mt-6">canvas://untitled — awaiting first node</p>
               </div>
             </div>
           ) : null}

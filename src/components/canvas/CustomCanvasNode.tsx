@@ -15,10 +15,10 @@ export type CustomFlowNode = Node<MLNodeData, "custom">;
 
 function ParamPill({ label, value }: { label: string; value: string | number }) {
   return (
-    <span className="inline-flex items-center rounded-lg bg-foreground/[0.05] px-2 py-0.5 font-mono text-[10px] leading-none text-muted-2">
-      <span className="text-muted">{label}</span>
-      <span className="mx-1 opacity-30">·</span>
-      <span className="text-foreground-2">{value}</span>
+    <span className="inline-flex max-w-full items-center rounded-md border border-neutral-200/80 bg-neutral-100/60 px-1.5 py-0.5 font-mono text-[9.5px] leading-none text-neutral-500 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-zinc-400">
+      <span className="opacity-60">{label}</span>
+      <span className="mx-1 opacity-30">=</span>
+      <span className="font-semibold text-neutral-800 dark:text-zinc-200">{value}</span>
     </span>
   );
 }
@@ -33,25 +33,21 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
   const isImage = data.type === "data:images";
   const csv = data.dataset as CsvDataset | undefined;
   const images = data.imageDataset as ImageDataset | undefined;
+  const running = data.executionStatus === "running";
 
   return (
     <div
       className={cn(
-        "nf-node-shell group relative w-[232px] rounded-2xl border bg-surface p-3.5 transition-all duration-200",
-        selected
-          ? "border-primary/40 shadow-lg shadow-primary/10"
-          : "border-border hover:border-border-strong hover:shadow-md",
+        "nf-node-shell nf-node-corners group relative w-[252px] rounded-xl p-3.5",
+        running && "border-sky-400/50 dark:border-sky-400/40",
       )}
+      style={selected ? { borderColor: `color-mix(in srgb, ${accent} 70%, transparent)`, boxShadow: `0 0 0 1px color-mix(in srgb, ${accent} 45%, transparent), 0 18px 40px -16px rgba(0,0,0,0.55)` } : undefined}
     >
-      <Handle type="target" position={Position.Left} />
-      <Handle type="source" position={Position.Right} />
+      {/* Accent glow (revealed on hover/selection) */}
+      <span className="nf-node-glow" style={{ ["--accent" as string]: accent }} aria-hidden />
 
-      {/* Accent bar */}
-      <span
-        aria-hidden
-        className="absolute left-0 top-3 h-[calc(100%-1.5rem)] w-[3px] rounded-full transition-all duration-200"
-        style={{ background: selected ? accent : `color-mix(in srgb, ${accent} 60%, transparent)` }}
-      />
+      <Handle type="target" position={Position.Left} style={selected ? { borderColor: accent } : undefined} />
+      <Handle type="source" position={Position.Right} style={selected ? { borderColor: accent } : undefined} />
 
       {/* Delete control */}
       <button
@@ -61,46 +57,59 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
         aria-label="Delete node"
         title="Delete node"
         className={cn(
-          "absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-lg text-muted transition-all duration-200 hover:bg-rose-500/10 hover:text-rose-400",
-          selected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+          "absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 opacity-0 transition-all duration-200 hover:bg-rose-500/10 hover:text-rose-500 focus-visible:opacity-100 group-hover:opacity-100",
+          selected && "opacity-100",
         )}
       >
         <Trash size={13} />
       </button>
 
       {/* Execution status */}
-      {data.executionStatus === "running" ? (
-        <span className="absolute right-9 top-2 flex items-center gap-1 rounded-lg bg-sky-500/10 px-1.5 py-0.5 font-mono text-[9px] font-medium text-sky-400" title="Running">
-          <CircleNotch size={11} className="animate-spin" /> run
+      {running ? (
+        <span
+          className="absolute right-9 top-2 inline-flex items-center gap-1 rounded-md border border-sky-400/30 bg-sky-400/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-sky-500 dark:text-sky-400"
+          title="Running"
+        >
+          <CircleNotch size={10} className="animate-spin" /> run
         </span>
       ) : data.executionStatus === "success" ? (
-        <CheckCircle size={14} weight="fill" className="absolute bottom-2.5 right-2.5 text-primary" aria-label="Succeeded" />
+        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-500" title="Succeeded">
+          <CheckCircle size={10} weight="fill" /> ok
+        </span>
       ) : data.executionStatus === "error" ? (
-        <XCircle size={14} weight="fill" className="absolute bottom-2.5 right-2.5 text-rose-500" aria-label="Failed" />
+        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-rose-500" title="Failed">
+          <XCircle size={10} weight="fill" /> err
+        </span>
       ) : null}
 
       {/* Header */}
-      <div className="flex items-center gap-2.5 pl-2">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${accent} 12%, transparent)` }}>
-          <Icon size={16} weight="regular" style={{ color: accent }} />
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
+          style={{
+            background: `color-mix(in srgb, ${accent} 10%, transparent)`,
+            borderColor: `color-mix(in srgb, ${accent} 28%, transparent)`,
+          }}
+        >
+          <Icon size={17} weight="regular" style={{ color: accent }} />
         </div>
-        <div className="min-w-0">
-          <h3 className="truncate text-[13px] font-bold leading-tight tracking-tight text-foreground">{data.label}</h3>
-          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted">{category.label}</p>
+        <div className="min-w-0 pr-6">
+          <h3 className="truncate text-[13px] font-semibold leading-tight tracking-tight text-neutral-900 dark:text-white">{data.label}</h3>
+          <p className="nf-hud-label mt-1 !text-[8.5px]" style={{ color: `color-mix(in srgb, ${accent} 75%, var(--muted))` }}>{category.label}</p>
         </div>
       </div>
 
       {/* Body */}
-      <div className="mt-3 pl-2">
+      <div className="mt-3">
         {isCsv ? (
           csv ? (
-            <div className="flex items-center gap-2 rounded-xl bg-foreground/[0.04] px-2.5 py-2">
-              <FileCsv size={14} weight="regular" className="shrink-0 text-muted-2" />
+            <div className="flex items-center gap-2 rounded-lg border border-neutral-200/70 bg-neutral-50/70 px-2.5 py-2 dark:border-white/[0.06] dark:bg-white/[0.03]">
+              <FileCsv size={14} weight="regular" className="shrink-0 text-neutral-400 dark:text-zinc-500" />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[11px] font-semibold text-foreground-2">{csv.filename}</div>
-                <div className="font-mono text-[9.5px] text-muted">{csv.nrows.toLocaleString()} rows · {csv.columns.length} cols</div>
+                <div className="truncate text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{csv.filename}</div>
+                <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{csv.nrows.toLocaleString()} rows · {csv.columns.length} cols</div>
               </div>
-              <span className="rounded-lg bg-foreground/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-medium text-muted-2">{csv.targetColumn}</span>
+              <span className="shrink-0 rounded-md border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 font-mono text-[9px] font-medium text-neutral-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-400">{csv.targetColumn}</span>
             </div>
           ) : (
             <UploadHint icon={<CloudArrowUp size={14} />} text="Click to import CSV" />
@@ -112,15 +121,15 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
                 <div className="grid grid-cols-4 gap-1">
                   {images.thumbnails.slice(0, 4).map((src, i) => (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img key={i} src={src} alt="" className="aspect-square w-full rounded-lg border border-border object-cover" />
+                    <img key={i} src={src} alt="" className="aspect-square w-full rounded-md border border-neutral-200/70 object-cover dark:border-white/[0.08]" />
                   ))}
                 </div>
               ) : null}
-              <div className="flex items-center gap-2 rounded-xl bg-foreground/[0.04] px-2.5 py-2">
-                <FileCsv size={14} weight="regular" className="shrink-0 text-muted-2" />
+              <div className="flex items-center gap-2 rounded-lg border border-neutral-200/70 bg-neutral-50/70 px-2.5 py-2 dark:border-white/[0.06] dark:bg-white/[0.03]">
+                <FileCsv size={14} weight="regular" className="shrink-0 text-neutral-400 dark:text-zinc-500" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[11px] font-semibold text-foreground-2">{images.nsamples} images</div>
-                  <div className="font-mono text-[9.5px] text-muted">{images.width}×{images.height} · {images.classNames.length} classes</div>
+                  <div className="truncate text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{images.nsamples} images</div>
+                  <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{images.width}×{images.height} · {images.classNames.length} classes</div>
                 </div>
               </div>
             </div>
@@ -128,7 +137,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
             <UploadHint icon={<CloudArrowUp size={14} />} text="Click to import images" />
           )
         ) : data.description ? (
-          <p className="line-clamp-1 text-[11px] leading-snug text-muted-2">{data.description}</p>
+          <p className="line-clamp-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">{data.description}</p>
         ) : null}
 
         {data.params && data.params.length > 0 ? (
@@ -145,7 +154,7 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
 
 function UploadHint({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-xl border border-dashed border-border px-2.5 py-2 text-[11px] text-muted-2 transition-colors hover:border-border-strong hover:text-muted">
+    <div className="flex items-center gap-1.5 rounded-lg border border-dashed border-neutral-300 px-2.5 py-2 text-[11px] text-neutral-400 transition-colors hover:border-neutral-400 hover:text-neutral-500 dark:border-white/[0.12] dark:text-zinc-500 dark:hover:border-white/25 dark:hover:text-zinc-400">
       {icon}{text}
     </div>
   );
