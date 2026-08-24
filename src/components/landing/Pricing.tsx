@@ -86,8 +86,7 @@ export function Pricing() {
                 }`}
               >
                 {tier.featured && (
-                  <span className="absolute -top-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-neutral-900 px-3.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-white shadow-[0_8px_24px_-10px_rgba(0,0,0,0.6)] dark:bg-white dark:text-neutral-900">
-                    <span className="h-1 w-1 rounded-full bg-emerald-400" aria-hidden="true" />
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-neutral-900 px-3.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-white shadow-[0_8px_24px_-10px_rgba(0,0,0,0.6)] dark:bg-white dark:text-neutral-900">
                     Most popular
                   </span>
                 )}

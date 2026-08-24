@@ -297,18 +297,8 @@ function DeployScene({ progress }: { progress: number }) {
   const live = progress > 0.62;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6">
-      <div className={`nf-deploy-badge inline-flex items-center gap-2.5 rounded-full border px-5 py-2 transition-all duration-700 ${
-        live
-          ? "border-emerald-500/40 bg-emerald-50 shadow-none dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:shadow-[0_0_28px_-6px_rgba(52,211,153,0.55)]"
-          : "border-neutral-200 bg-white dark:border-white/10 dark:bg-white/[0.03]"
-      }`}>
-        <span className={`relative flex h-2 w-2`}>
-          {live && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 dark:bg-emerald-400" />}
-          <span className={`relative inline-flex h-2 w-2 rounded-full ${live ? "bg-emerald-500 dark:bg-emerald-400" : "bg-neutral-300 dark:bg-zinc-600"}`} />
-        </span>
-        <span className={`font-mono text-xs uppercase tracking-[0.25em] ${live ? "text-emerald-700 dark:text-emerald-300" : "text-neutral-400 dark:text-zinc-500"}`}>
-          {live ? "Model live" : "Shipping…"}
-        </span>
+      <div className="font-mono text-xs uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-500">
+        {live ? "Model live" : "Shipping…"}
       </div>
       <div className="w-full max-w-md rounded-xl border border-neutral-900 bg-neutral-900 p-4 font-mono text-xs dark:border-white/[0.08] dark:bg-black/70">
         <p className="text-neutral-100">
@@ -431,16 +421,10 @@ export function TrainingShowcase() {
               {/* Title bar */}
               <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02] sm:px-5">
                 <div className="flex items-center gap-3">
-                  <div className="hidden gap-1.5 sm:flex" aria-hidden="true">
-                    <span className="h-2.5 w-2.5 rounded-full bg-neutral-300 dark:bg-zinc-800" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-neutral-300 dark:bg-zinc-800" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-neutral-400 dark:bg-zinc-700" />
-                  </div>
                   <span className="font-mono text-[11px] text-neutral-400 dark:text-zinc-500">how-to-train-your-first-model.nf</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 rounded border border-neutral-300 bg-neutral-100 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-neutral-600 dark:border-white/20 dark:bg-white/10 dark:text-zinc-300">
-                    <CircleNotch size={9} className="animate-spin" />
+                  <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-neutral-500 dark:text-zinc-400">
                     auto demo
                   </span>
                   <span className="font-mono text-[11px] tabular-nums text-neutral-400 dark:text-zinc-500">
@@ -500,10 +484,6 @@ export function TrainingShowcase() {
                       className="absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-neutral-900 dark:bg-white"
                       style={{ width: `${(elapsedGlobal / TOTAL_MS) * 100}%` }}
                     />
-                    <span
-                      className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-neutral-900 bg-white transition-transform group-hover:scale-125 dark:border-white dark:bg-[#070709]"
-                      style={{ left: `${(elapsedGlobal / TOTAL_MS) * 100}%` }}
-                    />
                   </div>
 
                   <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-neutral-400 dark:text-zinc-500 sm:flex">
@@ -528,7 +508,7 @@ export function TrainingShowcase() {
                       setT(0);
                       setPlaying(true);
                     }}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] transition-all duration-300 ${
+                    className={`inline-flex items-center gap-2 border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] transition-all duration-300 ${
                       active
                         ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
                         : done

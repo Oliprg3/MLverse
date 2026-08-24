@@ -53,17 +53,10 @@ export function StatsBand() {
         {STATS.map((s, i) => (
           <Reveal key={s.label} delay={i * 90} y={18}>
             <div className="nf-hud-corners group relative h-full overflow-hidden bg-neutral-50 px-6 py-12 text-center transition-colors duration-500 hover:bg-white dark:bg-[#060608] dark:hover:bg-white/[0.02] sm:py-16">
-              <span
-                className="pointer-events-none absolute left-1/2 top-6 h-1 w-1 -translate-x-1/2 rotate-45 border border-neutral-300 transition-colors duration-500 group-hover:border-neutral-900 dark:border-white/20 dark:group-hover:border-white"
-                aria-hidden="true"
-              />
               <div className="font-mono text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
                 <Counter to={s.value} suffix={s.suffix} decimals={s.decimals} />
               </div>
-              <div className="mt-3 flex items-center justify-center gap-2">
-                {i === STATS.length - 1 && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] dark:bg-emerald-400 dark:shadow-[0_0_6px_rgba(52,211,153,0.8)]" aria-hidden="true" />
-                )}
+              <div className="mt-3 flex items-center justify-center">
                 <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-400 transition-colors duration-500 group-hover:text-neutral-600 dark:text-zinc-600 dark:group-hover:text-zinc-400">
                   {s.label}
                 </span>

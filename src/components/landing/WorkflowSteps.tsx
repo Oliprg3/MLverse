@@ -70,7 +70,7 @@ export function WorkflowSteps() {
                     </div>
                     <p className="max-w-lg text-sm leading-relaxed text-neutral-500 dark:text-zinc-500">{s.copy}</p>
                   </div>
-                  <span className="w-fit shrink-0 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500 transition-colors duration-500 group-hover:border-neutral-400 group-hover:text-neutral-800 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400 dark:group-hover:border-white/25 dark:group-hover:text-zinc-200">
+                  <span className="w-fit shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500 transition-colors duration-500 group-hover:text-neutral-800 dark:text-zinc-400 dark:group-hover:text-zinc-200">
                     {s.tag}
                   </span>
                 </div>

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Play, CaretDown } from "@phosphor-icons/react";
-import { ParticleField } from "./ParticleField";
 
 const HERO_VIDEO = "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4";
 const HERO_VIDEO_FALLBACK = "https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4";
@@ -49,15 +48,7 @@ function CountUp({ to, suffix = "", prefix = "", decimals = 0 }: { to: number; s
 export function Hero() {
   return (
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white dark:bg-[#030304]">
-      <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-violet-400/20 blur-3xl nf-aurora dark:bg-violet-500/10" />
-      <div className="pointer-events-none absolute -right-24 bottom-24 h-80 w-80 rounded-full bg-emerald-300/20 blur-3xl nf-aurora [animation-delay:-5s] dark:bg-emerald-400/10" />
-
-      {/* Layer 1 — procedural particle network */}
-      <div className="absolute inset-0 opacity-70">
-        <ParticleField className="h-full w-full" />
-      </div>
-
-      {/* Layer 2 — background video (dark mode only) */}
+      {/* Layer 1 — background video (dark mode only) */}
       <video
         className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover opacity-25 mix-blend-screen dark:block"
         autoPlay
@@ -80,16 +71,6 @@ export function Hero() {
 
       {/* Content */}
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-5 pb-24 pt-36 text-center sm:px-8">
-        <div className="nf-fade-up mb-7 inline-flex items-center gap-2.5 rounded-full border border-neutral-200 bg-white/60 py-1.5 pl-2 pr-4 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.03]">
-          <span className="rounded-full bg-neutral-900 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-widest text-white dark:bg-white dark:text-neutral-900">
-            New
-          </span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500 dark:text-zinc-400">
-            v3 · Hybrid GPU engine is live
-          </span>
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500 dark:bg-emerald-400" />
-        </div>
-
         <p className="nf-fade-up max-w-2xl text-pretty text-base leading-relaxed text-neutral-500 [animation-delay:350ms] dark:text-zinc-400 sm:text-lg">
           MLverse is the no-code canvas where anyone can build, train and deploy
           machine-learning pipelines — visually. Drag nodes, connect data, hit train.
@@ -149,12 +130,9 @@ export function Hero() {
         </span>
         <span className="h-16 w-px bg-gradient-to-b from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       </div>
-      <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 select-none flex-col items-end gap-2 lg:flex" aria-hidden="true">
+      <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 select-none flex-col items-end gap-2 font-mono text-[9px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-600 lg:flex" aria-hidden="true">
         {["CPU CLUSTER — ONLINE", "GPU MESH — IDLE", "SYNC — 12MS"].map((t) => (
-          <span key={t} className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-600">
-            <span className="h-1 w-1 rounded-full bg-emerald-500/80 shadow-[0_0_6px_rgba(16,185,129,0.6)] dark:bg-emerald-400/80 dark:shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
-            {t}
-          </span>
+          <span key={t}>{t}</span>
         ))}
       </div>
     </section>

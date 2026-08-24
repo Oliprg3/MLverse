@@ -26,7 +26,6 @@ export function TechMarquee() {
               <span className="whitespace-nowrap font-mono text-sm font-medium uppercase tracking-[0.22em] text-neutral-400 transition-colors duration-300 hover:text-neutral-900 dark:text-zinc-600 dark:hover:text-zinc-200">
                 {name}
               </span>
-              <span className="h-1.5 w-1.5 rotate-45 border border-neutral-300 dark:border-white/25" />
             </span>
           ))}
         </div>

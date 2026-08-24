@@ -2,16 +2,11 @@
 
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
-import { ParticleField } from "./ParticleField";
 import { Reveal } from "./Reveal";
 
 export function FinalCTA() {
   return (
     <section className="relative overflow-hidden border-t border-neutral-200 py-32 dark:border-white/[0.06] sm:py-44">
-      {/* backdrop */}
-      <div className="absolute inset-0 opacity-50 dark:opacity-40">
-        <ParticleField className="h-full w-full" />
-      </div>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_50%,rgba(0,0,0,0.035),transparent_70%)] dark:bg-[radial-gradient(60%_60%_at_50%_50%,rgba(255,255,255,0.04),transparent_70%)]" />
       <div className="nf-grid-bg pointer-events-none absolute inset-0 opacity-30" />
 
@@ -54,8 +49,7 @@ export function FinalCTA() {
           </div>
         </Reveal>
         <Reveal delay={400}>
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <span className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] dark:bg-emerald-400 dark:shadow-[0_0_6px_rgba(52,211,153,0.8)]" aria-hidden="true" />
+          <div className="mt-8 flex items-center justify-center">
             <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-600">
               free forever tier · no credit card · runs in your browser
             </p>

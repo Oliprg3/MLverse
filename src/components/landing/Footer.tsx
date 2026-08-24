@@ -38,24 +38,21 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-white/15 dark:bg-white">
-                <Image src="/logo.png" alt="MLverse" width={36} height={36} className="h-full w-full object-contain p-1" />
+              <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-transparent">
+                <Image
+                  src="/logo.png"
+                  alt="MLverse"
+                  width={52}
+                  height={52}
+                  className="h-full w-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
+                />
               </span>
               <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-neutral-500 dark:text-zinc-600">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-neutral-500 dark:text-zinc-400">
               The no-code AI canvas. Train, evaluate and deploy machine-learning
               models visually — right in your browser.
             </p>
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 dark:border-emerald-400/20 dark:bg-emerald-400/[0.06]">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 dark:bg-emerald-400" />
-                <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
-              </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300/90">
-                All systems operational
-              </span>
-            </div>
           </div>
 
           {COLS.map((col) => (

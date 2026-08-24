@@ -99,7 +99,6 @@ function AIIllustration() {
         </span>
       </div>
       <div className="ml-6 flex items-center gap-2 self-start rounded-lg rounded-tl-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-neutral-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-300">
-        <span className={`h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 ${chars === PROMPTS[idx].length ? "animate-pulse" : ""}`} />
         building pipeline · 12 nodes
       </div>
     </div>
@@ -192,11 +191,6 @@ function CleanIllustration() {
 function CodeIllustration() {
   return (
     <div className="h-full overflow-hidden rounded-lg border border-neutral-900 bg-neutral-900 p-3 font-mono text-[10px] leading-relaxed dark:border-white/[0.08] dark:bg-black/60">
-      <div className="mb-2 flex gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-neutral-700" />
-        <span className="h-2 w-2 rounded-full bg-neutral-700" />
-        <span className="h-2 w-2 rounded-full bg-white/80" />
-      </div>
       <pre className="whitespace-pre-wrap text-neutral-400">
         <span className="font-semibold text-neutral-100">import</span> xgboost <span className="font-semibold text-neutral-100">as</span> xgb{"\n"}
         <span className="font-semibold text-neutral-100">from</span> sklearn.model_selection <span className="font-semibold text-neutral-100">import</span> split{"\n"}
