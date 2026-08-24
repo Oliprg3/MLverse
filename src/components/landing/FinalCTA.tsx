@@ -46,10 +46,10 @@ export function FinalCTA() {
               <ArrowRight size={17} weight="bold" className="relative transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
             <Link
-              href="/dashboard"
+              href="/canvas"
               className="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white/50 px-9 py-3.5 text-base font-semibold text-neutral-800 backdrop-blur-md transition-all duration-300 hover:border-neutral-500 hover:bg-white active:scale-[0.97] dark:border-white/15 dark:bg-white/[0.02] dark:text-zinc-200 dark:hover:border-white/30 dark:hover:bg-white/[0.06]"
             >
-              Explore the dashboard
+              Open the workspace
             </Link>
           </div>
         </Reveal>

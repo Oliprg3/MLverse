@@ -49,6 +49,9 @@ function CountUp({ to, suffix = "", prefix = "", decimals = 0 }: { to: number; s
 export function Hero() {
   return (
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white dark:bg-[#030304]">
+      <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-violet-400/20 blur-3xl nf-aurora dark:bg-violet-500/10" />
+      <div className="pointer-events-none absolute -right-24 bottom-24 h-80 w-80 rounded-full bg-emerald-300/20 blur-3xl nf-aurora [animation-delay:-5s] dark:bg-emerald-400/10" />
+
       {/* Layer 1 — procedural particle network */}
       <div className="absolute inset-0 opacity-70">
         <ParticleField className="h-full w-full" />
@@ -116,7 +119,7 @@ export function Hero() {
         <div className="nf-fade-up mt-10 flex flex-col items-center gap-4 [animation-delay:550ms] sm:flex-row">
           <Link
             href="/build"
-            className="group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-neutral-900 px-7 text-sm font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+            className="nf-button-glow group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-neutral-900 px-7 text-sm font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
           >
             <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-full dark:bg-neutral-900/10" />
             <span className="relative">Start training free</span>

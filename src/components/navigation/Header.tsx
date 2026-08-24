@@ -18,9 +18,11 @@ import {
   FloppyDisk,
   CircleNotch,
 } from "@phosphor-icons/react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/theme-provider";
 import type { ExecutionRoute } from "@/lib/types";
+import brandLogo from "../ChatGPT Image Aug 24, 2026, 03_53_23 PM.png";
 
 export interface HeaderProps {
   route: ExecutionRoute;
@@ -90,7 +92,9 @@ export function Header({
           {paletteOpen ? <SidebarSimple size={18} /> : <SidebarSimple size={18} weight="light" />}
         </Button>
 
-        <img src="/logo.png" alt="MLverse" className="-mt-0.5 h-6 w-auto dark:invert" />
+        <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+          <Image src={brandLogo} alt="MLverse" width={32} height={32} className="h-full w-full object-contain p-1" priority />
+        </span>
 
         <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
           <CaretRight className="h-3.5 w-3.5 shrink-0 text-muted" />

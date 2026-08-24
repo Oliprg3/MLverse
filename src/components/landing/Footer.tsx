@@ -1,4 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
+
+import brandLogo from "../ChatGPT Image Aug 24, 2026, 03_53_23 PM.png";
 
 const COLS = [
   {
@@ -6,7 +9,7 @@ const COLS = [
     links: [
       { label: "Canvas", href: "/canvas" },
       { label: "AI Builder", href: "/build" },
-      { label: "Dashboard", href: "/dashboard" },
+      { label: "Launch workspace", href: "/canvas" },
       { label: "Pricing", href: "/#pricing" },
     ],
   },
@@ -37,13 +40,8 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-900 bg-neutral-900 dark:border-white dark:bg-white">
-                <svg viewBox="0 0 24 24" className="h-full w-full p-1.5 text-white dark:text-neutral-900" aria-hidden="true">
-                  <circle cx="12" cy="4.5" r="1.7" fill="currentColor" />
-                  <circle cx="5" cy="17.5" r="1.7" fill="currentColor" />
-                  <circle cx="19" cy="17.5" r="1.7" fill="currentColor" />
-                  <path d="M12 4.5 L5 17.5 M12 4.5 L19 17.5 M5 17.5 L19 17.5" stroke="currentColor" strokeWidth="0.8" opacity="0.55" />
-                </svg>
+              <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-white/15 dark:bg-white">
+                <Image src={brandLogo} alt="MLverse" width={36} height={36} className="h-full w-full object-contain p-1" />
               </span>
               <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
             </Link>

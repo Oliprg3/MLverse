@@ -308,6 +308,38 @@
    LANDING — futuristic black design system
    ════════════════════════════════════════════════════════════════════ */
 
+/* ── Landing motion polish ──────────────────────────────────────────── */
+@keyframes nf-orbit {
+  from { transform: rotate(0deg) translateX(14px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(14px) rotate(-360deg); }
+}
+.nf-orbit { animation: nf-orbit 10s linear infinite; transform-origin: center; }
+
+@keyframes nf-aurora {
+  0%, 100% { transform: translate3d(-4%, -2%, 0) scale(1); opacity: 0.45; }
+  50% { transform: translate3d(4%, 3%, 0) scale(1.08); opacity: 0.8; }
+}
+.nf-aurora { animation: nf-aurora 12s ease-in-out infinite; }
+
+@keyframes nf-button-glow {
+  0%, 100% { box-shadow: 0 10px 30px -18px rgba(139, 92, 246, 0.45); }
+  50% { box-shadow: 0 18px 42px -16px rgba(139, 92, 246, 0.75); }
+}
+.nf-button-glow { animation: nf-button-glow 3.2s ease-in-out infinite; }
+
+.nf-tilt-card {
+  transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0);
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 500ms ease;
+}
+.nf-tilt-card:hover {
+  transform: perspective(900px) rotateX(1.2deg) rotateY(-1.2deg) translateY(-6px) translateZ(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-orbit, .nf-aurora, .nf-button-glow { animation: none; }
+  .nf-tilt-card:hover { transform: none; }
+}
+
 /* ── Grid backdrop ─────────────────────────────────────────────────── */
 .nf-grid-bg {
   background-image:

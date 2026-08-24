@@ -46,7 +46,7 @@ const TIERS = [
     period: "annual",
     copy: "For teams that need scale, security and control.",
     cta: "Talk to us",
-    href: "/dashboard",
+    href: "/build",
     features: [
       "Everything in Pro",
       "SSO / SAML & audit logs",

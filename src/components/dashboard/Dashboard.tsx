@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -23,6 +24,7 @@ import {
 import { useTheme } from "@/components/theme/theme-provider";
 import { NODE_PALETTE, CATEGORIES } from "@/lib/canvasConfig";
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
+import brandLogo from "../ChatGPT Image Aug 24, 2026, 03_53_23 PM.png";
 
 type EngineStatus = {
   engine?: string;
@@ -106,9 +108,12 @@ export function Dashboard() {
       {/* Top bar */}
       <header className="glass-panel sticky top-0 z-30 border-b border-border">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
-          <div className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="MLverse" className="-mt-0.5 h-6 w-auto dark:invert" />
-          </div>
+            <div className="flex items-center gap-2.5">
+              <span className="relative h-8 w-8 overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+                <Image src={brandLogo} alt="MLverse" width={32} height={32} className="h-full w-full object-contain p-1" priority />
+              </span>
+              <span className="text-sm font-semibold tracking-tight text-foreground">MLverse</span>
+            </div>
           <nav className="flex items-center gap-1">
             <Link href="/canvas" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Canvas</Link>
             <Link href="/build" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Build with AI</Link>
@@ -223,7 +228,7 @@ export function Dashboard() {
           <h2 className="text-xl font-bold tracking-tight">Everything in one studio</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((feature) => (
-              <div key={feature.title} className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-border-strong hover:shadow-lg hover:-translate-y-0.5">
+              <div key={feature.title} className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-border-strong hover:shadow-xl nf-tilt-card">
                 <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${feature.bg}`}>
                   <feature.icon size={20} className={feature.color} weight="regular" />
                 </div>
