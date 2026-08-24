@@ -90,27 +90,7 @@ export function Hero() {
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500 dark:bg-emerald-400" />
         </div>
 
-        <h1 className="max-w-5xl text-balance text-[42px] font-semibold leading-[1.04] tracking-[-0.03em] text-neutral-900 dark:text-white sm:text-6xl md:text-7xl lg:text-[84px]">
-          {"Train AI models at the|speed of thought.".split("|").map((line, li) => (
-            <span key={li} className="block overflow-hidden pb-1">
-              <span className={`nf-hero-line block ${li === 1 ? "text-neutral-400 dark:text-zinc-500" : ""}`}>
-                {li === 1 ? (
-                  <>
-                    speed of{" "}
-                    <span className="relative inline-block text-neutral-900 underline decoration-neutral-300 decoration-[3px] underline-offset-8 dark:text-white dark:decoration-white/40">
-                      thought
-                    </span>
-                    .
-                  </>
-                ) : (
-                  line
-                )}
-              </span>
-            </span>
-          ))}
-        </h1>
-
-        <p className="nf-fade-up mt-7 max-w-2xl text-pretty text-base leading-relaxed text-neutral-500 [animation-delay:350ms] dark:text-zinc-400 sm:text-lg">
+        <p className="nf-fade-up max-w-2xl text-pretty text-base leading-relaxed text-neutral-500 [animation-delay:350ms] dark:text-zinc-400 sm:text-lg">
           MLverse is the no-code canvas where anyone can build, train and deploy
           machine-learning pipelines — visually. Drag nodes, connect data, hit train.
           No notebooks. No boilerplate. Just intelligence.

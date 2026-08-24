@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { List, X, ArrowRight } from "@phosphor-icons/react";
+import { List, X, ArrowRight, Moon, Sun } from "@phosphor-icons/react";
+import { useTheme } from "@/components/theme/theme-provider";
 
 const LINKS = [
   { label: "Capabilities", href: "#capabilities" },
@@ -16,6 +17,7 @@ const LINKS = [
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { resolvedTheme, toggle } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -32,10 +34,10 @@ export function LandingNav() {
           : "border-b border-transparent bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link href="/" className="group flex items-center gap-2.5">
-          <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm transition-all duration-300 group-hover:-rotate-3 group-hover:shadow-[0_0_24px_-4px_rgba(0,0,0,0.35)] dark:border-white/15 dark:bg-white">
-            <Image src="/logo.png" alt="MLverse" width={36} height={36} className="h-full w-full object-contain p-1" priority />
+          <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-transparent transition-all duration-300 group-hover:-rotate-3 group-hover:drop-shadow-[0_0_18px_rgba(139,92,246,0.45)]">
+            <Image src="/logo.png" alt="MLverse" width={52} height={52} className="h-full w-full object-contain" priority />
           </span>
           <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
         </Link>
@@ -52,15 +54,33 @@ export function LandingNav() {
           <Link href="/canvas" className="text-[13px] font-medium text-neutral-500 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-white">
             Open canvas
           </Link>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-zinc-400 dark:hover:bg-white/[0.06] dark:hover:text-white"
+          >
+            {resolvedTheme === "dark" ? <Sun size={17} weight="bold" /> : <Moon size={17} weight="bold" />}
+          </button>
           <Link href="/build" className="group inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2 text-[13px] font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
             Launch App
             <ArrowRight size={14} weight="bold" className="transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
         </div>
 
-        <button onClick={() => setOpen((v) => !v)} aria-label="Toggle menu" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 dark:border-white/10 dark:text-zinc-300 md:hidden">
-          {open ? <X size={18} /> : <List size={18} />}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-zinc-400 dark:hover:bg-white/[0.06] dark:hover:text-white"
+          >
+            {resolvedTheme === "dark" ? <Sun size={17} weight="bold" /> : <Moon size={17} weight="bold" />}
+          </button>
+          <button onClick={() => setOpen((v) => !v)} aria-label="Toggle menu" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 dark:border-white/10 dark:text-zinc-300">
+            {open ? <X size={18} /> : <List size={18} />}
+          </button>
+        </div>
       </div>
 
       <div className={`overflow-hidden border-b border-neutral-200 bg-white/95 backdrop-blur-xl transition-all duration-400 dark:border-white/[0.06] dark:bg-[#050506]/95 md:hidden ${open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
