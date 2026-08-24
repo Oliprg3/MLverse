@@ -3,6 +3,7 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { CanvasLoader } from "./CanvasLoader";
 
 interface TransitionLinkProps {
   href: string;
@@ -51,17 +52,8 @@ export function TransitionLink({ href, children, className, label = "Preparing y
         {children}
       </Link>
       {pending ? (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 bg-white/85 backdrop-blur-xl dark:bg-[#050506]/90" role="status" aria-live="polite">
-          <div className="relative flex h-16 w-16 items-center justify-center">
-            <span className="absolute inset-0 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-900 dark:border-white/10 dark:border-t-white" />
-            <span className="h-2 w-2 rounded-full bg-neutral-900 dark:bg-white" />
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-neutral-500 dark:text-zinc-400">{label}</p>
-            <div className="h-0.5 w-44 overflow-hidden rounded-full bg-neutral-200 dark:bg-white/10">
-              <span className="nf-route-load block h-full w-full rounded-full bg-neutral-900 dark:bg-white" />
-            </div>
-          </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/85 backdrop-blur-xl dark:bg-[#050506]/90">
+          <CanvasLoader label={label} />
         </div>
       ) : null}
     </>
