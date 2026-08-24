@@ -12,14 +12,16 @@ const SHOWCASE_VIDEOS = [
     title: "Real hardware under every run",
     copy: "Your pipelines execute on clustered GPUs and CPUs, streamed straight into the dashboard.",
     speed: 34,
+    wide: false,
   },
   {
-    src: "https://videos.pexels.com/video-files/8084503/8084503-hd_1280_720_25fps.mp4",
-    hd: "https://videos.pexels.com/video-files/8084503/8084503-hd_1920_1080_25fps.mp4",
+    src: "https://cdn.pixabay.com/video/2023/04/12/158549-816999843_large.mp4",
+    hd: "https://cdn.pixabay.com/video/2023/04/12/158549-816999843_large.mp4",
     kicker: "02 / Intelligence",
-    title: "Models that learn while you watch",
-    copy: "Watch loss curves fall and accuracy climb live, epoch by epoch, in your browser.",
+    title: "Machines that learn like us",
+    copy: "Humanoid AI is no longer science fiction — train your own models on the same ideas.",
     speed: 58,
+    wide: false,
   },
   {
     src: "https://videos.pexels.com/video-files/4974708/4974708-hd_1280_720_25fps.mp4",
@@ -28,13 +30,23 @@ const SHOWCASE_VIDEOS = [
     title: "Built by teams like yours",
     copy: "From analysts to ML engineers, anyone assembles production pipelines on the canvas.",
     speed: 82,
+    wide: false,
+  },
+  {
+    src: "https://cdn.pixabay.com/video/2022/08/04/126730-736705773_large.mp4",
+    hd: "https://cdn.pixabay.com/video/2022/08/04/126730-736705773_large.mp4",
+    kicker: "04 / Nature",
+    title: "Patterns all the way down",
+    copy: "The same statistics that teach your model shape coastlines, flocks and forests. Datlify just reads them faster.",
+    speed: 46,
+    wide: true,
   },
 ];
 
 /**
  * Cinematic band of real-world footage with scroll-linked parallax. Each card
  * drifts at its own speed while the clip inside counter-scales, so the section
- * feels in motion as the page scrolls.
+ * feels in motion as the page scrolls. Closes with a full-width nature banner.
  */
 export function VideoShowcase() {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -57,11 +69,12 @@ export function VideoShowcase() {
 
       cardRefs.current.forEach((card, i) => {
         if (!card) return;
-        const { speed } = SHOWCASE_VIDEOS[i];
+        const { speed, wide } = SHOWCASE_VIDEOS[i];
         const drift = (progress - 0.5) * speed;
         const media = card.firstElementChild as HTMLElement | null;
         if (media) {
-          media.style.transform = `scale(${1.12 + Math.abs(drift) / 400}) translateY(${drift * -0.6}px)`;
+          const base = wide ? 1.18 : 1.12;
+          media.style.transform = `scale(${base + Math.abs(drift) / 400}) translateY(${drift * -0.6}px)`;
         }
         card.style.transform = `translateY(${drift}px)`;
       });
@@ -103,13 +116,13 @@ export function VideoShowcase() {
           </Reveal>
           <Reveal delay={120}>
             <p className="max-w-sm text-sm leading-relaxed text-neutral-500 dark:text-zinc-400">
-              Real data centers, real training runs, real builders. Scroll and watch the platform breathe.
+              Real hardware, real robots, real builders, real nature. Scroll and watch the platform breathe.
             </p>
           </Reveal>
         </div>
 
         <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {SHOWCASE_VIDEOS.map((video, i) => (
+          {SHOWCASE_VIDEOS.slice(0, 3).map((video, i) => (
             <Reveal key={video.kicker} delay={i * 120} className={i === 1 ? "lg:-mt-10" : ""}>
               <div
                 ref={(el) => { cardRefs.current[i] = el; }}
@@ -144,6 +157,40 @@ export function VideoShowcase() {
             </Reveal>
           ))}
         </div>
+
+        {/* Full-width cinematic nature banner */}
+        <Reveal delay={100} className="mt-5">
+          <div
+            ref={(el) => { cardRefs.current[3] = el; }}
+            className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.45)] will-change-transform sm:aspect-[21/9] dark:border-white/[0.08] dark:bg-white/[0.02] dark:shadow-[0_40px_90px_-40px_rgba(0,0,0,0.8)]"
+            style={{ transform: "translateY(0)" }}
+          >
+            <video
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100 dark:opacity-75 dark:group-hover:opacity-90"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-hidden="true"
+            >
+              <source src={SHOWCASE_VIDEOS[3].src} type="video/mp4" />
+            </video>
+
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+            <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/60">{SHOWCASE_VIDEOS[3].kicker}</p>
+                <h3 className="mt-2 text-xl font-semibold leading-snug tracking-tight text-white sm:text-2xl">{SHOWCASE_VIDEOS[3].title}</h3>
+                <p className="mt-1.5 max-w-md text-[12.5px] leading-relaxed text-white/70">{SHOWCASE_VIDEOS[3].copy}</p>
+              </div>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md transition-all duration-300 group-hover:scale-110 group-hover:bg-white group-hover:text-neutral-900">
+                <Play size={12} weight="fill" className="translate-x-[1px]" />
+              </span>
+            </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -4,6 +4,7 @@ import { TechMarquee } from "@/components/landing/TechMarquee";
 import { Capabilities } from "@/components/landing/Capabilities";
 import { TrainingShowcase } from "@/components/landing/TrainingShowcase";
 import { WorkflowSteps } from "@/components/landing/WorkflowSteps";
+import { VideoShowcase } from "@/components/landing/VideoShowcase";
 import { StatsBand } from "@/components/landing/StatsBand";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Pricing } from "@/components/landing/Pricing";
@@ -22,6 +23,7 @@ export default function LandingPage() {
         <TrainingShowcase />
         <StatsBand />
         <WorkflowSteps />
+        <VideoShowcase />
         <Testimonials />
         <Pricing />
         <FAQ />
