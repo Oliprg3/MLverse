@@ -22,7 +22,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/theme-provider";
 import type { ExecutionRoute } from "@/lib/types";
-import brandLogo from "../ChatGPT Image Aug 24, 2026, 03_53_23 PM.png";
 
 export interface HeaderProps {
   route: ExecutionRoute;
@@ -93,7 +92,7 @@ export function Header({
         </Button>
 
         <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-border bg-white shadow-sm">
-          <Image src={brandLogo} alt="MLverse" width={32} height={32} className="h-full w-full object-contain p-1" priority />
+          <Image src="/logo.png" alt="MLverse" width={32} height={32} className="h-full w-full object-contain p-1" priority />
         </span>
 
         <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">

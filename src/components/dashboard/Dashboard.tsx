@@ -24,7 +24,6 @@ import {
 import { useTheme } from "@/components/theme/theme-provider";
 import { NODE_PALETTE, CATEGORIES } from "@/lib/canvasConfig";
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
-import brandLogo from "../ChatGPT Image Aug 24, 2026, 03_53_23 PM.png";
 
 type EngineStatus = {
   engine?: string;
@@ -110,7 +109,7 @@ export function Dashboard() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
             <div className="flex items-center gap-2.5">
               <span className="relative h-8 w-8 overflow-hidden rounded-lg border border-border bg-white shadow-sm">
-                <Image src={brandLogo} alt="MLverse" width={32} height={32} className="h-full w-full object-contain p-1" priority />
+                <Image src="/logo.png" alt="MLverse" width={32} height={32} className="h-full w-full object-contain p-1" priority />
               </span>
               <span className="text-sm font-semibold tracking-tight text-foreground">MLverse</span>
             </div>

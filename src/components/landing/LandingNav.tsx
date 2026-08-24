@@ -5,8 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { List, X, ArrowRight } from "@phosphor-icons/react";
 
-import brandLogo from "../ChatGPT Image Aug 24, 2026, 03_53_23 PM.png";
-
 const LINKS = [
   { label: "Capabilities", href: "#capabilities" },
   { label: "Live Training", href: "#training-demo" },
@@ -37,7 +35,7 @@ export function LandingNav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link href="/" className="group flex items-center gap-2.5">
           <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm transition-all duration-300 group-hover:-rotate-3 group-hover:shadow-[0_0_24px_-4px_rgba(0,0,0,0.35)] dark:border-white/15 dark:bg-white">
-            <Image src={brandLogo} alt="MLverse" width={36} height={36} className="h-full w-full object-contain p-1" priority />
+            <Image src="/logo.png" alt="MLverse" width={36} height={36} className="h-full w-full object-contain p-1" priority />
           </span>
           <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
         </Link>

@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import brandLogo from "../ChatGPT Image Aug 24, 2026, 03_53_23 PM.png";
-
 const COLS = [
   {
     title: "Product",
@@ -41,7 +39,7 @@ export function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2.5">
               <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-white/15 dark:bg-white">
-                <Image src={brandLogo} alt="MLverse" width={36} height={36} className="h-full w-full object-contain p-1" />
+                <Image src="/logo.png" alt="MLverse" width={36} height={36} className="h-full w-full object-contain p-1" />
               </span>
               <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
             </Link>
