@@ -28,7 +28,7 @@ export interface ScaffoldFile {
 }
 
 function slug(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "neuralforge-app";
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "datlify-app";
 }
 
 const ACCENT_HEX: Record<UiSpecLike["accent"], string> = {
@@ -53,7 +53,7 @@ export function generateAppFiles(
   const pkgName = slug(spec.brand);
   const trainingCode = options?.trainingCode?.trim()
     ? options.trainingCode
-    : "# Export the training script from the NeuralForge canvas and paste it here.";
+    : "# Export the training script from the Datlify canvas and paste it here.";
 
   const files: ScaffoldFile[] = [
     {

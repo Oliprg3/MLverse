@@ -251,7 +251,7 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
       predictions: res.predictions,
       timing: res.timing,
     };
-    downloadBlob("neuralforge-results.json", JSON.stringify(payload, null, 2), "application/json");
+    downloadBlob("datlify-results.json", JSON.stringify(payload, null, 2), "application/json");
   };
 
   return (

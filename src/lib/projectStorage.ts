@@ -32,7 +32,7 @@ function slimNodes(nodes: Node<MLNodeData>[]): Node<MLNodeData>[] {
   });
 }
 
-export function saveProject(nodes: Node<MLNodeData>[], edges: Edge[], title = "NeuralForge Pipeline"): SavedProject {
+export function saveProject(nodes: Node<MLNodeData>[], edges: Edge[], title = "Datlify Pipeline"): SavedProject {
   const project: SavedProject = { version: 1, savedAt: new Date().toISOString(), title, nodes, edges };
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
@@ -55,7 +55,7 @@ export function loadProject(): SavedProject | null {
     return {
       version: 1,
       savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : new Date().toISOString(),
-      title: typeof parsed.title === "string" ? parsed.title : "NeuralForge Pipeline",
+      title: typeof parsed.title === "string" ? parsed.title : "Datlify Pipeline",
       nodes: parsed.nodes as Node<MLNodeData>[],
       edges: parsed.edges as Edge[],
     };

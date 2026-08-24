@@ -92,7 +92,7 @@ export function Hero() {
         </h1>
 
         <p className="nf-fade-up mt-7 max-w-2xl text-pretty text-base leading-relaxed text-neutral-500 [animation-delay:350ms] dark:text-zinc-400 sm:text-lg">
-          MLverse is the no-code canvas where anyone can build, train and deploy
+          Datlify is the no-code canvas where anyone can build, train and deploy
           machine-learning pipelines — visually. Drag nodes, connect data, hit train.
           No notebooks. No boilerplate. Just intelligence.
         </p>

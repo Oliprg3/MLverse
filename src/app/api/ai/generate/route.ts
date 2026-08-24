@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
         const response = await fetch(ZEN_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-          body: JSON.stringify({ model: selectedModel, temperature: 0.2, max_tokens: 12000, messages: [{ role: "system", content: "You are a senior ML engineer inside NeuralForge. Return only complete runnable Python code, never markdown fences. Use the supplied real dataset context. Do not invent file paths, API keys, placeholder arrays, or replacement instructions." }, { role: "user", content: context }] }),
+          body: JSON.stringify({ model: selectedModel, temperature: 0.2, max_tokens: 12000, messages: [{ role: "system", content: "You are a senior ML engineer inside Datlify. Return only complete runnable Python code, never markdown fences. Use the supplied real dataset context. Do not invent file paths, API keys, placeholder arrays, or replacement instructions." }, { role: "user", content: context }] }),
         });
         if (!response.ok) {
           lastError = `${selectedModel} failed (${response.status})`;
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: "You are a senior ML engineer inside NeuralForge. Return only complete runnable Python code, never markdown fences. Use the supplied real dataset context. Do not invent file paths, API keys, placeholder arrays, or comments telling the user to replace data. Validate target columns, shapes, labels, and missing values. Keep training progress visible with epoch prints. Do not claim to connect to Google Colab APIs; the app handles Colab export separately." }] },
+        systemInstruction: { parts: [{ text: "You are a senior ML engineer inside Datlify. Return only complete runnable Python code, never markdown fences. Use the supplied real dataset context. Do not invent file paths, API keys, placeholder arrays, or comments telling the user to replace data. Validate target columns, shapes, labels, and missing values. Keep training progress visible with epoch prints. Do not claim to connect to Google Colab APIs; the app handles Colab export separately." }] },
         contents: [{ role: "user", parts: [{ text: context }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 12000 },
       }),

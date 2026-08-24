@@ -41,13 +41,13 @@ export function Footer() {
               <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-transparent">
                 <Image
                   src="/logo.png"
-                  alt="MLverse"
+                  alt="Datlify"
                   width={52}
                   height={52}
-                  className="h-full w-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
+                  className="h-full w-full object-contain dark:brightness-0 dark:invert"
                 />
               </span>
-              <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
+              <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">Datlify</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-neutral-500 dark:text-zinc-400">
               The no-code AI canvas. Train, evaluate and deploy machine-learning
@@ -72,7 +72,7 @@ export function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-neutral-200 pt-8 dark:border-white/[0.06] sm:flex-row">
-          <p className="font-mono text-[11px] text-neutral-400 dark:text-zinc-700">© 2026 MLverse Labs. Built for the post-notebook era.</p>
+          <p className="font-mono text-[11px] text-neutral-400 dark:text-zinc-700">© 2026 Datlify Labs. Built for the post-notebook era.</p>
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-700">
             NF://core.engine.v3 · <span className="text-neutral-500 dark:text-zinc-500">est. 2024</span>
           </p>

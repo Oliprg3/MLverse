@@ -32,7 +32,7 @@ function notebookFromCode(code: string, filename: string) {
       colab: { name: filename.replace(/\.py$/, ".ipynb"), provenance: [] },
     },
     cells: [
-      { cell_type: "markdown", metadata: {}, source: ["# NeuralForge training notebook\n", "Generated from the editable canvas code workspace."] },
+      { cell_type: "markdown", metadata: {}, source: ["# Datlify training notebook\n", "Generated from the editable canvas code workspace."] },
       { cell_type: "code", execution_count: null, metadata: {}, outputs: [], source: source.split("\n").map((line) => `${line}\n`) },
     ],
   }, null, 2);

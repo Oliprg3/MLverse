@@ -100,7 +100,7 @@ function defaultSpec(modelName: string, format: string, featureNames?: string[])
         { key: "category", label: "Category", type: "select", options: ["Option A", "Option B"] },
       ];
   return {
-    brand: "NeuralForge",
+    brand: "Datlify",
     nav: ["Overview", "Predict", "Activity"],
     eyebrow: `${format.toUpperCase()} MODEL WORKSPACE`,
     title: `${modelName.replace(/\.(pkl|pickle|onnx)$/i, "")} prediction`,
@@ -282,7 +282,7 @@ function AppPreview({ spec, onPredict }: { spec: UiSpec; onPredict: (features: n
 export function AIBuilder() {
   const [project, setProject] = useState<SavedProject | null>(null);
   const [code, setCode] = useState("");
-  const [filename, setFilename] = useState("neuralforge_pipeline.py");
+    const [filename, setFilename] = useState("datlify_pipeline.py");
   const [messages, setMessages] = useState<BuilderMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");

@@ -8,7 +8,7 @@ import { Reveal } from "./Reveal";
 const FAQS = [
   {
     q: "Do I need to know how to code?",
-    a: "No. The entire pipeline — data import, cleaning, model selection, training and deployment — is visual. If you can use a whiteboard, you can use NeuralForge. And if you do code, every canvas exports to clean Python so nothing is locked away.",
+    a: "No. The entire pipeline — data import, cleaning, model selection, training and deployment — is visual. If you can use a whiteboard, you can use Datlify. And if you do code, every canvas exports to clean Python so nothing is locked away.",
   },
   {
     q: "How does the hybrid engine work?",

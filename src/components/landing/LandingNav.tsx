@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { List, X, ArrowRight, Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "@/components/theme/theme-provider";
+import { TransitionLink } from "@/components/landing/TransitionLink";
 
 const LINKS = [
   { label: "Capabilities", href: "#capabilities" },
@@ -39,14 +40,14 @@ export function LandingNav() {
           <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-transparent">
             <Image
               src="/logo.png"
-              alt="MLverse"
+              alt="Datlify"
               width={52}
               height={52}
-              className="h-full w-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
+              className="h-full w-full object-contain dark:brightness-0 dark:invert"
               priority
             />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
+          <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">Datlify</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
@@ -58,9 +59,9 @@ export function LandingNav() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/canvas" className="text-[13px] font-medium text-neutral-500 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-white">
+          <TransitionLink href="/canvas" label="Opening canvas" className="text-[13px] font-medium text-neutral-500 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-white">
             Open canvas
-          </Link>
+          </TransitionLink>
           <button
             type="button"
             onClick={toggle}

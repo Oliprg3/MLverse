@@ -4,8 +4,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ────────────────────────────────────────────────────────────────────────
-   Design tokens — MLverse.
-   Rich dark with emerald / violet accents. Warm, premium feel.
+   Design tokens — Datlify.
+   Neutral slate dark with a single sky accent. Calm, premium feel.
    ──────────────────────────────────────────────────────────────────────── */
 :root {
   --background: #f8fafc;
@@ -20,42 +20,41 @@
   --foreground-2: #2e3a50;
   --muted: #5e6b82;
   --muted-2: #8d99ae;
-  --primary: #8b5cf6;
-  --primary-light: #a78bfa;
-  --accent: #c084fc;
-  --accent-2: #a78bfa;
-  --ring: #8b5cf6;
+  --primary: #0369a1;
+  --primary-light: #38bdf8;
+  --accent: #0ea5e9;
+  --accent-2: #7dd3fc;
+  --ring: #0369a1;
   --input: #e2e5ea;
-  --glow-primary: rgba(139, 92, 246, 0.15);
-  --glow-accent: rgba(192, 132, 252, 0.12);
+  --glow-primary: rgba(2, 132, 199, 0.14);
+  --glow-accent: rgba(14, 165, 233, 0.12);
 }
 
 .dark {
-  --background: #0a0816;
-  --background-2: #0d0a1e;
-  --surface: #13102a;
-  --surface-2: #1a1535;
-  --card: #15112e;
-  --card-2: #1c1638;
-  --border: #2a2048;
-  --border-strong: #362c5a;
-  --foreground: #f0ecfa;
-  --foreground-2: #d4cde8;
-  --muted: #9589b8;
-  --muted-2: #6e6290;
-  --primary: #a78bfa;
-  --primary-light: #c4b5fd;
-  --accent: #c084fc;
-  --accent-2: #d8b4fe;
-  --ring: #a78bfa;
-  --input: #201a3a;
-  --glow-primary: rgba(167, 139, 250, 0.12);
-  --glow-accent: rgba(192, 132, 252, 0.10);
+  --background: #06080c;
+  --background-2: #090c11;
+  --surface: #0d1117;
+  --surface-2: #131922;
+  --card: #0f141b;
+  --card-2: #151c26;
+  --border: #222b37;
+  --border-strong: #2f3b4a;
+  --foreground: #f1f5f9;
+  --foreground-2: #d2dae4;
+  --muted: #8b96a6;
+  --muted-2: #647082;
+  --primary: #38bdf8;
+  --primary-light: #7dd3fc;
+  --accent: #0ea5e9;
+  --accent-2: #7dd3fc;
+  --ring: #38bdf8;
+  --input: #1a2230;
+  --glow-primary: rgba(56, 189, 248, 0.10);
+  --glow-accent: rgba(14, 165, 233, 0.08);
 
   background-image:
-    radial-gradient(120% 60% at 50% -8%, rgba(139, 92, 246, 0.10), transparent 55%),
-    radial-gradient(80% 50% at 80% 20%, rgba(168, 85, 247, 0.06), transparent 50%),
-    linear-gradient(180deg, rgba(20, 16, 42, 0.5), var(--background) 40%);
+    radial-gradient(120% 60% at 50% -8%, rgba(56, 189, 248, 0.05), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), var(--background) 40%);
   background-attachment: fixed;
 }
 
@@ -278,6 +277,16 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--muted-2);
+}
+
+/* Route-transition loading bar */
+@keyframes nf-route-load {
+  0% { transform: translateX(-100%); }
+  60% { transform: translateX(20%); }
+  100% { transform: translateX(110%); }
+}
+.nf-route-load {
+  animation: nf-route-load 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* ── Scrollbars ────────────────────────────────────────────────────── */
@@ -680,9 +689,9 @@
   --foreground-2: #2e3a50;
   --muted: #5e6b82;
   --muted-2: #8d99ae;
-  --primary: #8b5cf6;
-  --accent: #c084fc;
-  --ring: #8b5cf6;
+  --primary: #0369a1;
+  --accent: #0ea5e9;
+  --ring: #0369a1;
   --input: #e2e5ea;
 }
 
@@ -692,26 +701,25 @@
   color-scheme: dark;
 }
 .preview-dark {
-  --background: #0a0816;
-  --background-2: #0d0a1e;
-  --surface: #13102a;
-  --surface-2: #1a1535;
-  --card: #15112e;
-  --card-2: #1c1638;
-  --border: #2a2048;
-  --border-strong: #362c5a;
-  --foreground: #f0ecfa;
-  --foreground-2: #d4cde8;
-  --muted: #9589b8;
-  --muted-2: #6e6290;
-  --primary: #a78bfa;
-  --primary-light: #c4b5fd;
-  --accent: #c084fc;
-  --accent-2: #d8b4fe;
-  --ring: #a78bfa;
-  --input: #201a3a;
-  background-color: #0a0816;
+  --background: #06080c;
+  --background-2: #090c11;
+  --surface: #0d1117;
+  --surface-2: #131922;
+  --card: #0f141b;
+  --card-2: #151c26;
+  --border: #222b37;
+  --border-strong: #2f3b4a;
+  --foreground: #f1f5f9;
+  --foreground-2: #d2dae4;
+  --muted: #8b96a6;
+  --muted-2: #647082;
+  --primary: #38bdf8;
+  --primary-light: #7dd3fc;
+  --accent: #0ea5e9;
+  --accent-2: #7dd3fc;
+  --ring: #38bdf8;
+  --input: #1a2230;
+  background-color: #06080c;
   background-image:
-    radial-gradient(120% 60% at 50% -8%, rgba(139, 92, 246, 0.10), transparent 55%),
-    radial-gradient(80% 50% at 80% 20%, rgba(168, 85, 247, 0.06), transparent 50%);
+    radial-gradient(120% 60% at 50% -8%, rgba(56, 189, 248, 0.05), transparent 55%);
 }

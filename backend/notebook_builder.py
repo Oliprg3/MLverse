@@ -107,19 +107,19 @@ MODEL_EXPORT_CODE = '''# ✅ 6. Export trained model artifacts
 # Save native PyTorch weights, TorchScript, and a portable ONNX graph.
 model.eval()
 example_input = next(iter(test_loader))[0][:1].to(DEVICE)
-torch.save({"state_dict": model.state_dict(), "classes": globals().get("N_CLASS", None)}, "neuralforge_model.pth")
+torch.save({"state_dict": model.state_dict(), "classes": globals().get("N_CLASS", None)}, "datlify_model.pth")
 traced = torch.jit.trace(model, example_input)
-traced.save("neuralforge_model.ts")
+traced.save("datlify_model.ts")
 torch.onnx.export(
     model,
     example_input,
-    "neuralforge_model.onnx",
+    "datlify_model.onnx",
     input_names=["features"],
     output_names=["logits"],
     dynamic_axes={"features": {0: "batch"}, "logits": {0: "batch"}},
     opset_version=17,
 )
-print("Saved neuralforge_model.pth, neuralforge_model.ts, and neuralforge_model.onnx")
+print("Saved datlify_model.pth, datlify_model.ts, and datlify_model.onnx")
 '''
 
 _MLP_MD = "## 🧠 PyTorch MLP — Multi-Layer Perceptron\nTrain a fully-connected classifier with an explicit training loop."

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
 import { Reveal } from "./Reveal";
+import { TransitionLink } from "./TransitionLink";
 
 export function FinalCTA() {
   return (
@@ -37,15 +38,16 @@ export function FinalCTA() {
               className="group relative inline-flex h-13 items-center gap-2 overflow-hidden rounded-xl bg-neutral-900 px-9 py-3.5 text-base font-semibold text-white shadow-[0_24px_60px_-24px_rgba(0,0,0,0.55)] transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:shadow-[0_0_48px_-16px_rgba(255,255,255,0.45)] dark:hover:bg-neutral-200"
             >
               <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-full dark:bg-neutral-900/10" />
-              <span className="relative">Launch NeuralForge</span>
+              <span className="relative">Launch Datlify</span>
               <ArrowRight size={17} weight="bold" className="relative transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
-            <Link
+            <TransitionLink
               href="/canvas"
+              label="Opening canvas"
               className="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white/50 px-9 py-3.5 text-base font-semibold text-neutral-800 backdrop-blur-md transition-all duration-300 hover:border-neutral-500 hover:bg-white active:scale-[0.97] dark:border-white/15 dark:bg-white/[0.02] dark:text-zinc-200 dark:hover:border-white/30 dark:hover:bg-white/[0.06]"
             >
               Open the workspace
-            </Link>
+            </TransitionLink>
           </div>
         </Reveal>
         <Reveal delay={400}>

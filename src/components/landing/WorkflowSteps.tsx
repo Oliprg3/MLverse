@@ -9,7 +9,7 @@ const STEPS = [
     icon: CursorClick,
     num: "01",
     title: "Drop your data",
-    copy: "Upload a CSV, connect an API or paste a table. NeuralForge profiles every column instantly and suggests the right features.",
+    copy: "Upload a CSV, connect an API or paste a table. Datlify profiles every column instantly and suggests the right features.",
     tag: "30 seconds",
   },
   {

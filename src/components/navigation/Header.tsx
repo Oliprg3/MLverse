@@ -133,14 +133,14 @@ export function Header({
           <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden bg-transparent">
             <Image
               src="/logo.png"
-              alt="MLverse"
+              alt="Datlify"
               width={40}
               height={40}
-              className="h-full w-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
+              className="h-full w-full object-contain dark:brightness-0 dark:invert"
               priority
             />
           </span>
-          <span className="hidden text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white sm:inline">MLverse</span>
+          <span className="hidden text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white sm:inline">Datlify</span>
         </Link>
 
         <span className="hidden h-4 w-px bg-neutral-200 dark:bg-white/10 md:block" aria-hidden />

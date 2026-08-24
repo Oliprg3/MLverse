@@ -820,13 +820,13 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
             "artifacts": {
                 "pickle": {
                     "format": "pickle",
-                    "filename": f"neuralforge_{model_type.replace(':', '_')}.pkl",
+                    "filename": f"datlify_{model_type.replace(':', '_')}.pkl",
                     "mime": "application/octet-stream",
                     "base64": pickle_payload,
                 },
                 "joblib": {
                     "format": "joblib",
-                    "filename": f"neuralforge_{model_type.replace(':', '_')}.joblib",
+                    "filename": f"datlify_{model_type.replace(':', '_')}.joblib",
                     "mime": "application/octet-stream",
                     "base64": joblib_payload,
                 } if joblib_payload else None,

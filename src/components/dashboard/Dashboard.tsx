@@ -22,6 +22,7 @@ import {
   Target,
 } from "@phosphor-icons/react";
 import { useTheme } from "@/components/theme/theme-provider";
+import { TransitionLink } from "@/components/landing/TransitionLink";
 import { NODE_PALETTE, CATEGORIES } from "@/lib/canvasConfig";
 import { loadProject, type SavedProject } from "@/lib/projectStorage";
 
@@ -109,12 +110,12 @@ export function Dashboard() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
             <div className="flex items-center gap-2.5">
               <span className="relative h-8 w-8 overflow-hidden rounded-lg border border-border bg-white shadow-sm">
-                <Image src="/logo.png" alt="MLverse" width={32} height={32} className="h-full w-full object-contain p-1" priority />
+                <Image src="/logo.png" alt="Datlify" width={32} height={32} className="h-full w-full object-contain p-1" priority />
               </span>
-              <span className="text-sm font-semibold tracking-tight text-foreground">MLverse</span>
+              <span className="text-sm font-semibold tracking-tight text-foreground">Datlify</span>
             </div>
           <nav className="flex items-center gap-1">
-            <Link href="/canvas" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Canvas</Link>
+            <TransitionLink href="/canvas" label="Opening canvas" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Canvas</TransitionLink>
             <Link href="/build" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Build with AI</Link>
             <button type="button" onClick={toggle} aria-label="Toggle theme" className="flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
               {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -140,16 +141,16 @@ export function Dashboard() {
               Wire datasets, preprocessing, and models on a visual canvas. Train instantly, generate real Python for Colab, then let AI wrap your model in a web app.
             </p>
             <div className="animate-slide-up mt-8 flex flex-wrap items-center gap-4" style={{ animationDelay: "180ms" }}>
-              <Link href="/canvas" className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 px-6 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 active:scale-[0.97]">
+              <TransitionLink href="/canvas" label="Opening canvas" className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 px-6 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 active:scale-[0.97]">
                 <Play size={16} weight="fill" /> Open canvas
-              </Link>
+              </TransitionLink>
               <Link href="/build" className="inline-flex h-12 items-center gap-2.5 rounded-xl border border-border bg-surface px-6 text-sm font-bold text-foreground shadow-sm transition-all hover:border-border-strong hover:shadow-md active:scale-[0.97]">
                 <Robot size={17} /> Build with AI
               </Link>
               {savedExists ? (
-                <Link href="/canvas" className="ml-1 inline-flex items-center gap-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground">
+                <TransitionLink href="/canvas" label="Opening canvas" className="ml-1 inline-flex items-center gap-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground">
                   Resume &quot;{project?.title ?? "saved project"}&quot; <ArrowRight size={12} weight="bold" />
-                </Link>
+                </TransitionLink>
               ) : null}
             </div>
           </div>
@@ -166,7 +167,7 @@ export function Dashboard() {
               ) : native ? (
                 <p className="mt-2 flex items-center gap-1.5 text-sm font-bold text-primary"><Cpu size={15} weight="fill" /> Python {engine.python_version}</p>
               ) : (
-                <p className="mt-2 flex items-center gap-1.5 text-sm font-bold text-amber-500"><Lightning size={15} weight="fill" /> Built-in TS engine</p>
+                <p className="mt-2 flex items-center gap-1.5 text-sm font-bold text-foreground"><Lightning size={15} weight="fill" /> Built-in engine</p>
               )}
               <p className="mt-1 truncate text-[10px] text-muted-2">{engine ? (native ? "scikit-learn on this deployment" : `Deployment lacks Python ML stack`) : "Checking this deployment…"}</p>
             </div>
@@ -180,13 +181,13 @@ export function Dashboard() {
               <h2 className="text-xl font-bold tracking-tight">Start from a template</h2>
               <p className="mt-1.5 text-sm text-muted">Each opens the canvas pre-seeded with a working pipeline you can edit.</p>
             </div>
-            <Link href="/canvas" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-foreground">
+            <TransitionLink href="/canvas" label="Opening canvas" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-foreground">
               Blank canvas <ArrowRight size={12} weight="bold" />
-            </Link>
+            </TransitionLink>
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {TEMPLATES.map((template) => (
-              <Link key={template.title} href="/canvas" className={`group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${template.border}`}>
+              <TransitionLink key={template.title} href="/canvas" label="Opening canvas" className={`group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${template.border}`}>
                 <div className={`absolute inset-0 bg-gradient-to-br ${template.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />
                 <div className="relative">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${template.gradient}`}>
@@ -194,9 +195,9 @@ export function Dashboard() {
                   </div>
                   <h3 className="mt-4 text-base font-bold tracking-tight">{template.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted">{template.description}</p>
-                  <ArrowRight size={16} weight="bold" className="absolute right-0 top-0 text-muted opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
-                </div>
-              </Link>
+                    <ArrowRight size={16} weight="bold" className="absolute right-0 top-0 text-muted opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
+                  </div>
+                </TransitionLink>
             ))}
           </div>
         </section>
@@ -215,9 +216,9 @@ export function Dashboard() {
                   <p className="mt-0.5 text-[11px] text-muted">{project.nodes.length} nodes · {project.edges.length} links · saved {formatSavedAt(project.savedAt)}</p>
                 </div>
               </div>
-              <Link href="/canvas" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-border bg-surface px-5 text-xs font-bold text-foreground-2 shadow-sm transition-all hover:border-border-strong hover:shadow-md">
+              <TransitionLink href="/canvas" label="Opening canvas" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-border bg-surface px-5 text-xs font-bold text-foreground-2 shadow-sm transition-all hover:border-border-strong hover:shadow-md">
                 <ArrowsOutSimple size={13} /> Open in canvas
-              </Link>
+              </TransitionLink>
             </div>
           </section>
         ) : null}
@@ -244,7 +245,7 @@ export function Dashboard() {
             <MagnifyingGlass size={14} weight="bold" className="mr-1 inline text-muted-2" />
             Tip — inside the canvas press <kbd className="rounded-lg border border-border bg-foreground/[0.04] px-2 py-0.5 font-mono text-[10px] font-semibold">⌘K</kbd> to search all {NODE_PALETTE.length} nodes.
           </p>
-          <p className="font-mono text-[10px] text-muted-2">MLverse · Next.js · FastAPI engine</p>
+           <p className="font-mono text-[10px] text-muted-2">Datlify · Next.js · FastAPI engine</p>
         </footer>
       </main>
     </div>

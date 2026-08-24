@@ -291,7 +291,7 @@ function EvaluateScene() {
    ════════════════════════════════════════════════════════════════════ */
 function DeployScene({ progress }: { progress: number }) {
   const cmd = "$ nf deploy --target production";
-  const url = "https://api.mlverse.app/v1/models/churn-predictor";
+   const url = "https://api.datlify.app/v1/models/churn-predictor";
   const cmdChars = Math.floor(Math.min(1, progress / 0.45) * cmd.length);
   const urlChars = Math.floor(Math.max(0, (progress - 0.55) / 0.45) * url.length);
   const live = progress > 0.62;
@@ -406,7 +406,7 @@ export function TrainingShowcase() {
               <span className="text-neutral-400 dark:text-zinc-500">Start to finish.</span>
             </>
           }
-          copy="This is not a recorded video — it's the actual pipeline flow, replayed live in your browser. Six chapters, one click to scrub, exactly how you'll do it inside MLverse."
+          copy="This is not a recorded video — it's the actual pipeline flow, replayed live in your browser. Six chapters, one click to scrub, exactly how you'll do it inside Datlify."
         />
 
         <Reveal>

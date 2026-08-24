@@ -7,7 +7,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
 export const metadata: Metadata = {
-  title: "NeuralForge — Train AI models without code",
+  title: "Datlify — Train AI models without code",
   description:
     "The no-code AI canvas. Build, train and deploy machine-learning pipelines visually — hybrid CPU/GPU execution, AI builder, instant dashboards and one-click deployment.",
 };

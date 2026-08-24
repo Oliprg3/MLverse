@@ -14,7 +14,7 @@ import {
   type Edge,
   type OnConnect,
 } from "@xyflow/react";
-import { SquaresFour } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, SquaresFour } from "@phosphor-icons/react";
 import { CustomCanvasNode, type CustomFlowNode } from "./CustomCanvasNode";
 import { CanvasControls } from "./CanvasControls";
 import { NodeLibrary } from "@/components/sidebar/NodeLibrary";
@@ -136,6 +136,7 @@ function Canvas() {
   const [response, setResponse] = useState<ExecutionResponse | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(true);
+  const [workflowOpen, setWorkflowOpen] = useState(true);
   const [codeOpen, setCodeOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<GeneratedCode | null>(null);
@@ -512,7 +513,7 @@ function Canvas() {
       setNodes(project.nodes as CustomFlowNode[]);
       setEdges(project.edges);
       setSavedProjectAvailable(true);
-      notify("Loaded your local NeuralForge project");
+      notify("Loaded your local Datlify project");
       window.setTimeout(() => fitView({ padding: 0.28, duration: 450 }), 0);
     } catch {
       notify("Could not load the local project", "warn");
@@ -686,8 +687,19 @@ function Canvas() {
 
         {selectedNode ? (
           <Inspector node={selectedNode} onClose={closeInspector} />
+        ) : workflowOpen ? (
+          <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} onCollapse={() => setWorkflowOpen(false)} />
         ) : (
-          <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} />
+          <button
+            type="button"
+            onClick={() => setWorkflowOpen(true)}
+            aria-label="Show workflow panel"
+            title="Show workflow panel"
+            className="hidden h-full w-11 shrink-0 flex-col items-center gap-3 border-l border-neutral-200/80 bg-white/70 glass-panel py-4 text-neutral-400 transition-colors hover:text-neutral-900 lg:flex dark:border-white/[0.06] dark:bg-[#050506]/60 dark:text-zinc-500 dark:hover:text-white"
+          >
+            <CaretLeft size={15} />
+            <span className="font-mono text-[10px] uppercase tracking-[0.24em] [writing-mode:vertical-rl]">Workflow</span>
+          </button>
         )}
       </div>
 

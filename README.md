@@ -1,6 +1,6 @@
-# MLverse — No-Code AI/ML Canvas Platform
+# Datlify — No-Code AI/ML Canvas Platform
 
-Build, train, and deploy machine-learning workflows visually. MLverse is a
+Build, train, and deploy machine-learning workflows visually. Datlify is a
 node-based canvas where you connect data sources, cleaning steps, feature
 transforms, models, and charts — no code required — then export the result as
 a runnable Python notebook or a standalone app.

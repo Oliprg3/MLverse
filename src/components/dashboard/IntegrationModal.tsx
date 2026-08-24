@@ -45,7 +45,7 @@ type AgentActivity = {
 };
 
 const starterUi: UiSpec = {
-  brand: "NeuralForge", nav: ["Overview", "Predict", "Activity"], eyebrow: "MODEL WORKSPACE", title: "Your model prediction", description: "Upload a saved model, then ask the builder to shape the prediction experience.", submitLabel: "Run prediction", accent: "sky",
+  brand: "Datlify", nav: ["Overview", "Predict", "Activity"], eyebrow: "MODEL WORKSPACE", title: "Your model prediction", description: "Upload a saved model, then ask the builder to shape the prediction experience.", submitLabel: "Run prediction", accent: "sky",
   fields: [{ key: "feature_1", label: "Feature 1", type: "number", placeholder: "0" }, { key: "feature_2", label: "Feature 2", type: "number", placeholder: "0" }],
   stats: [{ label: "Model status", value: "Ready", detail: "Artifact loaded" }, { label: "Runtime", value: "Local", detail: "Serving target" }, { label: "Inputs", value: "02", detail: "Configurable fields" }],
   features: [{ title: "Private by design", description: "Your model artifact stays in this browser session.", icon: "shield" }, { title: "Fast feedback", description: "Validate the prediction experience before connecting inference.", icon: "activity" }, { title: "Built for iteration", description: "Keep refining layout, copy, and behavior through chat.", icon: "spark" }],

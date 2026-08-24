@@ -1,5 +1,5 @@
 /**
- * NeuralForge local training worker.
+ * Datlify local training worker.
  *
  * Loads Pyodide (CPython on WebAssembly) plus NumPy / scikit-learn / pandas
  * from the jsDelivr CDN, then trains classic-ML canvas pipelines entirely on

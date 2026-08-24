@@ -41,7 +41,7 @@ export interface WorkflowFile {
 export function serializeWorkflow(
   nodes: CustomFlowNode[],
   edges: FlowEdge[],
-  title = "NeuralForge Pipeline",
+  title = "Datlify Pipeline",
 ): WorkflowFile {
   return {
     format: "neuralforge-workflow",
@@ -86,7 +86,7 @@ export function deserializeWorkflow(raw: string | Partial<WorkflowFile>): Deseri
         imageDataset: n.imageDataset,
       })), (legacy.edges ?? []).map((e, i) => ({ id: e.id ?? `e${i}`, source: e.source, target: e.target })), "Imported pipeline");
     }
-    return { ok: false, error: "This file is not a NeuralForge workflow." };
+    return { ok: false, error: "This file is not a Datlify workflow." };
   }
 
   if ((parsed.version ?? 0) > WORKFLOW_FORMAT) {
@@ -154,7 +154,7 @@ export function downloadWorkflow(file: WorkflowFile): void {
   const a = document.createElement("a");
   a.href = url;
   const stamp = new Date().toISOString().slice(0, 10);
-  a.download = `neuralforge-workflow-${stamp}.json`;
+  a.download = `datlify-workflow-${stamp}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();

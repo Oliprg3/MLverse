@@ -21,7 +21,7 @@ const QUOTES = [
   },
   {
     quote:
-      "We replaced a stack of notebooks with MLverse dashboards. Execs actually look at them — that never happened before.",
+      "We replaced a stack of notebooks with Datlify dashboards. Execs actually look at them — that never happened before.",
     name: "Priya Nair",
     role: "VP Data · Castellan Retail",
     initials: "PN",

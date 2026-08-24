@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Code, Play, SlidersHorizontal } from "@phosphor-icons/react";
+import { CaretRight, Code, Play, SlidersHorizontal } from "@phosphor-icons/react";
 import type { ExecutionRoute } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ interface WorkflowPanelProps {
   warnings: number;
   onExecute: () => void;
   onCode: () => void;
+  onCollapse?: () => void;
 }
 
 interface EngineInfo {
@@ -22,7 +23,7 @@ interface EngineInfo {
   machine_check?: string | null;
 }
 
-export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, onExecute, onCode }: WorkflowPanelProps) {
+export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, onExecute, onCode, onCollapse }: WorkflowPanelProps) {
   const [engine, setEngine] = useState<EngineInfo | null>(null);
 
   useEffect(() => {
@@ -43,6 +44,17 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={15} weight="regular" className="text-neutral-400 dark:text-zinc-500" />
           <h2 className="text-[13px] font-semibold tracking-tight text-neutral-900 dark:text-white">Workflow</h2>
+          {onCollapse ? (
+            <button
+              type="button"
+              onClick={onCollapse}
+              aria-label="Minimize panel"
+              title="Minimize panel"
+              className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-zinc-500 dark:hover:bg-white/[0.06] dark:hover:text-white"
+            >
+              <CaretRight size={13} weight="bold" />
+            </button>
+          ) : null}
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">Review the pipeline before running it.</p>
       </div>
@@ -77,11 +89,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
             <p className="mt-1.5 text-[11px] text-neutral-400 dark:text-zinc-500">Checking deployment…</p>
           ) : native ? (
             <p className="mt-1.5 text-[11px] font-medium leading-snug text-emerald-500">Native Python {engine.python_version}: the full model suite trains here.</p>
-          ) : (
-            <p className="mt-1.5 text-[11px] font-medium leading-snug text-amber-500">
-              Built-in TypeScript fallback{engine.machine_check ? ` (${engine.machine_check})` : ""}. Only KNN and Naive Bayes train; add a Python ML stack to this server for the rest. Your own computer is never used for training.
-            </p>
-          )}
+          ) : null}
         </div>
       </div>
 
