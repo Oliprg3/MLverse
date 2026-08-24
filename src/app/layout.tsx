@@ -7,9 +7,9 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
 export const metadata: Metadata = {
-  title: "NeuralForge · AI Canvas",
+  title: "NeuralForge — Train AI models without code",
   description:
-    "A no-code AI canvas with a hybrid execution engine, custom dataset import, and interactive Plotly dashboards.",
+    "The no-code AI canvas. Build, train and deploy machine-learning pipelines visually — hybrid CPU/GPU execution, AI builder, instant dashboards and one-click deployment.",
 };
 
 export const viewport: Viewport = {
