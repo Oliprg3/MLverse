@@ -36,8 +36,15 @@ export function LandingNav() {
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link href="/" className="group flex items-center gap-2.5">
-          <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-transparent transition-all duration-300 group-hover:-rotate-3 group-hover:drop-shadow-[0_0_18px_rgba(139,92,246,0.45)]">
-            <Image src="/logo.png" alt="MLverse" width={52} height={52} className="h-full w-full object-contain" priority />
+          <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-transparent">
+            <Image
+              src="/logo.png"
+              alt="MLverse"
+              width={52}
+              height={52}
+              className="h-full w-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
+              priority
+            />
           </span>
           <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">MLverse</span>
         </Link>
