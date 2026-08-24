@@ -132,7 +132,7 @@ export function Header({
         <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden bg-transparent">
             <Image
-              src="/logo.png"
+              src="/datlify-mark.png"
               alt="Datlify"
               width={40}
               height={40}

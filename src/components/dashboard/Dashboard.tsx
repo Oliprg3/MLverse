@@ -110,7 +110,7 @@ export function Dashboard() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
             <div className="flex items-center gap-2.5">
               <span className="relative h-8 w-8 overflow-hidden rounded-lg border border-border bg-white shadow-sm">
-                <Image src="/logo.png" alt="Datlify" width={32} height={32} className="h-full w-full object-contain p-1" priority />
+                <Image src="/datlify-mark.png" alt="Datlify" width={32} height={32} className="h-full w-full object-contain p-1" priority />
               </span>
               <span className="text-sm font-semibold tracking-tight text-foreground">Datlify</span>
             </div>

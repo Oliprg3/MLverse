@@ -40,7 +40,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2.5">
               <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-transparent">
                 <Image
-                  src="/logo.png"
+                  src="/datlify-mark.png"
                   alt="Datlify"
                   width={52}
                   height={52}
