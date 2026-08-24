@@ -43,20 +43,16 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
       .filter(Boolean);
   }, [issues]);
 
-  // Seed defaults once issues are known.
-  useEffect(() => {
-    if (!dataset || !issues || !open) return;
-    setStrategies((current) => {
-      if (Object.keys(current).length > 0) return current;
-      const next: Record<string, CleanStrategy> = {};
-      for (const column of dirtyColumns) next[column] = defaultStrategy(dataset, column);
-      return next;
-    });
-  }, [dataset, issues, open, dirtyColumns]);
+  // Defaults derived during render; explicit user overrides win.
+  const effective = useMemo(() => {
+    const base: Record<string, CleanStrategy> = {};
+    if (dataset && open) for (const column of dirtyColumns) base[column] = defaultStrategy(dataset, column);
+    return { ...base, ...strategies };
+  }, [dataset, open, dirtyColumns, strategies]);
 
   const plan = useMemo(
-    () => (dataset && open && Object.keys(strategies).length > 0 ? buildCleaningPlan(dataset, strategies) : null),
-    [dataset, open, strategies],
+    () => (dataset && open && Object.keys(effective).length > 0 ? buildCleaningPlan(dataset, effective) : null),
+    [dataset, open, effective],
   );
 
   if (!dataset || !issues) return null;
@@ -64,7 +60,7 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
 
   const apply = () => {
     if (!plan || plan.totalReplacements + plan.rowsDropped === 0) return;
-    const { dataset: cleaned, replacements, rowsDropped } = applyCleaning(dataset, strategies);
+    const { dataset: cleaned, replacements, rowsDropped } = applyCleaning(dataset, effective);
     const parts: string[] = [];
     if (replacements > 0) parts.push(`${replacements} value${replacements === 1 ? "" : "s"} filled`);
     if (rowsDropped > 0) parts.push(`${rowsDropped} row${rowsDropped === 1 ? "" : "s"} dropped`);
@@ -148,7 +144,7 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
                         </p>
                       </div>
                       <select
-                        value={strategies[column] ?? "median"}
+                        value={effective[column] ?? "median"}
                         onChange={(e) => setStrategies((s) => ({ ...s, [column]: e.target.value as CleanStrategy }))}
                         className="rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring/40"
                       >

@@ -36,7 +36,7 @@ export function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <section id="faq" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 py-28 sm:px-8 sm:py-36">
-      <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-20">
         <SectionHead
           index="06"
@@ -46,7 +46,7 @@ export function FAQ() {
             <>
               Questions,
               <br />
-              <span className="text-zinc-500">answered straight.</span>
+              <span className="text-neutral-400 dark:text-zinc-500">answered straight.</span>
             </>
           }
         />
@@ -56,8 +56,10 @@ export function FAQ() {
             return (
               <Reveal key={f.q} delay={i * 60} y={16}>
                 <div
-                  className={`overflow-hidden rounded-xl border transition-all duration-400 ${
-                    isOpen ? "border-violet-500/30 bg-white/[0.03]" : "border-white/[0.07] bg-white/[0.01] hover:border-white/[0.14]"
+                  className={`overflow-hidden rounded-xl border transition-all duration-500 ${
+                    isOpen
+                      ? "border-neutral-900 bg-neutral-50 dark:border-white/[0.22] dark:bg-white/[0.03]"
+                      : "border-neutral-200 bg-white hover:border-neutral-400 dark:border-white/[0.07] dark:bg-white/[0.01] dark:hover:border-white/[0.14]"
                   }`}
                 >
                   <button
@@ -65,18 +67,23 @@ export function FAQ() {
                     aria-expanded={isOpen}
                     className="flex w-full items-center justify-between gap-6 px-6 py-5 text-left"
                   >
-                    <span className={`text-[15px] font-medium transition-colors ${isOpen ? "text-white" : "text-zinc-300"}`}>
-                      {f.q}
+                    <span className="flex items-baseline gap-4">
+                      <span className={`font-mono text-[10px] tracking-widest transition-colors duration-500 ${isOpen ? "text-neutral-900 dark:text-white" : "text-neutral-300 dark:text-zinc-700"}`}>
+                        Q{String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className={`text-[15px] font-medium transition-colors duration-500 ${isOpen ? "text-neutral-900 dark:text-white" : "text-neutral-700 dark:text-zinc-300"}`}>
+                        {f.q}
+                      </span>
                     </span>
                     <Plus
                       size={17}
                       weight="bold"
-                      className={`shrink-0 transition-transform duration-400 ${isOpen ? "rotate-45 text-violet-400" : "text-zinc-600"}`}
+                      className={`shrink-0 transition-transform duration-500 ${isOpen ? "rotate-45 text-neutral-900 dark:text-white" : "text-neutral-400 dark:text-zinc-600"}`}
                     />
                   </button>
-                  <div className={`grid transition-all duration-400 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                  <div className={`grid transition-all duration-500 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                     <div className="overflow-hidden">
-                      <p className="px-6 pb-6 text-sm leading-relaxed text-zinc-500">{f.a}</p>
+                      <p className="px-6 pb-6 pl-[52px] text-sm leading-relaxed text-neutral-500 dark:text-zinc-400">{f.a}</p>
                     </div>
                   </div>
                 </div>

@@ -311,11 +311,16 @@
 /* ── Grid backdrop ─────────────────────────────────────────────────── */
 .nf-grid-bg {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(75% 60% at 50% 40%, black 30%, transparent 100%);
   -webkit-mask-image: radial-gradient(75% 60% at 50% 40%, black 30%, transparent 100%);
+}
+.dark .nf-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
 }
 
 /* ── Scroll reveal ─────────────────────────────────────────────────── */
@@ -382,11 +387,15 @@
   position: absolute;
   width: 14px;
   height: 14px;
-  border-color: rgba(139, 92, 246, 0.55);
+  border-color: rgba(23, 23, 23, 0.7);
   border-style: solid;
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
+}
+.dark .nf-hud-corners::before,
+.dark .nf-hud-corners::after {
+  border-color: rgba(255, 255, 255, 0.55);
 }
 .nf-hud-corners::before {
   top: -1px;
@@ -413,8 +422,15 @@
 }
 
 @keyframes nf-node-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); filter: drop-shadow(0 0 0 rgba(139,92,246,0)); }
-  50% { filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5)); }
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(23, 23, 23, 0)); }
+  50% { filter: drop-shadow(0 0 10px rgba(23, 23, 23, 0.35)); }
+}
+.dark .nf-node-pulse {
+  animation-name: nf-node-pulse-dark;
+}
+@keyframes nf-node-pulse-dark {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+  50% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.35)); }
 }
 .nf-node-pulse { animation: nf-node-pulse 2.6s ease-in-out infinite; }
 

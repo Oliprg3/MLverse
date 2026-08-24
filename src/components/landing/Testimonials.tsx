@@ -1,6 +1,6 @@
 "use client";
 
-import { Quotes } from "@phosphor-icons/react";
+import { Quotes, Star } from "@phosphor-icons/react";
 import { SectionHead } from "./SectionHead";
 import { Reveal } from "./Reveal";
 
@@ -21,7 +21,7 @@ const QUOTES = [
   },
   {
     quote:
-      "We replaced a stack of notebooks with NeuralForge dashboards. Execs actually look at them — that never happened before.",
+      "We replaced a stack of notebooks with MLverse dashboards. Execs actually look at them — that never happened before.",
     name: "Priya Nair",
     role: "VP Data · Castellan Retail",
     initials: "PN",
@@ -60,23 +60,36 @@ export function Testimonials() {
             <>
               Loved by analysts,
               <br />
-              <span className="text-zinc-500">respected by engineers.</span>
+              <span className="text-neutral-400 dark:text-zinc-500">respected by engineers.</span>
             </>
           }
         />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {QUOTES.map((q, i) => (
-            <Reveal key={q.name} delay={(i % 3) * 100}>
-              <figure className="group relative flex h-full flex-col justify-between rounded-2xl border border-white/[0.06] bg-white/[0.015] p-7 transition-all duration-500 hover:-translate-y-1 hover:border-white/[0.12] hover:bg-white/[0.03]">
-                <Quotes size={22} weight="fill" className="mb-4 text-violet-500/50 transition-colors duration-500 group-hover:text-violet-400/70" />
-                <blockquote className="text-[15px] leading-relaxed text-zinc-300">“{q.quote}”</blockquote>
-                <figcaption className="mt-6 flex items-center gap-3 border-t border-white/[0.06] pt-5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-violet-500/30 bg-violet-500/10 font-mono text-[11px] font-semibold text-violet-300">
+            <Reveal key={q.name} delay={(i % 3) * 100} className="h-full">
+              <figure className="nf-hud-corners group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-neutral-200 bg-white p-7 transition-all duration-500 hover:-translate-y-1 hover:border-neutral-900 hover:bg-neutral-50 hover:shadow-[0_24px_60px_-32px_rgba(0,0,0,0.3)] dark:border-white/[0.06] dark:bg-white/[0.015] dark:hover:border-white/[0.2] dark:hover:bg-white/[0.03] dark:hover:shadow-[0_24px_60px_-32px_rgba(255,255,255,0.12)]">
+                <div>
+                  <div className="mb-4 flex items-center justify-between">
+                    <Quotes
+                      size={22}
+                      weight="fill"
+                      className="text-neutral-300 transition-colors duration-500 group-hover:text-neutral-900 dark:text-zinc-700 dark:group-hover:text-zinc-200"
+                    />
+                    <span className="flex items-center gap-0.5" aria-label="5 out of 5 stars">
+                      {Array.from({ length: 5 }).map((_, si) => (
+                        <Star key={si} size={10} weight="fill" className="text-neutral-400 dark:text-zinc-500" />
+                      ))}
+                    </span>
+                  </div>
+                  <blockquote className="text-[15px] leading-relaxed text-neutral-700 dark:text-zinc-300">“{q.quote}”</blockquote>
+                </div>
+                <figcaption className="mt-6 flex items-center gap-3 border-t border-neutral-100 pt-5 dark:border-white/[0.06]">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 bg-neutral-100 font-mono text-[11px] font-semibold text-neutral-700 transition-colors duration-500 group-hover:border-neutral-900 group-hover:bg-neutral-900 group-hover:text-white dark:border-white/20 dark:bg-white/10 dark:text-zinc-300 dark:group-hover:border-white dark:group-hover:bg-white dark:group-hover:text-neutral-900">
                     {q.initials}
                   </span>
                   <span>
-                    <span className="block text-sm font-medium text-white">{q.name}</span>
-                    <span className="block font-mono text-[10px] uppercase tracking-widest text-zinc-600">{q.role}</span>
+                    <span className="block text-sm font-medium text-neutral-900 dark:text-white">{q.name}</span>
+                    <span className="block font-mono text-[10px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">{q.role}</span>
                   </span>
                 </figcaption>
               </figure>

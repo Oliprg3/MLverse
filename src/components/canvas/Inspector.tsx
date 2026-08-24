@@ -113,7 +113,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
 
   const csvIssues = useMemo(
     () => (node?.data.type === "data:csv" && node.data.dataset ? analyzeCsv(node.data.dataset) : null),
-    [node?.data.type, node?.data.dataset],
+    [node],
   );
 
   const applyCleaning = (dataset: CsvDataset, summary: string) => {

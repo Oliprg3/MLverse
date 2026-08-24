@@ -48,16 +48,26 @@ const STATS = [
 
 export function StatsBand() {
   return (
-    <section className="border-y border-white/[0.06] bg-[#060608]">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px lg:grid-cols-4">
+    <section className="relative border-y border-neutral-200 bg-neutral-50 dark:border-white/[0.06] dark:bg-[#060608]">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-neutral-200 lg:grid-cols-4 dark:bg-white/[0.06]">
         {STATS.map((s, i) => (
           <Reveal key={s.label} delay={i * 90} y={18}>
-            <div className="relative px-6 py-12 text-center sm:py-16">
-              {i > 0 && <span className="absolute inset-y-8 left-0 hidden w-px bg-white/[0.06] sm:block" aria-hidden="true" />}
-              <div className="font-mono text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <div className="nf-hud-corners group relative h-full overflow-hidden bg-neutral-50 px-6 py-12 text-center transition-colors duration-500 hover:bg-white dark:bg-[#060608] dark:hover:bg-white/[0.02] sm:py-16">
+              <span
+                className="pointer-events-none absolute left-1/2 top-6 h-1 w-1 -translate-x-1/2 rotate-45 border border-neutral-300 transition-colors duration-500 group-hover:border-neutral-900 dark:border-white/20 dark:group-hover:border-white"
+                aria-hidden="true"
+              />
+              <div className="font-mono text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
                 <Counter to={s.value} suffix={s.suffix} decimals={s.decimals} />
               </div>
-              <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-600">{s.label}</div>
+              <div className="mt-3 flex items-center justify-center gap-2">
+                {i === STATS.length - 1 && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] dark:bg-emerald-400 dark:shadow-[0_0_6px_rgba(52,211,153,0.8)]" aria-hidden="true" />
+                )}
+                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-400 transition-colors duration-500 group-hover:text-neutral-600 dark:text-zinc-600 dark:group-hover:text-zinc-400">
+                  {s.label}
+                </span>
+              </div>
             </div>
           </Reveal>
         ))}

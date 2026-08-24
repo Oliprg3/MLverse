@@ -54,15 +54,15 @@ const CSV_ROWS = [
 function ImportScene() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5">
-      <div className="nf-scene-item flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3">
-        <Database size={18} className="text-violet-400" />
-        <span className="font-mono text-xs text-zinc-300">customers_churn.csv</span>
-        <span className="rounded bg-emerald-400/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-emerald-300">uploaded</span>
+      <div className="nf-scene-item flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-5 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+        <Database size={18} className="text-neutral-900 dark:text-zinc-200" />
+        <span className="font-mono text-xs text-neutral-700 dark:text-zinc-300">customers_churn.csv</span>
+        <span className="rounded bg-neutral-900 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white dark:bg-white/10 dark:text-emerald-300">uploaded</span>
       </div>
-      <div className="w-full max-w-md overflow-hidden rounded-xl border border-white/[0.08]">
-        <div className="grid grid-cols-5 gap-px bg-white/[0.06] font-mono text-[9px] uppercase tracking-wider text-zinc-600">
+      <div className="w-full max-w-md overflow-hidden rounded-xl border border-neutral-200 dark:border-white/[0.08]">
+        <div className="grid grid-cols-5 gap-px bg-neutral-200 font-mono text-[9px] uppercase tracking-wider text-neutral-500 dark:bg-white/[0.06] dark:text-zinc-600">
           {["id", "age", "income", "region", "label"].map((h, i) => (
-            <span key={h} className="nf-scene-item bg-[#0b0b0f] px-3 py-2" style={{ animationDelay: `${200 + i * 110}ms` }}>
+            <span key={h} className="nf-scene-item bg-neutral-100 px-3 py-2 dark:bg-[#0b0b0f]" style={{ animationDelay: `${200 + i * 110}ms` }}>
               {h}
             </span>
           ))}
@@ -70,9 +70,7 @@ function ImportScene() {
             row.map((cell, ci) => (
               <span
                 key={`${ri}-${ci}`}
-                className={`nf-scene-item px-3 py-1.5 text-[10px] ${ci === 4 ? "text-violet-300" : "text-zinc-400"} ${
-                  ri % 2 === 0 ? "bg-[#0a0a0e]" : "bg-[#0d0d12]"
-                }`}
+                className={`nf-scene-item bg-white px-3 py-1.5 text-[10px] text-neutral-500 odd:bg-neutral-50 dark:bg-[#0d0d12] dark:text-zinc-400 dark:odd:bg-[#0a0a0e] ${ci === 4 ? "!text-neutral-900 dark:!text-zinc-200" : ""}`}
                 style={{ animationDelay: `${650 + (ri * 5 + ci) * 55}ms` }}
               >
                 {cell}
@@ -81,9 +79,9 @@ function ImportScene() {
           )}
         </div>
       </div>
-      <p className="nf-scene-item font-mono text-[11px] text-zinc-500" style={{ animationDelay: "2100ms" }}>
-        schema inferred · <span className="text-zinc-300">1,204 rows</span> ·{" "}
-        <span className="text-violet-300">9 features</span> detected
+      <p className="nf-scene-item font-mono text-[11px] text-neutral-400 dark:text-zinc-500" style={{ animationDelay: "2100ms" }}>
+        schema inferred · <span className="text-neutral-800 dark:text-zinc-300">1,204 rows</span> ·{" "}
+        <span className="text-neutral-900 font-medium dark:text-white">9 features</span> detected
       </p>
     </div>
   );
@@ -102,13 +100,13 @@ function CleanScene() {
     <div className="flex h-full w-full flex-col justify-center gap-4">
       <div className="mx-auto w-full max-w-md space-y-2 font-mono text-[11px]">
         {fixes.map((f) => (
-          <div key={f.cell} className="nf-clean-row relative overflow-hidden rounded-lg border border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
-            <span className="flex items-center gap-2 text-red-400/90">
+          <div key={f.cell} className="nf-clean-row relative overflow-hidden rounded-lg border border-neutral-200 bg-white px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02]">
+            <span className="flex items-center gap-2 text-red-600 dark:text-red-400/90">
               <Warning size={12} weight="fill" />
               {f.cell}
             </span>
             <span
-              className="nf-fix-swap absolute inset-0 flex items-center gap-2 bg-[#071009]/95 px-4 text-emerald-300"
+              className="nf-fix-swap absolute inset-0 flex items-center gap-2 bg-white px-4 text-emerald-700 dark:bg-[#071009]/95 dark:text-emerald-300"
               style={{ animationDelay: `${f.delay}ms` }}
             >
               <CheckCircle size={12} weight="fill" />
@@ -117,8 +115,8 @@ function CleanScene() {
           </div>
         ))}
       </div>
-      <p className="nf-scene-item self-center font-mono text-[11px] text-zinc-500" style={{ animationDelay: "3600ms" }}>
-        outliers capped · encodings applied · <span className="text-emerald-300">dataset ready</span>
+      <p className="nf-scene-item self-center font-mono text-[11px] text-neutral-400 dark:text-zinc-500" style={{ animationDelay: "3600ms" }}>
+        outliers capped · encodings applied · <span className="text-emerald-600 dark:text-emerald-300">dataset ready</span>
       </p>
     </div>
   );
@@ -137,11 +135,11 @@ function ModelScene() {
   const edges = ["M114 90 L168 44", "M114 90 L168 136", "M260 44 L316 88", "M260 136 L316 92"];
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6">
-      <svg viewBox="0 0 440 170" className="w-full max-w-lg" aria-hidden="true">
+      <svg viewBox="0 0 440 170" className="w-full max-w-lg text-neutral-900 dark:text-white" aria-hidden="true">
         {edges.map((d, i) => (
           <g key={i}>
-            <path d={d} fill="none" stroke="rgba(139,92,246,0.65)" strokeWidth="1.5" className="nf-edge-draw" style={{ animationDelay: `${1400 + i * 350}ms` }} />
-            <circle r="2.5" fill="#c4b5fd" opacity="0">
+            <path d={d} fill="none" stroke="currentColor" strokeOpacity="0.6" strokeWidth="1.5" className="nf-edge-draw" style={{ animationDelay: `${1400 + i * 350}ms` }} />
+            <circle r="2.5" className="fill-neutral-900 opacity-0 dark:fill-white">
               <animateMotion dur="1.6s" begin={`${2600 + i * 250}ms`} repeatCount="3" path={d} />
             </circle>
           </g>
@@ -154,18 +152,19 @@ function ModelScene() {
               width={n.w}
               height={40}
               rx={9}
-              fill={n.hot ? "rgba(139,92,246,0.14)" : "rgba(255,255,255,0.04)"}
-              stroke={n.hot ? "rgba(139,92,246,0.7)" : "rgba(255,255,255,0.15)"}
+              className={n.hot
+                ? "fill-neutral-100 stroke-neutral-900 dark:fill-white/[0.1] dark:stroke-white/70"
+                : "fill-neutral-50 stroke-neutral-300 dark:fill-white/[0.04] dark:stroke-white/15"}
             />
-            <circle cx={n.x + 16} cy={n.y + 20} r={3.5} fill={n.hot ? "#a78bfa" : "rgba(255,255,255,0.35)"} />
-            <text x={n.x + 28} y={n.y + 24} fontSize="11" fill={n.hot ? "#ddd6fe" : "#a1a1aa"} fontFamily="monospace">
+            <circle cx={n.x + 16} cy={n.y + 20} r={3.5} className={n.hot ? "fill-neutral-900 dark:fill-white" : "fill-neutral-400 dark:fill-white/35"} />
+            <text x={n.x + 28} y={n.y + 24} fontSize="11" fontFamily="monospace" className={n.hot ? "fill-neutral-900 dark:fill-zinc-100" : "fill-neutral-500 dark:fill-zinc-400"}>
               {n.label}
             </text>
           </g>
         ))}
       </svg>
-      <p className="nf-scene-item font-mono text-[11px] text-zinc-500" style={{ animationDelay: "3200ms" }}>
-        gradient boosting selected · <span className="text-violet-300">80 / 20 split</span> locked
+      <p className="nf-scene-item font-mono text-[11px] text-neutral-400 dark:text-zinc-500" style={{ animationDelay: "3200ms" }}>
+        gradient boosting selected · <span className="text-neutral-900 font-medium dark:text-white">80 / 20 split</span> locked
       </p>
     </div>
   );
@@ -194,43 +193,42 @@ function TrainScene({ progress }: { progress: number }) {
   return (
     <div className="grid h-full w-full grid-cols-1 items-center gap-5 md:grid-cols-[1fr_240px]">
       {/* loss chart */}
-      <div className="relative h-full min-h-[130px] rounded-xl border border-white/[0.07] bg-black/40 p-4">
-        <div className="mb-1 flex justify-between font-mono text-[9px] uppercase tracking-widest text-zinc-600">
+      <div className="relative h-full min-h-[130px] rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-white/[0.07] dark:bg-black/40">
+        <div className="mb-1 flex justify-between font-mono text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">
           <span>training loss</span>
-          <span className="text-violet-300">run #A41F</span>
+          <span className="text-neutral-700 dark:text-zinc-300">run #A41F</span>
         </div>
         <svg viewBox="0 0 100 64" preserveAspectRatio="none" className="h-[calc(100%-22px)] w-full" aria-hidden="true">
           {[16, 32, 48].map((y) => (
-            <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" />
+            <line key={y} x1="0" y1={y} x2="100" y2={y} className="stroke-neutral-200 dark:stroke-white/10" strokeWidth="0.4" />
           ))}
-          <polyline points={pts || "0,58"} fill="none" stroke="#8b5cf6" strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
+          <polyline points={pts || "0,58"} fill="none" strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" className="stroke-neutral-900 dark:stroke-white" />
           {pts && (
             <circle
               cx={100}
               cy={6 + 52 * Math.exp(-progress * 3.1) + Math.sin(Math.floor(progress * 48) * 1.7) * 1.6}
               r="2"
-              fill="#c4b5fd"
-              className="nf-glow-dot"
+              className="fill-neutral-900 dark:fill-white nf-glow-dot"
             />
           )}
         </svg>
       </div>
       {/* live readouts */}
       <div className="space-y-2.5 font-mono text-xs">
-        <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
-          <div className="text-[9px] uppercase tracking-widest text-zinc-600">epoch</div>
-          <div className="mt-0.5 text-xl font-semibold text-white">
+        <div className="rounded-lg border border-neutral-200 bg-white px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02]">
+          <div className="text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">epoch</div>
+          <div className="mt-0.5 text-xl font-semibold text-neutral-900 dark:text-white">
             {String(epoch).padStart(2, "0")}
-            <span className="text-sm text-zinc-600">/{EPOCHS}</span>
+            <span className="text-sm text-neutral-400 dark:text-zinc-600">/{EPOCHS}</span>
           </div>
         </div>
-        <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
-          <div className="text-[9px] uppercase tracking-widest text-zinc-600">loss</div>
-          <div className="mt-0.5 text-xl font-semibold text-violet-300">{loss.toFixed(3)}</div>
+        <div className="rounded-lg border border-neutral-200 bg-white px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02]">
+          <div className="text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">loss</div>
+          <div className="mt-0.5 text-xl font-semibold text-neutral-900 dark:text-zinc-100">{loss.toFixed(3)}</div>
         </div>
-        <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
-          <div className="text-[9px] uppercase tracking-widest text-zinc-600">val accuracy</div>
-          <div className="mt-0.5 text-xl font-semibold text-emerald-300">{acc.toFixed(1)}%</div>
+        <div className="rounded-lg border border-neutral-200 bg-white px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02]">
+          <div className="text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">val accuracy</div>
+          <div className="mt-0.5 text-xl font-semibold text-emerald-600 dark:text-emerald-300">{acc.toFixed(1)}%</div>
         </div>
       </div>
     </div>
@@ -242,9 +240,9 @@ function TrainScene({ progress }: { progress: number }) {
    ════════════════════════════════════════════════════════════════════ */
 function EvaluateScene() {
   const metrics = [
-    { k: "Accuracy", v: "94.2%", c: "text-emerald-300" },
-    { k: "F1 score", v: "0.931", c: "text-white" },
-    { k: "ROC-AUC", v: "0.974", c: "text-violet-300" },
+    { k: "Accuracy", v: "94.2%", c: "text-emerald-600 dark:text-emerald-300" },
+    { k: "F1 score", v: "0.931", c: "text-neutral-900 dark:text-white" },
+    { k: "ROC-AUC", v: "0.974", c: "text-neutral-900 dark:text-zinc-200" },
   ];
   // confusion matrix values (2x2)
   const cm = [86, 9, 4, 101];
@@ -252,21 +250,23 @@ function EvaluateScene() {
     <div className="flex h-full flex-col items-center justify-center gap-5">
       <div className="flex w-full max-w-md justify-between gap-3">
         {metrics.map((m, i) => (
-          <div key={m.k} className="nf-metric-pop flex-1 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-center" style={{ animationDelay: `${300 + i * 400}ms` }}>
+          <div key={m.k} className="nf-metric-pop flex-1 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-center dark:border-white/[0.08] dark:bg-white/[0.02]" style={{ animationDelay: `${300 + i * 400}ms` }}>
             <div className={`font-mono text-2xl font-semibold ${m.c}`}>{m.v}</div>
-            <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-zinc-600">{m.k}</div>
+            <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">{m.k}</div>
           </div>
         ))}
       </div>
-      <div className="nf-scene-item flex items-center gap-5 rounded-xl border border-white/[0.07] bg-black/40 p-4" style={{ animationDelay: "1500ms" }}>
+      <div className="nf-scene-item flex items-center gap-5 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-white/[0.07] dark:bg-black/40" style={{ animationDelay: "1500ms" }}>
         <div>
-          <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-zinc-600">confusion matrix</div>
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">confusion matrix</div>
           <div className="grid grid-cols-2 gap-1">
             {cm.map((v, i) => (
               <span
                 key={i}
                 className={`nf-cm-cell flex h-11 w-11 items-center justify-center rounded font-mono text-xs ${
-                  i === 0 || i === 3 ? "bg-violet-500/25 text-violet-100" : "bg-white/[0.05] text-zinc-500"
+                  i === 0 || i === 3
+                    ? "bg-neutral-900 text-white dark:bg-white/90 dark:text-neutral-900"
+                    : "bg-neutral-200/70 text-neutral-400 dark:bg-white/[0.05] dark:text-zinc-500"
                 }`}
                 style={{ animationDelay: `${1800 + i * 220}ms` }}
               >
@@ -275,11 +275,11 @@ function EvaluateScene() {
             ))}
           </div>
         </div>
-        <div className="space-y-1.5 font-mono text-[10px] leading-relaxed text-zinc-500">
-          <p><span className="text-emerald-300">TP 86</span> — churners caught</p>
-          <p><span className="text-zinc-300">TN 101</span> — safe kept safe</p>
-          <p><span className="text-zinc-500">FP 9 · FN 4</span></p>
-          <p className="pt-1 text-zinc-400">feature importance exported → dashboard</p>
+        <div className="space-y-1.5 font-mono text-[10px] leading-relaxed text-neutral-500 dark:text-zinc-500">
+          <p><span className="text-emerald-600 dark:text-emerald-300">TP 86</span> — churners caught</p>
+          <p><span className="text-neutral-800 dark:text-zinc-300">TN 101</span> — safe kept safe</p>
+          <p><span className="text-neutral-400 dark:text-zinc-500">FP 9 · FN 4</span></p>
+          <p className="pt-1 text-neutral-600 dark:text-zinc-400">feature importance exported → dashboard</p>
         </div>
       </div>
     </div>
@@ -291,33 +291,37 @@ function EvaluateScene() {
    ════════════════════════════════════════════════════════════════════ */
 function DeployScene({ progress }: { progress: number }) {
   const cmd = "$ nf deploy --target production";
-  const url = "https://api.neuralforge.ai/v1/models/churn-predictor";
+  const url = "https://api.mlverse.app/v1/models/churn-predictor";
   const cmdChars = Math.floor(Math.min(1, progress / 0.45) * cmd.length);
   const urlChars = Math.floor(Math.max(0, (progress - 0.55) / 0.45) * url.length);
   const live = progress > 0.62;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6">
-      <div className={`nf-deploy-badge inline-flex items-center gap-2.5 rounded-full border px-5 py-2 transition-all duration-700 ${live ? "border-emerald-400/40 bg-emerald-400/10 shadow-[0_0_28px_-6px_rgba(52,211,153,0.55)]" : "border-white/10 bg-white/[0.03]"}`}>
+      <div className={`nf-deploy-badge inline-flex items-center gap-2.5 rounded-full border px-5 py-2 transition-all duration-700 ${
+        live
+          ? "border-emerald-500/40 bg-emerald-50 shadow-none dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:shadow-[0_0_28px_-6px_rgba(52,211,153,0.55)]"
+          : "border-neutral-200 bg-white dark:border-white/10 dark:bg-white/[0.03]"
+      }`}>
         <span className={`relative flex h-2 w-2`}>
-          {live && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />}
-          <span className={`relative inline-flex h-2 w-2 rounded-full ${live ? "bg-emerald-400" : "bg-zinc-600"}`} />
+          {live && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 dark:bg-emerald-400" />}
+          <span className={`relative inline-flex h-2 w-2 rounded-full ${live ? "bg-emerald-500 dark:bg-emerald-400" : "bg-neutral-300 dark:bg-zinc-600"}`} />
         </span>
-        <span className={`font-mono text-xs uppercase tracking-[0.25em] ${live ? "text-emerald-300" : "text-zinc-500"}`}>
+        <span className={`font-mono text-xs uppercase tracking-[0.25em] ${live ? "text-emerald-700 dark:text-emerald-300" : "text-neutral-400 dark:text-zinc-500"}`}>
           {live ? "Model live" : "Shipping…"}
         </span>
       </div>
-      <div className="w-full max-w-md rounded-xl border border-white/[0.08] bg-black/70 p-4 font-mono text-xs">
-        <p className="text-zinc-300">
+      <div className="w-full max-w-md rounded-xl border border-neutral-900 bg-neutral-900 p-4 font-mono text-xs dark:border-white/[0.08] dark:bg-black/70">
+        <p className="text-neutral-100">
           {cmd.slice(0, cmdChars)}
-          <span className="nf-caret ml-0.5 inline-block h-3 w-[6px] translate-y-[2px] bg-violet-400" />
+          <span className="nf-caret ml-0.5 inline-block h-3 w-[6px] translate-y-[2px] bg-white" />
         </p>
         {urlChars > 0 && (
           <p className="mt-2 break-all text-emerald-300/90">↳ endpoint {url.slice(0, urlChars)}</p>
         )}
         {live && (
-          <p className="mt-2 text-zinc-500">
-            cold start <span className="text-zinc-300">380ms</span> · autoscaling <span className="text-zinc-300">on</span> · region{" "}
-            <span className="text-zinc-300">eu-central</span>
+          <p className="mt-2 text-neutral-400 dark:text-zinc-500">
+            cold start <span className="text-neutral-100 dark:text-zinc-300">380ms</span> · autoscaling <span className="text-neutral-100 dark:text-zinc-300">on</span> · region{" "}
+            <span className="text-neutral-100 dark:text-zinc-300">eu-central</span>
           </p>
         )}
       </div>
@@ -399,8 +403,8 @@ export function TrainingShowcase() {
   return (
     <section id="training-demo" className="relative scroll-mt-24 py-28 sm:py-36">
       {/* backdrop accents */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-      <div className="pointer-events-none absolute left-1/2 top-24 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-white/[0.025] blur-[120px]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-white/15" />
+      <div className="pointer-events-none absolute left-1/2 top-24 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-neutral-200/50 blur-[120px] dark:bg-white/[0.025]" />
 
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHead
@@ -409,38 +413,38 @@ export function TrainingShowcase() {
           title={
             <>
               Watch a model get trained.{" "}
-              <span className="text-zinc-500">Start to finish.</span>
+              <span className="text-neutral-400 dark:text-zinc-500">Start to finish.</span>
             </>
           }
-          copy="This is not a recorded video — it's the actual pipeline flow, replayed live in your browser. Six chapters, one click to scrub, exactly how you'll do it inside NeuralForge."
+          copy="This is not a recorded video — it's the actual pipeline flow, replayed live in your browser. Six chapters, one click to scrub, exactly how you'll do it inside MLverse."
         />
 
         <Reveal>
           <div ref={rootRef} className="relative mx-auto max-w-5xl">
             {/* outer HUD brackets */}
-            <span className="pointer-events-none absolute -left-3 -top-3 hidden h-8 w-8 border-l border-t border-violet-500/50 sm:block" aria-hidden="true" />
-            <span className="pointer-events-none absolute -right-3 -top-3 hidden h-8 w-8 border-r border-t border-violet-500/50 sm:block" aria-hidden="true" />
-            <span className="pointer-events-none absolute -bottom-3 -left-3 hidden h-8 w-8 border-b border-l border-violet-500/50 sm:block" aria-hidden="true" />
-            <span className="pointer-events-none absolute -bottom-3 -right-3 hidden h-8 w-8 border-b border-r border-violet-500/50 sm:block" aria-hidden="true" />
+            <span className="pointer-events-none absolute -left-3 -top-3 hidden h-8 w-8 border-l border-t border-neutral-400 sm:block dark:border-white/30" aria-hidden="true" />
+            <span className="pointer-events-none absolute -right-3 -top-3 hidden h-8 w-8 border-r border-t border-neutral-400 sm:block dark:border-white/30" aria-hidden="true" />
+            <span className="pointer-events-none absolute -bottom-3 -left-3 hidden h-8 w-8 border-b border-l border-neutral-400 sm:block dark:border-white/30" aria-hidden="true" />
+            <span className="pointer-events-none absolute -bottom-3 -right-3 hidden h-8 w-8 border-b border-r border-neutral-400 sm:block dark:border-white/30" aria-hidden="true" />
 
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#070709] shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9)]">
+            <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_60px_120px_-60px_rgba(0,0,0,0.35)] dark:border-white/10 dark:bg-[#070709] dark:shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9)]">
               {/* Title bar */}
-              <div className="flex items-center justify-between border-b border-white/[0.07] bg-white/[0.02] px-4 py-2.5 sm:px-5">
+              <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02] sm:px-5">
                 <div className="flex items-center gap-3">
                   <div className="hidden gap-1.5 sm:flex" aria-hidden="true">
-                    <span className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-zinc-800" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-neutral-300 dark:bg-zinc-800" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-neutral-300 dark:bg-zinc-800" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-neutral-400 dark:bg-zinc-700" />
                   </div>
-                  <span className="font-mono text-[11px] text-zinc-500">how-to-train-your-first-model.nf</span>
+                  <span className="font-mono text-[11px] text-neutral-400 dark:text-zinc-500">how-to-train-your-first-model.nf</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 rounded border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-violet-300">
+                  <span className="inline-flex items-center gap-1.5 rounded border border-neutral-300 bg-neutral-100 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-neutral-600 dark:border-white/20 dark:bg-white/10 dark:text-zinc-300">
                     <CircleNotch size={9} className="animate-spin" />
                     auto demo
                   </span>
-                  <span className="font-mono text-[11px] tabular-nums text-zinc-500">
-                    {fmt(elapsedGlobal)} <span className="text-zinc-700">/ {fmt(TOTAL_MS)}</span>
+                  <span className="font-mono text-[11px] tabular-nums text-neutral-400 dark:text-zinc-500">
+                    {fmt(elapsedGlobal)} <span className="text-neutral-300 dark:text-zinc-700">/ {fmt(TOTAL_MS)}</span>
                   </span>
                 </div>
               </div>
@@ -457,16 +461,16 @@ export function TrainingShowcase() {
                   {CHAPTERS[chapter].id === "deploy" && <DeployScene progress={progress} />}
                 </div>
                 {/* scanline sweep */}
-                <div className="nf-scan pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-transparent via-violet-500/[0.05] to-transparent" aria-hidden="true" />
+                <div className="nf-scan pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-transparent via-neutral-400/10 to-transparent dark:via-white/[0.05]" aria-hidden="true" />
               </div>
 
               {/* Controls */}
-              <div className="border-t border-white/[0.07] bg-white/[0.02] px-4 py-3.5 sm:px-5">
+              <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-3.5 dark:border-white/[0.07] dark:bg-white/[0.02] sm:px-5">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setPlaying((v) => !v)}
                     aria-label={playing ? "Pause demo" : "Play demo"}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-[0_0_20px_-4px_rgba(139,92,246,0.8)] transition-all hover:bg-violet-500 active:scale-95"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-all hover:bg-neutral-700 active:scale-95 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
                   >
                     {playing ? <Pause size={15} weight="fill" /> : <Play size={15} weight="fill" className="translate-x-[1px]" />}
                   </button>
@@ -483,27 +487,27 @@ export function TrainingShowcase() {
                     aria-valuenow={Math.round(elapsedGlobal)}
                     tabIndex={0}
                   >
-                    <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/[0.08]">
+                    <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-neutral-200 dark:bg-white/[0.08]">
                       {STARTS.slice(1).map((s) => (
                         <span
                           key={s}
-                          className="absolute top-0 h-full w-px bg-white/25"
+                          className="absolute top-0 h-full w-px bg-neutral-400 dark:bg-white/25"
                           style={{ left: `${(s / TOTAL_MS) * 100}%` }}
                         />
                       ))}
                     </div>
                     <div
-                      className="absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.7)]"
+                      className="absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-neutral-900 dark:bg-white"
                       style={{ width: `${(elapsedGlobal / TOTAL_MS) * 100}%` }}
                     />
                     <span
-                      className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-violet-400 bg-[#070709] transition-transform group-hover:scale-125"
+                      className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-neutral-900 bg-white transition-transform group-hover:scale-125 dark:border-white dark:bg-[#070709]"
                       style={{ left: `${(elapsedGlobal / TOTAL_MS) * 100}%` }}
                     />
                   </div>
 
-                  <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-zinc-500 sm:flex">
-                    <ActiveIcon size={13} className="text-violet-400" />
+                  <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-neutral-400 dark:text-zinc-500 sm:flex">
+                    <ActiveIcon size={13} className="text-neutral-800 dark:text-zinc-200" />
                     CH {String(chapter + 1).padStart(2, "0")}/{String(CHAPTERS.length).padStart(2, "0")}
                   </div>
                 </div>
@@ -526,13 +530,13 @@ export function TrainingShowcase() {
                     }}
                     className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] transition-all duration-300 ${
                       active
-                        ? "border-violet-500/60 bg-violet-500/15 text-violet-200 shadow-[0_0_16px_-4px_rgba(139,92,246,0.6)]"
+                        ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
                         : done
-                          ? "border-white/10 bg-white/[0.03] text-zinc-500"
-                          : "border-white/10 bg-transparent text-zinc-600 hover:border-white/25 hover:text-zinc-300"
+                          ? "border-neutral-200 bg-neutral-100 text-neutral-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-500"
+                          : "border-neutral-200 bg-transparent text-neutral-400 hover:border-neutral-400 hover:text-neutral-700 dark:border-white/10 dark:text-zinc-600 dark:hover:border-white/25 dark:hover:text-zinc-300"
                     }`}
                   >
-                    <Icon size={12} className={active ? "text-violet-300" : ""} />
+                    <Icon size={12} className={active ? "" : ""} />
                     {String(i + 1).padStart(2, "0")} {c.label}
                   </button>
                 );

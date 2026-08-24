@@ -1,9 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "@/components/theme/theme-provider";
+
+interface Ink {
+  link: (alpha: number) => string;
+  node: string;
+}
+
+const DARK_INK: Ink = { link: (a) => `rgba(255,255,255,${a})`, node: "rgba(255,255,255,0.35)" };
+const LIGHT_INK: Ink = { link: (a) => `rgba(23,23,23,${a})`, node: "rgba(23,23,23,0.28)" };
 
 export function ParticleField({ className = "" }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { resolvedTheme } = useTheme();
+  const inkRef = useRef<Ink>(resolvedTheme === "light" ? LIGHT_INK : DARK_INK);
+
+  useEffect(() => {
+    inkRef.current = resolvedTheme === "light" ? LIGHT_INK : DARK_INK;
+  }, [resolvedTheme]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -45,6 +60,7 @@ export function ParticleField({ className = "" }: { className?: string }) {
     };
 
     const step = () => {
+      const ink = inkRef.current;
       ctx.clearRect(0, 0, w, h);
 
       for (const p of pts) {
@@ -74,7 +90,7 @@ export function ParticleField({ className = "" }: { className?: string }) {
           const max = 130;
           if (d2 < max * max) {
             const a = (1 - Math.sqrt(d2) / max) * 0.16;
-            ctx.strokeStyle = `rgba(255,255,255,${a})`;
+            ctx.strokeStyle = ink.link(a);
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(pts[i].x, pts[i].y);
@@ -86,7 +102,7 @@ export function ParticleField({ className = "" }: { className?: string }) {
 
       // nodes
       for (const p of pts) {
-        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        ctx.fillStyle = ink.node;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();

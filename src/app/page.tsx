@@ -13,7 +13,7 @@ import { Footer } from "@/components/landing/Footer";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#050506] text-zinc-200 antialiased selection:bg-violet-600/40 selection:text-white">
+    <div className="min-h-screen bg-white text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white dark:bg-[#050506] dark:text-zinc-200 dark:selection:bg-white/90 dark:selection:text-neutral-900">
       <LandingNav />
       <main>
         <Hero />
