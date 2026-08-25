@@ -22,6 +22,7 @@ import {
   Lightning,
   PlugsConnected,
   Table,
+  Trash,
   Warning,
   XCircle,
 } from "@phosphor-icons/react";
@@ -51,8 +52,8 @@ function shortLabel(dialect: DbDialect, table: string): string {
   return `${dialect === "mysql" ? "MySQL" : "Postgres"} · ${table}`;
 }
 
-function DatabaseSourceNodeBase({ id, data }: NodeProps<DbSourceFlowNode>) {
-  const { updateNodeData } = useReactFlow();
+function DatabaseSourceNodeBase({ id, data, selected }: NodeProps<DbSourceFlowNode>) {
+  const { updateNodeData, deleteElements } = useReactFlow();
   const [open, setOpen] = useState(false);
 
   const db = data.dbConfig as DbSourceConfig | undefined;
@@ -71,11 +72,26 @@ function DatabaseSourceNodeBase({ id, data }: NodeProps<DbSourceFlowNode>) {
       {/* Output handle: passes columns, types and rows to downstream nodes */}
       <Handle type="source" position={Position.Right} />
 
+      {/* Delete control */}
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); deleteElements({ nodes: [{ id }] }); }}
+        aria-label="Delete node"
+        title="Delete node"
+        className={cn(
+          "absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 opacity-0 transition-all duration-200 hover:bg-rose-500/10 hover:text-rose-500 focus-visible:opacity-100 group-hover:opacity-100",
+          selected && "opacity-100",
+        )}
+      >
+        <Trash size={13} />
+      </button>
+
       {/* Connection status badge */}
       <span
         title={status === "error" ? db?.error ?? "Last fetch failed" : undefined}
         className={cn(
-          "absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em]",
+          "absolute right-9 top-2 z-10 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em]",
           status === "connected" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
           status === "error" && "border-rose-500/30 bg-rose-500/10 text-rose-500",
           status === "idle" && "border-neutral-200/80 bg-neutral-100/60 text-neutral-400 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-500",

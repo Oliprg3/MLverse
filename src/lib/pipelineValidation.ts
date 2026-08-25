@@ -18,7 +18,7 @@ export type FixSpec =
   | { kind: "remove-node"; nodeId: string }
   | { kind: "set-param"; nodeId: string; key: string; value: string | number }
   | { kind: "add-imputer"; nodeId: string }
-  | { kind: "resolve-text-columns"; nodeId: string; columns: string[] }
+  | { kind: "resolve-text-columns"; nodeId: string; sourceId: string; columns: string[] }
   | { kind: "auto-connect" };
 
 export interface Diagnostic {
@@ -353,7 +353,7 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
             nodeId: node.id,
             title: "Text column feeds a numeric pipeline",
             detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Confirm a fix and we rewrite the dataset: drop the columns, or encode them.`,
-            fix: { kind: "resolve-text-columns", nodeId: node.id, columns: textColumns },
+            fix: { kind: "resolve-text-columns", nodeId: node.id, sourceId: primaryData.id, columns: textColumns },
           });
         }
         if (missingCells > 0 && !preNodes.some((p) => p.type === "pre:impute") && !missingReported) {

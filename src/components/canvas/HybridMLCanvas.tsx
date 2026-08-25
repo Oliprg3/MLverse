@@ -274,13 +274,15 @@ function Canvas() {
         break;
       }
       case "resolve-text-columns": {
-        const source = nodes.find((n) => n.id === fix.nodeId);
+        // The diagnostic is attached to the downstream node, but the dataset
+        // lives on the data source feeding it.
+        const source = nodes.find((n) => n.id === fix.sourceId);
         if (!source?.data.dataset) {
           notify("Fetch data into the source node first, then fix the columns", "warn");
           return;
         }
         // Ask permission — the modal lets the user pick drop/encode per column.
-        setTextFix({ nodeId: fix.nodeId, columns: fix.columns });
+        setTextFix({ nodeId: fix.sourceId, columns: fix.columns });
         return;
       }
       case "auto-connect": {
