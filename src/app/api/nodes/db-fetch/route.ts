@@ -17,6 +17,7 @@
  */
 
 import type { NextRequest } from "next/server";
+import { lookup } from "dns/promises";
 import type { DbDialect } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -207,6 +208,9 @@ function friendlyDriverError(err: unknown, dialect: DbDialect): DbError {
     ECONNREFUSED: new DbError("Connection refused — nothing is listening on that host and port.", "Double-check the host and port in your connection string, and that the database accepts external connections."),
     ENOTFOUND: new DbError("The database host could not be found.", "Check the hostname spelling in your connection string."),
     ETIMEDOUT: new DbError("The connection timed out.", "The host may be behind a firewall or VPN. Allow-list this server's IP if the provider requires it."),
+    ENETUNREACH: new DbError("This server has no network route to the database host.", "The host only offered an IPv6 address your network can't reach (common with Neon free tier). Enable IPv6 on this machine, or use the provider's IPv4 / pooler hostname."),
+    EHOSTUNREACH: new DbError("This server has no network route to the database host.", "Check that the database accepts external connections and the host is reachable from this machine."),
+    EAI_AGAIN: new DbError("The database hostname could not be resolved right now.", "A DNS hiccup on the server — try again in a moment."),
     "28P01": new DbError("Authentication failed — the user or password was rejected.", "Re-check the username and password portion of the connection string."),
     ER_ACCESS_DENIED_ERROR: new DbError("Authentication failed — the user or password was rejected.", "Re-check the username and password portion of the connection string."),
     "3D000": new DbError("That database does not exist on the server.", "Check the database name at the end of the connection string."),
@@ -278,10 +282,24 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 }
 
+/**
+ * Resolve the host to an IPv4 address when one exists. Cloud providers like
+ * Neon hand out AAAA (IPv6) records first, and many dev machines / CI
+ * networks have no IPv6 route (ENETUNREACH) — IPv4 keeps them working.
+ */
+async function resolveHostIPv4(host: string): Promise<string> {
+  try {
+    const v4 = await lookup(host, { family: 4 });
+    return v4.address;
+  } catch {
+    return host; // no A record — let the driver resolve (host may be IPv6-only)
+  }
+}
+
 async function runPostgres(uri: ParsedUri, sql: string): Promise<{ columns: string[]; columnTypes: Record<string, string>; rows: Array<Record<string, CellValue>> }> {
   const { Client } = await import("pg");
   const client = new Client({
-    host: uri.host,
+    host: await resolveHostIPv4(uri.host),
     port: uri.port,
     user: uri.user,
     password: uri.password,
@@ -314,7 +332,7 @@ async function runPostgres(uri: ParsedUri, sql: string): Promise<{ columns: stri
 async function runMysql(uri: ParsedUri, sql: string): Promise<{ columns: string[]; columnTypes: Record<string, string>; rows: Array<Record<string, CellValue>> }> {
   const mysql = await import("mysql2/promise");
   const conn = await mysql.createConnection({
-    host: uri.host,
+    host: await resolveHostIPv4(uri.host),
     port: uri.port,
     user: uri.user,
     password: uri.password,
