@@ -16,11 +16,15 @@ import {
   Plus,
   Trash,
   MagnifyingGlass,
+  Broom,
+  Warning,
+  CheckCircle,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { PlotlyChart } from "./PlotlyChart";
 import { cn } from "@/lib/utils";
 import type { PlotlyFigure } from "@/lib/types";
+import { analyzeCsv, buildCleaningPlan, applyCleaning, type CleanStrategy, STRATEGY_LABEL, type CsvIssues } from "@/lib/dataCleaning";
 
 interface DataPoint {
   [key: string]: string | number;
@@ -29,6 +33,7 @@ interface DataPoint {
 interface AdvancedAnalyticsDashboardProps {
   data: DataPoint[];
   fileName?: string;
+  csvText?: string;
 }
 
 type FilterCondition = {
@@ -48,20 +53,30 @@ type Aggregation = {
   operation: "sum" | "avg" | "min" | "max" | "count" | "std";
 };
 
-export function AdvancedAnalyticsDashboard({ data, fileName = "data" }: AdvancedAnalyticsDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"data" | "charts" | "analysis">("data");
+export function AdvancedAnalyticsDashboard({ data, fileName = "data", csvText }: AdvancedAnalyticsDashboardProps) {
+  const [activeTab, setActiveTab] = useState<"data" | "charts" | "analysis" | "cleaning">("data");
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [sorts, setSorts] = useState<SortCondition[]>([]);
   const [aggregations, setAggregations] = useState<Aggregation[]>([]);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+  
+  // Data cleaning state
+  const [cleaningStrategies, setCleaningStrategies] = useState<Record<string, CleanStrategy>>({});
+  const [cleaningApplied, setCleaningApplied] = useState(false);
+  const [cleanedData, setCleanedData] = useState<DataPoint[] | null>(null);
+  const [csvIssues, setCsvIssues] = useState<CsvIssues | null>(null);
+  const [removeDuplicates, setRemoveDuplicates] = useState(false);
+  const [standardizeColumns, setStandardizeColumns] = useState<string[]>([]);
 
   const columns = useMemo(() => {
     if (data.length === 0) return [];
     return Object.keys(data[0]);
   }, [data]);
 
+  const currentData = cleaningApplied ? (cleanedData || data) : data;
+
   const filteredData = useMemo(() => {
-    let result = [...data];
+    let result = [...currentData];
 
     // Apply filters
     filters.forEach((filter) => {
@@ -97,7 +112,7 @@ export function AdvancedAnalyticsDashboard({ data, fileName = "data" }: Advanced
     });
 
     return result;
-  }, [data, filters, sorts]);
+  }, [currentData, filters, sorts]);
 
   const aggregatedData = useMemo(() => {
     if (aggregations.length === 0) return null;
@@ -275,6 +290,97 @@ export function AdvancedAnalyticsDashboard({ data, fileName = "data" }: Advanced
     URL.revokeObjectURL(url);
   };
 
+  // Data cleaning functions
+  const detectIssues = () => {
+    if (!csvText) return;
+    const csvDataset = {
+      filename: fileName,
+      csvText,
+      nrows: data.length,
+      columns: columns,
+      targetColumn: columns[columns.length - 1],
+    };
+    const issues = analyzeCsv(csvDataset);
+    setCsvIssues(issues);
+    
+    // Set default strategies for affected columns
+    const defaultStrategies: Record<string, CleanStrategy> = {};
+    issues.affected.forEach((col) => {
+      defaultStrategies[col] = "median";
+    });
+    setCleaningStrategies(defaultStrategies);
+  };
+
+  const applyDataCleaning = () => {
+    if (!csvText || Object.keys(cleaningStrategies).length === 0) return;
+    
+    const csvDataset = {
+      filename: fileName,
+      csvText,
+      nrows: data.length,
+      columns: columns,
+      targetColumn: columns[columns.length - 1],
+    };
+    
+    const { dataset, replacements, rowsDropped } = applyCleaning(csvDataset, cleaningStrategies);
+    
+    // Parse cleaned CSV back to DataPoint format
+    const lines = dataset.csvText.split("\n").filter(Boolean);
+    const headers = lines[0].split(",");
+    const cleanedRows = lines.slice(1).map((line) => {
+      const values = line.split(",");
+      const row: Record<string, string | number> = {};
+      headers.forEach((header, i) => {
+        const val = values[i]?.trim() || "";
+        const numVal = parseFloat(val);
+        row[header.trim()] = isNaN(numVal) ? val : numVal;
+      });
+      return row;
+    });
+    
+    // Remove duplicates if enabled
+    let finalRows = cleanedRows;
+    if (removeDuplicates) {
+      const seen = new Set<string>();
+      finalRows = cleanedRows.filter((row) => {
+        const key = JSON.stringify(row);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    
+    // Standardize columns if enabled
+    if (standardizeColumns.length > 0) {
+      standardizeColumns.forEach((col) => {
+        const values = finalRows.map((row) => Number(row[col])).filter((v) => !isNaN(v));
+        if (values.length > 0) {
+          const mean = values.reduce((a, b) => a + b, 0) / values.length;
+          const std = Math.sqrt(values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length);
+          finalRows = finalRows.map((row) => {
+            const val = Number(row[col]);
+            if (!isNaN(val) && std > 0) {
+              return { ...row, [col]: (val - mean) / std };
+            }
+            return row;
+          });
+        }
+      });
+    }
+    
+    setCleanedData(finalRows);
+    setCleaningApplied(true);
+  };
+
+  const resetCleaning = () => {
+    setCleaningStrategies({});
+    setCleaningApplied(false);
+    setCleanedData(null);
+    setCsvIssues(null);
+    setRemoveDuplicates(false);
+    setStandardizeColumns([]);
+  };
+
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-border">
@@ -340,6 +446,20 @@ export function AdvancedAnalyticsDashboard({ data, fileName = "data" }: Advanced
           )}
         >
           <Calculator size={16} className="mr-2 inline" /> Analysis
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("cleaning");
+            if (!csvIssues && csvText) detectIssues();
+          }}
+          className={cn(
+            "px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "cleaning"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-muted hover:text-foreground"
+          )}
+        >
+          <Broom size={16} className="mr-2 inline" /> Cleaning
         </button>
       </div>
 
@@ -626,6 +746,131 @@ export function AdvancedAnalyticsDashboard({ data, fileName = "data" }: Advanced
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === "cleaning" && (
+        <div className="space-y-4">
+          {!csvText ? (
+            <div className="rounded-xl border border-dashed border-border bg-foreground/[0.02] px-5 py-10 text-center">
+              <Broom size={32} className="mx-auto text-muted-2" />
+              <p className="mt-2 text-sm font-medium text-foreground-2">CSV text not available</p>
+              <p className="mt-1 text-xs text-muted">Data cleaning requires the original CSV text</p>
+            </div>
+          ) : (
+            <>
+              {/* Issues Summary */}
+              {csvIssues && (
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <h4 className="mb-3 text-sm font-semibold tracking-tight">Detected Issues</h4>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <div className={cn("rounded-lg border border-border bg-foreground/[0.04] p-3", csvIssues.missingTotal > 0 ? "border-amber-500/50 bg-amber-500/10" : "")}>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Missing Values</p>
+                      <p className="mt-1 font-mono text-lg font-bold tabular-nums">{csvIssues.missingTotal}</p>
+                    </div>
+                    <div className={cn("rounded-lg border border-border bg-foreground/[0.04] p-3", csvIssues.duplicateRows > 0 ? "border-amber-500/50 bg-amber-500/10" : "")}>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Duplicate Rows</p>
+                      <p className="mt-1 font-mono text-lg font-bold tabular-nums">{csvIssues.duplicateRows}</p>
+                    </div>
+                    <div className={cn("rounded-lg border border-border bg-foreground/[0.04] p-3", csvIssues.columns.length > 0 ? "border-amber-500/50 bg-amber-500/10" : "")}>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Column Issues</p>
+                      <p className="mt-1 font-mono text-lg font-bold tabular-nums">{csvIssues.columns.length}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Cleaning Strategies */}
+              {csvIssues && csvIssues.affected.length > 0 && (
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <h4 className="mb-3 text-sm font-semibold tracking-tight">Missing Value Strategies</h4>
+                  <div className="space-y-2">
+                    {csvIssues.affected.map((col) => (
+                      <div key={col} className="flex items-center gap-2 rounded-lg bg-foreground/[0.04] p-2">
+                        <span className="flex-1 text-xs font-medium">{col}</span>
+                        <select
+                          value={cleaningStrategies[col] || "median"}
+                          onChange={(e) => {
+                            setCleaningStrategies({ ...cleaningStrategies, [col]: e.target.value as CleanStrategy });
+                          }}
+                          className="h-8 rounded border border-border bg-background px-2 text-xs"
+                        >
+                          <option value="mean">Mean</option>
+                          <option value="median">Median</option>
+                          <option value="mode">Mode</option>
+                          <option value="zero">Zero</option>
+                          <option value="drop">Drop Rows</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Cleaning Options */}
+              <div className="rounded-xl border border-border bg-surface p-4">
+                <h4 className="mb-3 text-sm font-semibold tracking-tight">Additional Options</h4>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={removeDuplicates}
+                      onChange={(e) => setRemoveDuplicates(e.target.checked)}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    <span className="text-xs">Remove duplicate rows</span>
+                  </label>
+                  
+                  <div>
+                    <p className="mb-2 text-xs font-medium">Standardize columns (z-score normalization)</p>
+                    <div className="flex flex-wrap gap-2">
+                      {columns.filter((col) => {
+                        const values = data.slice(0, 100).map((row) => Number(row[col]));
+                        return values.some((v) => !isNaN(v));
+                      }).map((col) => (
+                        <label key={col} className="flex items-center gap-1 cursor-pointer rounded border border-border bg-foreground/[0.04] px-2 py-1">
+                          <input
+                            type="checkbox"
+                            checked={standardizeColumns.includes(col)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setStandardizeColumns([...standardizeColumns, col]);
+                              } else {
+                                setStandardizeColumns(standardizeColumns.filter((c) => c !== col));
+                              }
+                            }}
+                            className="h-3 w-3 rounded border-border"
+                          />
+                          <span className="text-[10px]">{col}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                {!cleaningApplied ? (
+                  <Button onClick={applyDataCleaning} disabled={!csvIssues || Object.keys(cleaningStrategies).length === 0}>
+                    <Broom size={16} className="mr-2" /> Apply Cleaning
+                  </Button>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2">
+                      <CheckCircle size={16} className="text-emerald-500" />
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        Cleaning applied - {cleanedData?.length || 0} rows
+                      </span>
+                    </div>
+                    <Button variant="outline" onClick={resetCleaning}>
+                      <X size={16} className="mr-2" /> Reset
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -36,6 +36,8 @@ export function AnalyticsModal({ open, onClose, csvDataset }: AnalyticsModalProp
     return rows;
   })();
 
+  const csvText = csvDataset.csvText;
+
   return (
     <>
       <div
@@ -72,7 +74,7 @@ export function AnalyticsModal({ open, onClose, csvDataset }: AnalyticsModalProp
 
           {/* Content */}
           <div className="scroll-thin max-h-[calc(90vh-80px)] overflow-auto px-6 py-4">
-            <AdvancedAnalyticsDashboard data={data} fileName={csvDataset.filename} />
+            <AdvancedAnalyticsDashboard data={data} fileName={csvDataset.filename} csvText={csvText} />
           </div>
         </div>
       </div>
