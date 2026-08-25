@@ -46,8 +46,8 @@ export function Modal({ open, onClose, title, subtitle, children, footer, classN
         {(title || subtitle) && (
           <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
             <div className="min-w-0">
-              {title ? <h2 className="text-base font-bold text-foreground">{title}</h2> : null}
-              {subtitle ? <p className="mt-0.5 truncate text-xs text-muted">{subtitle}</p> : null}
+            {title ? <h2 className="text-base font-bold text-foreground">{title}</h2> : null}
+            {subtitle ? <p className="mt-0.5 text-xs leading-5 text-muted">{subtitle}</p> : null}
             </div>
             <button
               onClick={onClose}

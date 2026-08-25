@@ -106,47 +106,39 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
           </div>
         ) : (
           <>
-            {/* Issue summary */}
-            <div className="grid gap-2 sm:grid-cols-3">
-              {issues.missingTotal > 0 ? (
-                <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3">
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-amber-500"><Warning size={13} weight="fill" /> Missing cells</p>
-                  <p className="mt-1 font-mono text-lg font-extrabold text-foreground">{issues.missingTotal}</p>
-                </div>
-              ) : null}
-              {issues.columns.some((c) => c.kind === "text") ? (
-                <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3">
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-amber-500"><Warning size={13} weight="fill" /> Text in numeric cols</p>
-                  <p className="mt-1 font-mono text-lg font-extrabold text-foreground">{issues.columns.filter((c) => c.kind === "text").length}</p>
-                </div>
-              ) : null}
+            {/* Issue summary — one slim strip instead of stacked cards */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-4 py-3">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                <Warning size={13} weight="fill" /> {issues.missingTotal} missing cell{issues.missingTotal === 1 ? "" : "s"}
+              </span>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                <Warning size={13} weight="fill" /> {issues.columns.filter((c) => c.kind === "text").length} text column{issues.columns.filter((c) => c.kind === "text").length === 1 ? "" : "s"}
+              </span>
               {issues.duplicateRows > 0 ? (
-                <div className="rounded-xl border border-border bg-surface p-3">
-                  <p className="text-xs font-bold text-muted">Duplicate rows</p>
-                  <p className="mt-1 font-mono text-lg font-extrabold text-foreground">{issues.duplicateRows}</p>
-                </div>
+                <span className="text-xs font-semibold text-muted">{issues.duplicateRows} duplicate row{issues.duplicateRows === 1 ? "" : "s"}</span>
               ) : null}
+              <span className="ml-auto font-mono text-[10.5px] text-muted/70">{dataset.nrows.toLocaleString()} rows scanned</span>
             </div>
 
             {/* Column strategies */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted">How should each column be filled?</p>
+              <p className="nf-hud-label">How should each column be filled?</p>
               <div className="mt-2 divide-y divide-border/60 overflow-hidden rounded-xl border border-border">
                 {dirtyColumns.map((column) => {
                   const issue = issues.columns.find((c) => "column" in c && c.column === column);
+                  const detail = issue?.kind === "text"
+                    ? `${issue.count} non-numeric · ${issue.samples.slice(0, 2).map((s) => `“${s}”`).join(", ")}`
+                    : issue?.kind === "missing" ? `${issue.count} empty cell${issue.count === 1 ? "" : "s"}` : "";
                   return (
-                    <div key={column} className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-foreground">{column}</p>
-                        <p className="text-[10.5px] text-muted">
-                          {issue?.kind === "missing" ? `${issue.count} missing` : ""}
-                          {issue?.kind === "text" ? `${issue.count} non-numeric (e.g. ${issue.samples.slice(0, 2).map((s) => `"${s}"`).join(", ")})` : ""}
-                        </p>
+                    <div key={column} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3.5 py-2.5 sm:flex-nowrap">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-foreground">{column}</p>
+                        {detail ? <p className="mt-0.5 truncate font-mono text-[10.5px] text-muted" title={detail}>{detail}</p> : null}
                       </div>
                       <select
                         value={effective[column] ?? "median"}
                         onChange={(e) => setStrategies((s) => ({ ...s, [column]: e.target.value as CleanStrategy }))}
-                        className="rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring/40"
+                        className="shrink-0 rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring/40"
                       >
                         {STRATEGIES.map((s) => (
                           <option key={s} value={s}>{STRATEGY_LABEL[s]}</option>
@@ -161,7 +153,7 @@ export function DataCleaningModal({ dataset, open, onClose, onApply }: DataClean
             {/* Replacement preview */}
             {plan && plan.preview.length > 0 ? (
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-muted">Preview: what gets written</p>
+                <p className="nf-hud-label">Preview — what gets written</p>
                 <div className="mt-2 overflow-hidden rounded-xl border border-border">
                   <table className="w-full text-[11.5px]">
                     <thead className="bg-foreground/[0.04] text-left text-muted">
