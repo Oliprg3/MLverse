@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TerminalConsole, type TerminalLine } from "./TerminalConsole";
 import { EvaluationAnalytics } from "./EvaluationAnalytics";
+import { AdvancedAnalyticsDashboard } from "./AdvancedAnalyticsDashboard";
 import { PlotlyChart } from "./PlotlyChart";
 import type { PlotlyFigure } from "@/lib/types";
 import { chartSpec, sortChartKeys } from "@/lib/chartCatalog";
@@ -299,6 +300,23 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
       })()}
 
       {res.predictions && res.predictions.y_true.length > 0 ? <PredictionsTable preds={res.predictions} /> : null}
+
+      {/* Advanced Analytics Dashboard */}
+      {res.predictions && res.predictions.y_true.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+          <h4 className="mb-3 text-sm font-semibold tracking-tight text-foreground">Advanced Data Analytics</h4>
+          <AdvancedAnalyticsDashboard 
+            data={res.predictions.y_true.map((trueVal, i) => ({
+              index: i,
+              actual: res.predictions.classes[trueVal] || trueVal,
+              predicted: res.predictions.classes[res.predictions.y_pred[i]] || res.predictions.y_pred[i],
+              correct: trueVal === res.predictions.y_pred[i] ? "yes" : "no",
+              confidence: res.predictions.confidence?.[i] ?? "N/A",
+            }))}
+            fileName="predictions"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
