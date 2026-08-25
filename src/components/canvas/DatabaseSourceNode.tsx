@@ -87,20 +87,6 @@ function DatabaseSourceNodeBase({ id, data, selected }: NodeProps<DbSourceFlowNo
         <Trash size={13} />
       </button>
 
-      {/* Connection status badge */}
-      <span
-        title={status === "error" ? db?.error ?? "Last fetch failed" : undefined}
-        className={cn(
-          "absolute right-9 top-2 z-10 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em]",
-          status === "connected" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
-          status === "error" && "border-rose-500/30 bg-rose-500/10 text-rose-500",
-          status === "idle" && "border-neutral-200/80 bg-neutral-100/60 text-neutral-400 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-500",
-        )}
-      >
-        {status === "connected" ? <CheckCircle size={10} weight="fill" /> : status === "error" ? <XCircle size={10} weight="fill" /> : <PlugsConnected size={10} />}
-        {status === "connected" ? "Connected" : status === "error" ? "Error" : "Not Configured"}
-      </span>
-
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200/90 dark:border-white/[0.1]">
@@ -114,8 +100,25 @@ function DatabaseSourceNodeBase({ id, data, selected }: NodeProps<DbSourceFlowNo
 
       {/* Body */}
       <div className="mt-3">
+        {/* Connection status strip — full width so long titles never collide */}
+        <div
+          title={status === "error" ? db?.error ?? "Last fetch failed" : undefined}
+          className={cn(
+            "flex items-center gap-1.5 rounded-lg border px-2 py-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em]",
+            status === "connected" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
+            status === "error" && "border-rose-500/30 bg-rose-500/10 text-rose-500",
+            status === "idle" && "border-neutral-200/80 bg-neutral-100/60 text-neutral-400 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-500",
+          )}
+        >
+          {status === "connected" ? <CheckCircle size={10} weight="fill" /> : status === "error" ? <XCircle size={10} weight="fill" /> : <PlugsConnected size={10} />}
+          {status === "connected" ? "Connected" : status === "error" ? "Error" : "Not Configured"}
+          {status === "connected" && db?.rowCount ? (
+            <span className="ml-auto font-mono text-[9px] normal-case tracking-normal opacity-70">{db.rowCount.toLocaleString()} rows{db.queryMs ? ` · ${db.queryMs} ms` : ""}</span>
+          ) : null}
+        </div>
+
         {dataset ? (
-          <div className="flex items-center gap-2 rounded-lg border border-neutral-200/70 bg-neutral-50/70 px-2.5 py-2 dark:border-white/[0.06] dark:bg-white/[0.03]">
+          <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200/70 bg-neutral-50/70 px-2.5 py-2 dark:border-white/[0.06] dark:bg-white/[0.03]">
             <Table size={14} weight="regular" className="shrink-0 text-neutral-400 dark:text-zinc-500" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{dataset.filename}</div>
@@ -128,7 +131,7 @@ function DatabaseSourceNodeBase({ id, data, selected }: NodeProps<DbSourceFlowNo
             </span>
           </div>
         ) : (
-          <p className="line-clamp-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">{data.description}</p>
+          <p className="mt-1.5 line-clamp-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">{data.description}</p>
         )}
 
         {db?.query ? (

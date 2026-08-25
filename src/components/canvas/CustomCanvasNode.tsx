@@ -15,10 +15,10 @@ export type CustomFlowNode = Node<MLNodeData, "custom">;
 
 function ParamPill({ label, value }: { label: string; value: string | number }) {
   return (
-    <span className="inline-flex max-w-full items-center rounded-md border border-neutral-200/80 bg-neutral-100/60 px-1.5 py-0.5 font-mono text-[9.5px] leading-none text-neutral-500 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-zinc-400">
-      <span className="opacity-60">{label}</span>
-      <span className="mx-1 opacity-30">=</span>
-      <span className="font-semibold text-neutral-800 dark:text-zinc-200">{value}</span>
+    <span className="inline-flex min-w-0 max-w-full items-center overflow-hidden rounded-md border border-neutral-200/80 bg-neutral-100/60 px-1.5 py-0.5 font-mono text-[9.5px] leading-none text-neutral-500 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-zinc-400">
+      <span className="shrink-0 opacity-60">{label}</span>
+      <span className="mx-1 shrink-0 opacity-30">=</span>
+      <span className="min-w-0 truncate font-semibold text-neutral-800 dark:text-zinc-200">{value}</span>
     </span>
   );
 }
