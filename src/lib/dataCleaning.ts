@@ -61,11 +61,13 @@ interface ParsedCsv {
 }
 
 export function parseCsvLoose(text: string): ParsedCsv {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return { columns: [], rows: [] };
-  const delimiter = lines[0].includes(";") && !lines[0].includes(",") ? ";" : ",";
-  const columns = lines[0].split(delimiter).map((h) => h.trim().replace(/^"|"$/g, ""));
-  const rows = lines.slice(1).map((l) => l.split(delimiter).map((c) => c.trim().replace(/^"|"$/g, "")));
+  // Papa handles RFC-4180 quoting — commas inside quoted fields ("Braund, Mr.
+  // Owen Harris") must not split cells, which naive string splitting gets wrong.
+  const parsed = Papa.parse<string[]>(text.trim(), { skipEmptyLines: true });
+  const table = (parsed.data ?? []).map((row) => (Array.isArray(row) ? row.map((c) => String(c ?? "")) : []));
+  if (table.length === 0) return { columns: [], rows: [] };
+  const columns = table[0].map((h) => h.trim());
+  const rows = table.slice(1).map((row) => columns.map((_, i) => (row[i] ?? "").trim()));
   return { columns, rows };
 }
 

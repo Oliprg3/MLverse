@@ -8,6 +8,7 @@
  */
 
 import { useMemo, useState } from "react";
+import Papa from "papaparse";
 import { Check, Warning } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -39,13 +40,10 @@ export function TextColumnsFixModal({ open, onClose, dataset, columns, onApply }
   const samples = useMemo(() => {
     const map = new Map<string, string>();
     if (!dataset) return map;
-    const header = dataset.csvText.split(/\r?\n/)[0] ?? "";
-    const delimiter = header.includes(";") && !header.includes(",") ? ";" : ",";
-    const rows = dataset.csvText.split(/\r?\n/).slice(1, 30);
+    const parsed = Papa.parse<Record<string, string>>(dataset.csvText.trim(), { header: true, skipEmptyLines: true });
+    const rows = parsed.data.slice(0, 30);
     for (const column of columns) {
-      const idx = header.split(delimiter).findIndex((h) => h.trim().replace(/^"|"$/g, "") === column);
-      if (idx === -1) continue;
-      const uniques = Array.from(new Set(rows.map((r) => (r.split(delimiter)[idx] ?? "").trim()).filter(Boolean)));
+      const uniques = Array.from(new Set(rows.map((r) => (r[column] ?? "").trim()).filter(Boolean)));
       map.set(column, uniques.slice(0, 3).map((v) => `“${v}”`).join(", "));
     }
     return map;

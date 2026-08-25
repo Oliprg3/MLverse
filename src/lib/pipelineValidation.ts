@@ -8,6 +8,8 @@
  * (e.g. encoding a text column) stay manual but explain exactly what to do.
  */
 
+import Papa from "papaparse";
+
 import type { CsvDataset, GraphEdgePayload, GraphNodePayload, ImageDataset } from "./types";
 
 export type DiagnosticLevel = "error" | "warning";
@@ -105,25 +107,26 @@ function paramValue(params: Record<string, string | number> | undefined, key: st
 
 /** Inspect a CSV sample to find text-only feature columns and missing cells. */
 function inspectCsv(csv: CsvDataset): { textColumns: string[]; missingCells: number; sampledRows: number } {
-  const rows = csv.csvText.split(/\r?\n/).filter((r) => r.trim().length > 0).slice(0, 51);
-  if (rows.length === 0) return { textColumns: [], missingCells: 0, sampledRows: 0 };
-  const delimiter = rows[0].includes(";") && !rows[0].includes(",") ? ";" : ",";
-  const header = rows[0].split(delimiter).map((h) => h.trim().replace(/^"|"$/g, ""));
+  // Papa parses quoted fields correctly — naive comma splitting misaligns
+  // every column after a value like "Braund, Mr. Owen Harris".
+  const parsed = Papa.parse<Record<string, string>>(csv.csvText.trim(), { header: true, skipEmptyLines: true });
+  const columns = (parsed.meta.fields ?? []).filter(Boolean);
+  if (columns.length === 0) return { textColumns: [], missingCells: 0, sampledRows: 0 };
+  const rows = parsed.data.slice(0, 51);
   const textColumns = new Set<string>();
   let missingCells = 0;
   let sampledRows = 0;
-  for (const row of rows.slice(1)) {
+  for (const row of rows) {
     sampledRows += 1;
-    const cells = row.split(delimiter);
-    header.forEach((col, i) => {
-      if (col === csv.targetColumn) return;
-      const raw = (cells[i] ?? "").trim();
+    for (const col of columns) {
+      if (col === csv.targetColumn) continue;
+      const raw = (row[col] ?? "").trim();
       if (raw === "" || raw === "?" || raw.toLowerCase() === "na" || raw.toLowerCase() === "null") {
         missingCells += 1;
-        return;
+        continue;
       }
       if (Number.isNaN(Number(raw))) textColumns.add(col);
-    });
+    }
   }
   return { textColumns: [...textColumns], missingCells, sampledRows };
 }
