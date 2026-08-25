@@ -8,9 +8,11 @@
  */
 
 import { getPaletteItem } from "./canvasConfig";
-import type { CustomFlowNode } from "@/components/canvas/CustomCanvasNode";
-import type { CsvDataset, ImageDataset, ImageDataset as ImageDatasetAlias, MLNodeData } from "./types";
-import type { Edge as FlowEdge } from "@xyflow/react";
+import type { CsvDataset, DbSourceConfig, ImageDataset, ImageDataset as ImageDatasetAlias, MLNodeData } from "./types";
+import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/react";
+
+/** Canvas nodes of any renderer kind ("custom" / "dbSource"). */
+type CanvasFlowNode = FlowNode<MLNodeData>;
 
 export const WORKFLOW_FORMAT = 2;
 
@@ -21,6 +23,8 @@ export interface SerializedNode {
   params?: Array<{ key: string; value: string | number }>;
   dataset?: CsvDataset;
   imageDataset?: ImageDataset;
+  /** Connection state with the credential stripped — secrets never leave the device. */
+  dbConfig?: Omit<DbSourceConfig, "connectionString">;
 }
 
 export interface SerializedEdge {
@@ -39,7 +43,7 @@ export interface WorkflowFile {
 }
 
 export function serializeWorkflow(
-  nodes: CustomFlowNode[],
+  nodes: CanvasFlowNode[],
   edges: FlowEdge[],
   title = "Datlify Pipeline",
 ): WorkflowFile {
@@ -55,13 +59,14 @@ export function serializeWorkflow(
       params: node.data.params?.map((p) => ({ key: p.key, value: p.value })),
       dataset: node.data.dataset,
       imageDataset: node.data.imageDataset,
+      dbConfig: node.data.dbConfig ? { ...node.data.dbConfig, connectionString: "" } : undefined,
     })),
     edges: edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target })),
   };
 }
 
 export type DeserializeResult =
-  | { ok: true; nodes: CustomFlowNode[]; edges: FlowEdge[]; title: string }
+  | { ok: true; nodes: CanvasFlowNode[]; edges: FlowEdge[]; title: string }
   | { ok: false; error: string };
 
 /** Rebuild canvas nodes from a workflow file, merging saved values onto fresh palette defaults. */
@@ -101,7 +106,7 @@ export function deserializeWorkflow(raw: string | Partial<WorkflowFile>): Deseri
 }
 
 function buildGraph(serializedNodes: SerializedNode[], serializedEdges: SerializedEdge[], title: string): DeserializeResult {
-  const nodes: CustomFlowNode[] = [];
+  const nodes: CanvasFlowNode[] = [];
   const missing: string[] = [];
 
   for (const sn of serializedNodes) {
@@ -120,6 +125,7 @@ function buildGraph(serializedNodes: SerializedNode[], serializedEdges: Serializ
       params: palette.params ? palette.params.map((p) => ({ ...p })) : undefined,
       dataset: sn.dataset,
       imageDataset: sn.imageDataset,
+      dbConfig: sn.dbConfig ? { ...sn.dbConfig, connectionString: "" } : undefined,
     };
     // Merge saved parameter values onto current defaults by key.
     if (data.params && Array.isArray(sn.params)) {
@@ -130,7 +136,7 @@ function buildGraph(serializedNodes: SerializedNode[], serializedEdges: Serializ
     }
     nodes.push({
       id: sn.id || `${sn.type}-${nodes.length}`,
-      type: "custom",
+      type: palette.type === "data:db" ? "dbSource" : "custom",
       position: sn.position ?? { x: 0, y: 0 },
       data,
     });

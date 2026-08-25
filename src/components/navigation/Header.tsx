@@ -122,7 +122,7 @@ export function Header({
   const analyticsDisabled = !hasDataForAnalytics;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-neutral-200/80 bg-white/85 px-3 glass-panel dark:border-white/[0.06] dark:bg-[#050506]/80 lg:px-4">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-neutral-200/80 bg-white/95 px-3 glass-panel dark:border-white/[0.06] dark:bg-[#050506]/80 lg:px-4">
       {/* Left — brand + pipeline path */}
       <div className="flex min-w-0 items-center gap-2">
         <button

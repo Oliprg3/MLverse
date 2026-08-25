@@ -66,7 +66,7 @@ const MODEL_SPECS: Record<string, ModelSpec> = {
 function dataCode(g: GraphPayload): string {
   const data = first(g, "data");
   const t = data?.type ?? "data:breast_cancer";
-  if (t === "data:csv") {
+  if (t === "data:csv" || t === "data:db") {
     const target = data?.dataset?.targetColumn ?? "target";
     const csvText = data?.dataset?.csvText;
     return csvText

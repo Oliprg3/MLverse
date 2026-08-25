@@ -12,10 +12,13 @@ import {
   MarkerType,
   type Connection,
   type Edge,
+  type Node,
   type OnConnect,
 } from "@xyflow/react";
 import { CaretLeft, CaretRight, SquaresFour } from "@phosphor-icons/react";
-import { CustomCanvasNode, type CustomFlowNode } from "./CustomCanvasNode";
+import { CustomCanvasNode } from "./CustomCanvasNode";
+import { DatabaseSourceNode } from "./DatabaseSourceNode";
+import { TextColumnsFixModal } from "./TextColumnsFixModal";
 import { CanvasControls } from "./CanvasControls";
 import { NodeLibrary } from "@/components/sidebar/NodeLibrary";
 import { Header } from "@/components/navigation/Header";
@@ -35,6 +38,7 @@ import { deserializeWorkflow, downloadWorkflow, serializeWorkflow } from "@/lib/
 import type { TerminalLine } from "@/components/dashboard/TerminalConsole";
 import { hasSavedProject, loadProject, saveProject } from "@/lib/projectStorage";
 import type {
+  CsvDataset,
   ExecutionResponse,
   GraphEdgePayload,
   GraphNodePayload,
@@ -44,7 +48,10 @@ import type {
   PaletteItem,
 } from "@/lib/types";
 
-const nodeTypes = { custom: CustomCanvasNode };
+const nodeTypes = { custom: CustomCanvasNode, dbSource: DatabaseSourceNode };
+
+/** Canvas-wide node shape — one data payload, renderers keyed by `node.type`. */
+type CanvasFlowNode = Node<MLNodeData>;
 
 const DEFAULT_EDGE_OPTIONS = {
   // Animated edges keep a continuous SVG update loop alive even while idle.
@@ -104,14 +111,14 @@ function makeNodeData(type: string): MLNodeData | null {
   };
 }
 
-function createInitialGraph(): { nodes: CustomFlowNode[]; edges: Edge[] } {
-  const seed = (type: string, x: number, y: number): CustomFlowNode => ({
+function createInitialGraph(): { nodes: CanvasFlowNode[]; edges: Edge[] } {
+  const seed = (type: string, x: number, y: number): CanvasFlowNode => ({
     id: `${type}-seed`,
     type: "custom",
     position: { x, y },
     data: makeNodeData(type) as MLNodeData,
   });
-  const nodes: CustomFlowNode[] = [
+  const nodes: CanvasFlowNode[] = [
     seed("data:breast_cancer", -360, -20),
     seed("pre:scaler", -90, -20),
     seed("ml:random_forest", 180, -20),
@@ -127,7 +134,7 @@ function createInitialGraph(): { nodes: CustomFlowNode[]; edges: Edge[] } {
 
 function Canvas() {
   const initial = useMemo(createInitialGraph, []);
-  const [nodes, setNodes, onNodesChange] = useNodesState<CustomFlowNode>(initial.nodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState<CanvasFlowNode>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initial.edges);
   const { screenToFlowPosition, fitView } = useReactFlow();
   const router = useRouter();
@@ -152,6 +159,7 @@ function Canvas() {
   const [savedProjectAvailable, setSavedProjectAvailable] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [textFix, setTextFix] = useState<{ nodeId: string; columns: string[] } | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -243,7 +251,7 @@ function Canvas() {
         const palette = getPaletteItem("pre:impute");
         if (!palette) return;
         const newId = `pre:impute-autofix-${Date.now()}`;
-        const imputerNode: CustomFlowNode = {
+        const imputerNode: CanvasFlowNode = {
           id: newId,
           type: "custom",
           position: { x: target.position.x - 240, y: target.position.y },
@@ -264,6 +272,16 @@ function Canvas() {
         );
         notify("Inserted median imputation before this step");
         break;
+      }
+      case "resolve-text-columns": {
+        const source = nodes.find((n) => n.id === fix.nodeId);
+        if (!source?.data.dataset) {
+          notify("Fetch data into the source node first, then fix the columns", "warn");
+          return;
+        }
+        // Ask permission — the modal lets the user pick drop/encode per column.
+        setTextFix({ nodeId: fix.nodeId, columns: fix.columns });
+        return;
       }
       case "auto-connect": {
         const additions = autoConnectChain({
@@ -314,8 +332,9 @@ function Canvas() {
       if (!data) return;
       const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
       idCounter.current += 1;
+      const flowType = item.type === "data:db" ? "dbSource" : "custom";
       setNodes((nds) =>
-        nds.concat({ id: `${item.type}-${idCounter.current}`, type: "custom", position, data }),
+        nds.concat({ id: `${item.type}-${idCounter.current}`, type: flowType, position, data }),
       );
     },
     [screenToFlowPosition, setNodes],
@@ -520,7 +539,7 @@ function Canvas() {
         notify("No local project has been saved yet", "warn");
         return;
       }
-      setNodes(project.nodes as CustomFlowNode[]);
+      setNodes(project.nodes as CanvasFlowNode[]);
       setEdges(project.edges);
       setSavedProjectAvailable(true);
       notify("Loaded your local Datlify project");
@@ -561,6 +580,25 @@ function Canvas() {
   }, [fitView, notify, setEdges, setNodes, stampStatuses]);
 
   const closeInspector = useCallback(() => setNodes((nds) => nds.map((n) => ({ ...n, selected: false }))), [setNodes]);
+
+  const textFixNode = useMemo(
+    () => (textFix ? nodes.find((n) => n.id === textFix.nodeId) ?? null : null),
+    [nodes, textFix],
+  );
+
+  /** Rewrite the source node's dataset once the user confirms the column fix. */
+  const applyTextColumnFix = useCallback((dataset: CsvDataset, summary: string) => {
+    if (!textFix) return;
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === textFix.nodeId
+          ? { ...n, data: { ...n.data, dataset, description: `${dataset.nrows.toLocaleString()} rows, ${dataset.columns.length} cols, fixed (${summary})` } }
+          : n,
+      ),
+    );
+    notify(`Dataset rewritten — ${summary}`);
+    setTextFix(null);
+  }, [notify, setNodes, textFix]);
 
   return (
     <div className="nf-canvas-bg flex h-screen w-full flex-col">
@@ -643,7 +681,7 @@ function Canvas() {
             <CanvasControls />
           </ReactFlow>
 
-          <div className="pointer-events-none absolute left-5 top-5 z-10 flex items-center gap-3 rounded-xl border border-neutral-200/80 bg-white/80 px-4 py-2.5 shadow-lg shadow-black/[0.05] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0d]/80 dark:shadow-black/40">
+          <div className="pointer-events-none absolute left-5 top-5 z-10 flex items-center gap-3 rounded-xl border border-neutral-200/80 bg-white/95 px-4 py-2.5 shadow-lg shadow-black/[0.05] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0d]/80 dark:shadow-black/40">
             <span className={`font-mono text-[10px] font-semibold uppercase tracking-[0.16em] ${blockingErrors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500"}`}>
               {blockingErrors > 0 ? `${blockingErrors} error${blockingErrors === 1 ? "" : "s"}` : hasModel ? "Ready" : "Incomplete"}
             </span>
@@ -661,9 +699,19 @@ function Canvas() {
 
           <ProblemsPanel diagnostics={diagnostics} onSelectNode={focusNode} onApplyFix={handleApplyFix} />
 
+          {textFix && textFixNode?.data.dataset ? (
+            <TextColumnsFixModal
+              open
+              onClose={() => setTextFix(null)}
+              dataset={textFixNode.data.dataset}
+              columns={textFix.columns}
+              onApply={applyTextColumnFix}
+            />
+          ) : null}
+
           {isDragActive ? (
             <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-neutral-400/60 bg-white/[0.04] dark:border-white/25">
-              <div className="animate-slide-up rounded-2xl border border-neutral-200/80 bg-white/90 px-7 py-5 text-center shadow-2xl backdrop-blur-xl dark:border-white/[0.1] dark:bg-[#0a0a0d]/90">
+              <div className="animate-slide-up rounded-2xl border border-neutral-200/80 bg-white/95 px-7 py-5 text-center shadow-2xl backdrop-blur-xl dark:border-white/[0.1] dark:bg-[#0a0a0d]/90">
                 <p className="nf-hud-label">drop zone</p>
                 <p className="mt-1.5 text-sm font-semibold tracking-tight text-neutral-900 dark:text-white">Drop to add this step</p>
                 <p className="mt-1 text-xs text-neutral-400 dark:text-zinc-500">Connect it to the nearest node when ready</p>
@@ -674,7 +722,7 @@ function Canvas() {
           {nodes.length === 0 ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="animate-slide-up text-center">
-                <div className="nf-hud-corners relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-neutral-200/80 bg-white/70 backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.03]">
+                <div className="nf-hud-corners relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-neutral-200/80 bg-white/95 backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.03]">
                   <SquaresFour size={26} weight="light" className="text-neutral-400 dark:text-zinc-500" />
                 </div>
                 <p className="mt-5 text-base font-semibold tracking-tight text-neutral-900 dark:text-white">Start with a dataset</p>
@@ -713,7 +761,7 @@ function Canvas() {
             onClick={() => setWorkflowOpen(true)}
             aria-label="Show workflow panel"
             title="Show workflow panel"
-            className="hidden h-full w-11 shrink-0 flex-col items-center gap-3 border-l border-neutral-200/80 bg-white/70 glass-panel py-4 text-neutral-400 transition-colors hover:text-neutral-900 lg:flex dark:border-white/[0.06] dark:bg-[#050506]/60 dark:text-zinc-500 dark:hover:text-white"
+            className="hidden h-full w-11 shrink-0 flex-col items-center gap-3 border-l border-neutral-200/80 bg-white/95 glass-panel py-4 text-neutral-400 transition-colors hover:text-neutral-900 lg:flex dark:border-white/[0.06] dark:bg-[#050506]/60 dark:text-zinc-500 dark:hover:text-white"
           >
             <CaretLeft size={15} />
             <span className="font-mono text-[10px] uppercase tracking-[0.24em] [writing-mode:vertical-rl]">Workflow</span>

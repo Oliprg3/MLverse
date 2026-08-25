@@ -39,7 +39,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
   const statusTone = errors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500";
 
   return (
-    <aside className="hidden h-full w-72 shrink-0 flex-col border-l border-neutral-200/80 bg-white/70 glass-panel lg:flex dark:bg-[#050506]/60">
+    <aside className="hidden h-full w-72 shrink-0 flex-col border-l border-neutral-200/80 bg-white/95 glass-panel lg:flex dark:bg-[#050506]/60">
       <div className="border-b border-neutral-200/80 px-5 py-4 dark:border-white/[0.06]">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={15} weight="regular" className="text-neutral-400 dark:text-zinc-500" />

@@ -24,7 +24,7 @@ export function ProblemsPanel({ diagnostics, onSelectNode, onApplyFix }: Problem
   const fixable = diagnostics.filter((d) => d.fix);
 
   return (
-    <div className="pointer-events-auto absolute bottom-4 left-4 z-10 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-neutral-200/80 bg-white/90 shadow-2xl shadow-black/[0.08] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0d]/90 dark:shadow-black/50">
+    <div className="pointer-events-auto absolute bottom-4 left-4 z-10 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-neutral-200/80 bg-white/[0.97] shadow-2xl shadow-black/[0.08] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0d]/90 dark:shadow-black/50">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

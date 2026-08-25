@@ -111,7 +111,7 @@ export function NodeLibrary() {
   }).length;
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-neutral-200/80 bg-white/70 glass-panel max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-20 max-md:shadow-2xl dark:bg-[#050506]/60">
+    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-neutral-200/80 bg-white/95 glass-panel max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-20 max-md:shadow-2xl dark:bg-[#050506]/60">
       {/* Search */}
       <div className="border-b border-neutral-200/80 p-4 dark:border-white/[0.06]">
         <div className="mb-3 flex items-center justify-between px-1">

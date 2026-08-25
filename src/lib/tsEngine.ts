@@ -114,7 +114,7 @@ function buildDataset(nodes: { type: string; category: string; params?: Record<s
   const dtype = dataNode?.type ?? "data:breast_cancer";
   const p = (dataNode?.params ?? {}) as Record<string, number>;
 
-  if (dtype === "data:csv" && dataNode?.dataset) {
+  if ((dtype === "data:csv" || dtype === "data:db") && dataNode?.dataset) {
     const ds = dataNode.dataset;
     const { columns, rows } = parseCsv(ds.csvText);
     if (!columns.length || !rows.length) throw new Error("The uploaded CSV is empty or has no data rows.");

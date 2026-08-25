@@ -381,7 +381,7 @@ def load_image_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.n
 def load_dataset(
     data_type: str, params: Dict[str, Any], dataset: Dict[str, Any] | None = None
 ) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
-    if data_type == "data:csv":
+    if data_type in ("data:csv", "data:db"):
         return load_csv_dataset(dataset)
     if data_type == "data:images":
         return load_image_dataset(dataset)
@@ -649,7 +649,7 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
     # 1. dataset
     data_node = next((n for n in nodes if n.get("category") == "data"), None)
     data_type = data_node["type"] if data_node else "data:breast_cancer"
-    if data_type == "data:csv":
+    if data_type in ("data:csv", "data:db"):
         dataset = data_node.get("dataset") if data_node else None
     elif data_type == "data:images":
         dataset = data_node.get("imageDataset") if data_node else None

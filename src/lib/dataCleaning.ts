@@ -7,6 +7,8 @@
  * replacements, and `applyCleaning` rewrites the CSV text.
  */
 
+import Papa from "papaparse";
+
 import type { CsvDataset } from "./types";
 
 export type ColumnIssue =
@@ -265,5 +267,91 @@ export function applyCleaning(csv: CsvDataset, strategies: Record<string, CleanS
     },
     replacements: plan.totalReplacements,
     rowsDropped: plan.rowsDropped,
+  };
+}
+
+export type TextColumnAction = "drop" | "label" | "onehot";
+
+/**
+ * Resolve text columns that would poison a numeric pipeline, per the user's
+ * explicit confirmation: drop the column, ordinal-encode it, or explode it
+ * into 0/1 one-hot columns. Returns a rewritten CsvDataset (original untouched).
+ */
+export function applyTextColumnResolutions(
+  csv: CsvDataset,
+  decisions: Record<string, TextColumnAction>,
+): { dataset: CsvDataset; dropped: string[]; encoded: string[]; added: number } {
+  const { columns, rows } = parseCsvLoose(csv.csvText);
+  const colIndex = new Map(columns.map((c, i) => [c, i]));
+
+  const dropCols: string[] = [];
+  const encodeCols: string[] = [];
+  for (const [column, action] of Object.entries(decisions)) {
+    if (!columns.includes(column) || column === csv.targetColumn) continue;
+    if (action === "drop") dropCols.push(column);
+    else encodeCols.push(column);
+  }
+
+  // One-hot columns are derived from the full row set up-front.
+  const oneHotValues = new Map<string, string[]>();
+  let addedColumns = 0;
+  for (const column of encodeCols) {
+    if (decisions[column] !== "onehot") continue;
+    const idx = colIndex.get(column)!;
+    const uniques = Array.from(new Set(rows.map((r) => (r[idx] ?? "").trim() || "(missing)")));
+    oneHotValues.set(column, uniques);
+    addedColumns += uniques.length;
+  }
+
+  const keptColumns = columns.filter((c) => !dropCols.includes(c) && c !== csv.targetColumn);
+  const outColumns: string[] = [];
+  const outColumnSources: Array<{ column: string; mode: "asis" | "label" | "onehot"; valueIndex?: number }> = [];
+  for (const column of keptColumns) {
+    if (encodeCols.includes(column) && decisions[column] === "onehot") {
+      for (const value of oneHotValues.get(column) ?? []) {
+        outColumns.push(`${column}_${value}`);
+        outColumnSources.push({ column, mode: "onehot", valueIndex: (oneHotValues.get(column) ?? []).indexOf(value) });
+      }
+    } else if (encodeCols.includes(column) && decisions[column] === "label") {
+      outColumns.push(column);
+      outColumnSources.push({ column, mode: "label" });
+    } else {
+      outColumns.push(column);
+      outColumnSources.push({ column, mode: "asis" });
+    }
+  }
+  outColumns.push(csv.targetColumn);
+
+  const labelMaps = new Map<string, Map<string, number>>();
+  for (const column of encodeCols) {
+    if (decisions[column] !== "label") continue;
+    const idx = colIndex.get(column)!;
+    const uniques = Array.from(new Set(rows.map((r) => (r[idx] ?? "").trim()))).sort();
+    labelMaps.set(column, new Map(uniques.map((v, i) => [v, i])));
+  }
+
+  const targetIdx = colIndex.get(csv.targetColumn)!;
+  const outRows = rows.map((row) =>
+    outColumnSources.map((source) => {
+      const raw = (row[colIndex.get(source.column)!] ?? "").trim();
+      if (source.mode === "onehot") return raw === (oneHotValues.get(source.column) ?? [])[source.valueIndex ?? -1] ? "1" : "0";
+      if (source.mode === "label") return String(labelMaps.get(source.column)?.get(raw) ?? 0);
+      return raw;
+    }).concat([(row[targetIdx] ?? "").trim()]),
+  );
+
+  const csvText = Papa.unparse({ fields: outColumns, data: outRows });
+  const nextTarget = csv.targetColumn;
+  return {
+    dataset: {
+      ...csv,
+      columns: outColumns,
+      targetColumn: nextTarget,
+      nrows: outRows.length,
+      csvText,
+    },
+    dropped: dropCols,
+    encoded: encodeCols,
+    added: addedColumns,
   };
 }

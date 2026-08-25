@@ -18,6 +18,7 @@ export type FixSpec =
   | { kind: "remove-node"; nodeId: string }
   | { kind: "set-param"; nodeId: string; key: string; value: string | number }
   | { kind: "add-imputer"; nodeId: string }
+  | { kind: "resolve-text-columns"; nodeId: string; columns: string[] }
   | { kind: "auto-connect" };
 
 export interface Diagnostic {
@@ -351,7 +352,8 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
             level: "error",
             nodeId: node.id,
             title: "Text column feeds a numeric pipeline",
-            detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Drop the column in your source file, or re-upload an encoded version, this one needs a human decision.`,
+            detail: `Column${textColumns.length > 1 ? "s" : ""} ${textColumns.map((c) => `“${c}”`).join(", ")} in “${facts.csv.filename}” contain${textColumns.length > 1 ? "" : "s"} non-numeric values. Confirm a fix and we rewrite the dataset: drop the columns, or encode them.`,
+            fix: { kind: "resolve-text-columns", nodeId: node.id, columns: textColumns },
           });
         }
         if (missingCells > 0 && !preNodes.some((p) => p.type === "pre:impute") && !missingReported) {

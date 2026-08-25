@@ -32,6 +32,7 @@ const TEST_SIZE = (value: number): NodeParam => ({
 export const NODE_PALETTE: PaletteItem[] = [
   // ── Data ─────────────────────────────────────────────────────────────────
   { type: "data:csv", label: "Custom CSV", description: "Upload your own dataset with auto target detection", category: "data", icon: "FileSpreadsheet", accent: CATEGORIES.data.accent },
+  { type: "data:db", label: "Cloud Database", description: "Query PostgreSQL, Supabase, Neon or MySQL with SQL", category: "data", icon: "CloudDatabase", accent: CATEGORIES.data.accent },
   { type: "data:images", label: "Image Dataset", description: "Upload images grouped by class folders", category: "data", icon: "Images", accent: CATEGORIES.data.accent },
   { type: "data:breast_cancer", label: "Breast Cancer", description: "569 samples, 30 numeric features, binary", category: "data", icon: "Database", accent: CATEGORIES.data.accent, params: [TEST_SIZE(0.2)] },
   { type: "data:wine", label: "Wine Quality", description: "178 samples, 13 features, 3 classes", category: "data", icon: "Database", accent: CATEGORIES.data.accent, params: [TEST_SIZE(0.2)] },

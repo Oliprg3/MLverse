@@ -7,6 +7,7 @@ import {
   Brain,
   ChartBar,
   ChartScatter,
+  CloudArrowDown,
   Cube,
   Database,
   FileCsv,
@@ -45,6 +46,7 @@ const REGISTRY: Record<string, IconComponent> = {
   FileSpreadsheet: FileCsv,
   Images: Images,
   Database: Database,
+  CloudDatabase: CloudArrowDown,
   Boxes: SquaresFour,
   // Preprocessing
   Scale: Barbell,

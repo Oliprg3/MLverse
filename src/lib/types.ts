@@ -87,6 +87,26 @@ export interface CsvDataset {
   csvText: string;
 }
 
+/** SQL dialect behind a Cloud Database source node. */
+export type DbDialect = "postgres" | "mysql";
+
+/** Connection + query state persisted on a Cloud Database (data:db) node. */
+export interface DbSourceConfig {
+  connectionString: string;
+  query: string;
+  dialect: DbDialect;
+  /** idle = not configured yet, connected = last fetch succeeded, error = last fetch failed. */
+  status: "idle" | "connected" | "error";
+  /** Friendly message from the last failed fetch. */
+  error?: string;
+  fetchedAt?: string;
+  rowCount?: number;
+  queryMs?: number;
+}
+
+/** Per-column decision for repairing text columns that feed a numeric pipeline. */
+export type TextColumnResolution = "drop" | "label" | "onehot";
+
 /** A user-imported image dataset (grayscale-encoded samples) for classification. */
 export interface ImageDataset {
   name: string;
@@ -115,6 +135,8 @@ export interface MLNodeData {
   dataset?: CsvDataset;
   /** Present on custom image data nodes — grayscale-encoded samples. */
   imageDataset?: ImageDataset;
+  /** Present on Cloud Database (data:db) nodes — connection + query state. */
+  dbConfig?: DbSourceConfig;
   /** Lifecycle marker stamped by the canvas during a training run. */
   executionStatus?: "running" | "success" | "error";
   /** selection ring / active state */
