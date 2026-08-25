@@ -3,6 +3,7 @@
 import {
   ArrowsOut,
   BookOpen,
+  ChartLine,
   Code,
   DownloadSimple,
   FolderOpen,
@@ -43,6 +44,8 @@ export interface HeaderProps {
   onClear: () => void;
   onFit: () => void;
   onExecute: () => void;
+  onAnalytics: () => void;
+  hasDataForAnalytics: boolean;
 }
 
 function ThemeToggle() {
@@ -112,8 +115,11 @@ export function Header({
   onClear,
   onFit,
   onExecute,
+  onAnalytics,
+  hasDataForAnalytics,
 }: HeaderProps) {
   const disabled = !hasModel || loading;
+  const analyticsDisabled = !hasDataForAnalytics;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-neutral-200/80 bg-white/85 px-3 glass-panel dark:border-white/[0.06] dark:bg-[#050506]/80 lg:px-4">
@@ -177,6 +183,7 @@ export function Header({
 
         <div className="mx-1 hidden h-5 w-px bg-neutral-200 dark:bg-white/10 sm:block" aria-hidden />
 
+        <GhostAction icon={ChartLine} label="Analytics" onClick={onAnalytics} className={cn(analyticsDisabled && "opacity-35 pointer-events-none")} />
         <IconButton icon={FloppyDisk} label="Save project locally" onClick={onSave} />
         <IconButton icon={FolderOpen} label={hasSavedProject ? "Load saved project" : "No saved project yet"} onClick={onLoad} />
         <IconButton icon={ArrowsOut} label="Fit view" onClick={onFit} className="hidden sm:inline-flex" />

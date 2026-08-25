@@ -24,6 +24,7 @@ import { ProblemsPanel } from "./ProblemsPanel";
 import { ResultsDrawer } from "@/components/dashboard/ResultsDrawer";
 import { CodeModal } from "@/components/dashboard/CodeModal";
 import { GuideModal } from "@/components/dashboard/GuideModal";
+import { AnalyticsModal } from "@/components/dashboard/AnalyticsModal";
 import { WorkflowPanel } from "@/components/canvas/WorkflowPanel";
 import { Toast, type ToastData } from "@/components/ui/toast";
 import { getPaletteItem, hasModelNode, resolveRoute } from "@/lib/canvasConfig";
@@ -150,6 +151,7 @@ function Canvas() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [savedProjectAvailable, setSavedProjectAvailable] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -173,6 +175,14 @@ function Canvas() {
   const route = useMemo(() => resolveRoute(categories), [categories]);
   const hasModel = useMemo(() => hasModelNode(categories), [categories]);
   const selectedNode = useMemo(() => nodes.find((n) => n.selected) ?? null, [nodes]);
+  
+  // Check if there's CSV data available for analytics
+  const csvDataset = useMemo(() => {
+    const dataNode = nodes.find((n) => n.data.type === "data:csv" && n.data.dataset);
+    return dataNode?.data.dataset ?? null;
+  }, [nodes]);
+  
+  const hasDataForAnalytics = useMemo(() => csvDataset != null, [csvDataset]);
 
   // ── Live pipeline validation ────────────────────────────────────────────────
   const diagnostics = useMemo(
@@ -582,8 +592,10 @@ function Canvas() {
         onExport={handleExport}
         onImportWorkflow={() => fileInputRef.current?.click()}
         onClear={handleClear}
-        onFit={handleFit}
+        onFit={fitView}
         onExecute={handleExecute}
+        onAnalytics={() => setAnalyticsOpen(true)}
+        hasDataForAnalytics={hasDataForAnalytics}
       />
       <input
         ref={fileInputRef}
@@ -682,6 +694,12 @@ function Canvas() {
             onViewCode={openCode}
             onOpenColab={handleOpenColab}
             code={generatedCode?.code}
+          />
+          
+          <AnalyticsModal
+            open={analyticsOpen}
+            onClose={() => setAnalyticsOpen(false)}
+            csvDataset={csvDataset}
           />
         </main>
 
