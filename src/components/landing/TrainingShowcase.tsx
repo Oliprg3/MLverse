@@ -398,7 +398,7 @@ export function TrainingShowcase() {
 
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHead
-          index="02"
+          index="03"
           kicker="Live walkthrough"
           title={
             <>

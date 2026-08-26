@@ -33,7 +33,7 @@ export function WorkflowSteps() {
     <section id="workflow" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 py-28 sm:px-8 sm:py-36">
       <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       <SectionHead
-        index="03"
+        index="05"
         kicker="Workflow"
         title={
           <>

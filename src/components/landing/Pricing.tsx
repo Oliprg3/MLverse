@@ -64,7 +64,7 @@ export function Pricing() {
       <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHead
-          index="05"
+          index="08"
           kicker="Pricing"
           title={
             <>

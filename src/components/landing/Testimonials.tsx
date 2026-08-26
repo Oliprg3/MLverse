@@ -54,7 +54,7 @@ export function Testimonials() {
     <section className="relative py-28 sm:py-36">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHead
-          index="04"
+          index="07"
           kicker="Field notes"
           title={
             <>

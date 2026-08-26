@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import { SectionHead } from "./SectionHead";
 import { Reveal } from "./Reveal";
+import { Spotlight } from "./Spotlight";
 
 /* ── Mini illustration: node graph ─────────────────────────────────── */
 function CanvasIllustration() {
@@ -216,23 +217,27 @@ interface CardProps {
 
 function Card({ icon: Icon, title, copy, children, className = "", index }: CardProps) {
   return (
-    <div
-      className={`group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white p-6 transition-all duration-500 hover:-translate-y-1 hover:border-neutral-400 hover:shadow-[0_24px_60px_-32px_rgba(0,0,0,0.35)] dark:border-white/[0.07] dark:bg-white/[0.02] dark:hover:border-white/25 dark:hover:bg-white/[0.03] dark:hover:shadow-[0_24px_60px_-24px_rgba(0,0,0,0.8)] nf-hud-corners ${className}`}
-    >
-      <div className="mb-5 flex items-start justify-between">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition-all duration-500 group-hover:border-neutral-900 group-hover:text-neutral-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-300 dark:group-hover:border-white/40 dark:group-hover:text-white">
-          <Icon size={19} weight="duotone" />
-        </span>
-        <span className="font-mono text-[10px] tracking-[0.2em] text-neutral-300 transition-colors duration-500 group-hover:text-neutral-600 dark:text-zinc-700 dark:group-hover:text-zinc-400">
-          {index}
-        </span>
+    // Spotlight sits outside the card because nf-hud-corners already owns both
+    // of the card's own pseudo-elements.
+    <Spotlight className="h-full rounded-2xl" radius={300}>
+      <div
+        className={`group relative h-full overflow-hidden rounded-2xl border border-neutral-200 bg-white p-6 transition-all duration-500 hover:-translate-y-1 hover:border-neutral-400 hover:shadow-[0_24px_60px_-32px_rgba(0,0,0,0.35)] dark:border-white/[0.07] dark:bg-white/[0.02] dark:hover:border-white/25 dark:hover:bg-white/[0.03] dark:hover:shadow-[0_24px_60px_-24px_rgba(0,0,0,0.8)] nf-hud-corners ${className}`}
+      >
+        <div className="mb-5 flex items-start justify-between">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition-all duration-500 group-hover:border-neutral-900 group-hover:text-neutral-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-300 dark:group-hover:border-white/40 dark:group-hover:text-white">
+            <Icon size={19} weight="duotone" />
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.2em] text-neutral-300 transition-colors duration-500 group-hover:text-neutral-600 dark:text-zinc-700 dark:group-hover:text-zinc-400">
+            {index}
+          </span>
+        </div>
+        <h3 className="text-[17px] font-semibold tracking-tight text-neutral-900 dark:text-white">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-500 dark:text-zinc-500">{copy}</p>
+        {children ? (
+          <div className="mt-6 min-h-[104px] rounded-xl border border-neutral-100 bg-neutral-50/60 p-3 dark:border-white/[0.05] dark:bg-black/30">{children}</div>
+        ) : null}
       </div>
-      <h3 className="text-[17px] font-semibold tracking-tight text-neutral-900 dark:text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-500 dark:text-zinc-500">{copy}</p>
-      {children ? (
-        <div className="mt-6 min-h-[104px] rounded-xl border border-neutral-100 bg-neutral-50/60 p-3 dark:border-white/[0.05] dark:bg-black/30">{children}</div>
-      ) : null}
-    </div>
+    </Spotlight>
   );
 }
 

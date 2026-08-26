@@ -785,3 +785,125 @@
   background-image:
     radial-gradient(120% 60% at 50% -8%, rgba(56, 189, 248, 0.05), transparent 55%);
 }
+
+/* ── Interactive lab modules ───────────────────────────────────────── */
+
+/* Histogram and level bars grow from their own edge. transform-box cannot be
+   set from inside a keyframe, and an inline `animation` would override a
+   class's, so the geometry ships on the class and per-element timing stays
+   inline. */
+@keyframes nf-bar-rise {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+.nf-hist-bar {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+}
+
+@keyframes nf-bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.nf-grow-l { transform-origin: left center; }
+.nf-grow-r { transform-origin: right center; }
+
+/* Range inputs — the platform default fights the monochrome palette, so track
+   and thumb are drawn by hand. Colours are literal because Tailwind v4
+   tree-shakes unused theme variables out of :root. */
+.nf-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+}
+.nf-range::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: #e5e5e5;
+}
+.nf-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  margin-top: -5px;
+  border-radius: 999px;
+  background: #171717;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+  transition: transform 160ms ease;
+}
+.nf-range:active::-webkit-slider-thumb { transform: scale(1.18); }
+.nf-range:focus-visible { outline: none; }
+.nf-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(23, 23, 23, 0.16);
+}
+.nf-range::-moz-range-track {
+  height: 3px;
+  border-radius: 999px;
+  background: #e5e5e5;
+}
+.nf-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: #171717;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+:where(.dark) .nf-range::-webkit-slider-runnable-track { background: rgba(255, 255, 255, 0.14); }
+:where(.dark) .nf-range::-webkit-slider-thumb { background: #ffffff; border-color: #0a0a0c; }
+:where(.dark) .nf-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.16);
+}
+:where(.dark) .nf-range::-moz-range-track { background: rgba(255, 255, 255, 0.14); }
+:where(.dark) .nf-range::-moz-range-thumb { background: #ffffff; border-color: #0a0a0c; }
+
+/* Pointer-following card highlight. The position arrives as custom properties
+   from the Spotlight component, so moving the cursor never re-renders React. */
+.nf-spotlight { position: relative; }
+.nf-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: var(--nf-lit, 0);
+  transition: opacity 300ms ease;
+  background: radial-gradient(
+    var(--nf-spot-r, 320px) circle at var(--nf-mx, 50%) var(--nf-my, 50%),
+    rgba(23, 23, 23, 0.055),
+    transparent 68%
+  );
+}
+:where(.dark) .nf-spotlight::after {
+  background: radial-gradient(
+    var(--nf-spot-r, 320px) circle at var(--nf-mx, 50%) var(--nf-my, 50%),
+    rgba(255, 255, 255, 0.075),
+    transparent 68%
+  );
+}
+/* Nothing to follow without a cursor. */
+@media (hover: none) {
+  .nf-spotlight::after { display: none; }
+}
+
+/* Scroll-progress rail in the nav. */
+.nf-scroll-rail {
+  transform-origin: left center;
+  transform: scaleX(var(--nf-progress, 0));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-hist-bar,
+  .nf-grow-l,
+  .nf-grow-r {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .nf-spotlight::after { display: none; }
+}

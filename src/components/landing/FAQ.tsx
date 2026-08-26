@@ -39,7 +39,7 @@ export function FAQ() {
       <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-20">
         <SectionHead
-          index="06"
+          index="09"
           kicker="FAQ"
           align="left"
           title={

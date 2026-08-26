@@ -2,8 +2,11 @@ import { LandingNav } from "@/components/landing/LandingNav";
 import { Hero } from "@/components/landing/Hero";
 import { TechMarquee } from "@/components/landing/TechMarquee";
 import { Capabilities } from "@/components/landing/Capabilities";
+import { DataProfiler } from "@/components/landing/DataProfiler";
 import { TrainingShowcase } from "@/components/landing/TrainingShowcase";
+import { ModelPlayground } from "@/components/landing/ModelPlayground";
 import { WorkflowSteps } from "@/components/landing/WorkflowSteps";
+import { AIComposer } from "@/components/landing/AIComposer";
 import { VideoShowcase } from "@/components/landing/VideoShowcase";
 import { StatsBand } from "@/components/landing/StatsBand";
 import { Testimonials } from "@/components/landing/Testimonials";
@@ -20,9 +23,12 @@ export default function LandingPage() {
         <Hero />
         <TechMarquee />
         <Capabilities />
+        <DataProfiler />
         <TrainingShowcase />
+        <ModelPlayground />
         <StatsBand />
         <WorkflowSteps />
+        <AIComposer />
         <VideoShowcase />
         <Testimonials />
         <Pricing />
