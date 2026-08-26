@@ -13,15 +13,6 @@ const SHOWCASE_VIDEOS = [
     speed: 120,
     wide: true,
   },
-  {
-    src: "https://videos.pexels.com/video-files/5382181/5382181-hd_1280_720_24fps.mp4",
-    hd: "https://videos.pexels.com/video-files/5382181/5382181-hd_1920_1080_24fps.mp4",
-    kicker: "02 / Scale",
-    title: "From prototype to production",
-    copy: "Build once, deploy everywhere. Your ML pipelines scale seamlessly from laptop to cloud.",
-    speed: 150,
-    wide: true,
-  },
 ];
 
 /**
@@ -103,7 +94,7 @@ export function VideoShowcase() {
           </Reveal>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <div className="mt-14 flex justify-center">
           {SHOWCASE_VIDEOS.map((video, i) => (
             <Reveal key={video.kicker} delay={i * 150}>
               <div className="relative">
