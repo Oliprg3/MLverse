@@ -99,7 +99,7 @@ export function Hero() {
 
         <div className="nf-fade-up mt-10 flex flex-col items-center gap-4 [animation-delay:550ms] sm:flex-row">
           <Link
-            href="/build"
+            href="/canvas"
             className="nf-button-glow group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-neutral-900 px-7 text-sm font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
           >
             <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-full dark:bg-neutral-900/10" />

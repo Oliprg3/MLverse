@@ -34,7 +34,7 @@ export function FinalCTA() {
         <Reveal delay={300}>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
-              href="/build"
+              href="/canvas"
               className="group relative inline-flex h-13 items-center gap-2 overflow-hidden rounded-xl bg-neutral-900 px-9 py-3.5 text-base font-semibold text-white shadow-[0_24px_60px_-24px_rgba(0,0,0,0.55)] transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:shadow-[0_0_48px_-16px_rgba(255,255,255,0.45)] dark:hover:bg-neutral-200"
             >
               <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-full dark:bg-neutral-900/10" />

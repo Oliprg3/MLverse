@@ -140,7 +140,7 @@ export function LandingNav() {
           >
             {resolvedTheme === "dark" ? <Sun size={17} weight="bold" /> : <Moon size={17} weight="bold" />}
           </button>
-          <Link href="/build" className="group inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2 text-[13px] font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+          <Link href="/canvas" className="group inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2 text-[13px] font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
             Launch App
             <ArrowRight size={14} weight="bold" className="transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
@@ -186,7 +186,7 @@ export function LandingNav() {
               {l.label}
             </a>
           ))}
-          <Link href="/build" className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-neutral-900">
+          <Link href="/canvas" className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-neutral-900">
             Launch App <ArrowRight size={14} weight="bold" />
           </Link>
         </nav>

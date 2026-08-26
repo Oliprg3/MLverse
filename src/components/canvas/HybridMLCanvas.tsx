@@ -624,7 +624,7 @@ function Canvas() {
           } catch {
             notify("Pipeline too large for browser storage, the builder will attach what it can", "warn");
           }
-          router.push("/build");
+          router.push("/canvas");
         }}
         onSave={handleSave}
         onLoad={handleLoad}

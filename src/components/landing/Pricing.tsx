@@ -12,7 +12,7 @@ const TIERS = [
     period: "forever",
     copy: "For your first model and every experiment after.",
     cta: "Start free",
-    href: "/build",
+    href: "/canvas",
     features: [
       "Unlimited canvas projects",
       "Instant CPU training",
@@ -28,7 +28,7 @@ const TIERS = [
     period: "per month",
     copy: "For practitioners shipping models to production.",
     cta: "Go Pro",
-    href: "/build",
+    href: "/canvas",
     features: [
       "Everything in Explorer",
       "Unlimited Colab GPU training",
@@ -46,7 +46,7 @@ const TIERS = [
     period: "annual",
     copy: "For teams that need scale, security and control.",
     cta: "Talk to us",
-    href: "/build",
+    href: "/canvas",
     features: [
       "Everything in Pro",
       "SSO / SAML & audit logs",

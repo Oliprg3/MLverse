@@ -116,7 +116,7 @@ export function Dashboard() {
             </div>
           <nav className="flex items-center gap-1">
             <TransitionLink href="/canvas" label="Opening canvas" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Canvas</TransitionLink>
-            <Link href="/build" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Build with AI</Link>
+            <Link href="/canvas" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Build with AI</Link>
             <button type="button" onClick={toggle} aria-label="Toggle theme" className="flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
               {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -144,7 +144,7 @@ export function Dashboard() {
               <TransitionLink href="/canvas" label="Opening canvas" className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 px-6 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 active:scale-[0.97]">
                 <Play size={16} weight="fill" /> Open canvas
               </TransitionLink>
-              <Link href="/build" className="inline-flex h-12 items-center gap-2.5 rounded-xl border border-border bg-surface px-6 text-sm font-bold text-foreground shadow-sm transition-all hover:border-border-strong hover:shadow-md active:scale-[0.97]">
+              <Link href="/canvas" className="inline-flex h-12 items-center gap-2.5 rounded-xl border border-border bg-surface px-6 text-sm font-bold text-foreground shadow-sm transition-all hover:border-border-strong hover:shadow-md active:scale-[0.97]">
                 <Robot size={17} /> Build with AI
               </Link>
               {savedExists ? (
