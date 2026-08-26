@@ -5,7 +5,6 @@ import { Capabilities } from "@/components/landing/Capabilities";
 import { TrainingShowcase } from "@/components/landing/TrainingShowcase";
 import { WorkflowSteps } from "@/components/landing/WorkflowSteps";
 import { VideoShowcase } from "@/components/landing/VideoShowcase";
-import { InteractiveDataGame } from "@/components/landing/InteractiveDataGame";
 import { StatsBand } from "@/components/landing/StatsBand";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Pricing } from "@/components/landing/Pricing";
@@ -25,7 +24,6 @@ export default function LandingPage() {
         <StatsBand />
         <WorkflowSteps />
         <VideoShowcase />
-        <InteractiveDataGame />
         <Testimonials />
         <Pricing />
         <FAQ />
