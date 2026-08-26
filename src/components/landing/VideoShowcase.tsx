@@ -10,34 +10,16 @@ const SHOWCASE_VIDEOS = [
     kicker: "01 / Analytics",
     title: "Data that speaks for itself",
     copy: "Transform raw numbers into actionable insights with interactive dashboards and real-time visualizations.",
-    speed: 34,
-    wide: false,
-  },
-  {
-    src: "https://videos.pexels.com/video-files/853800/853800-hd_1280_720_25fps.mp4",
-    hd: "https://videos.pexels.com/video-files/853800/853800-hd_1920_1080_25fps.mp4",
-    kicker: "02 / Collaboration",
-    title: "Teams that move together",
-    copy: "Share insights, iterate faster, and deploy models with your entire organization aligned.",
-    speed: 58,
-    wide: false,
+    speed: 120,
+    wide: true,
   },
   {
     src: "https://videos.pexels.com/video-files/5382181/5382181-hd_1280_720_24fps.mp4",
     hd: "https://videos.pexels.com/video-files/5382181/5382181-hd_1920_1080_24fps.mp4",
-    kicker: "03 / Scale",
+    kicker: "02 / Scale",
     title: "From prototype to production",
     copy: "Build once, deploy everywhere. Your ML pipelines scale seamlessly from laptop to cloud.",
-    speed: 82,
-    wide: false,
-  },
-  {
-    src: "https://videos.pexels.com/video-files/3165321/3165321-hd_1280_720_24fps.mp4",
-    hd: "https://videos.pexels.com/video-files/3165321/3165321-hd_1920_1080_24fps.mp4",
-    kicker: "04 / Innovation",
-    title: "The future of data science",
-    copy: "No-code ML platforms are redefining how teams build, train, and deploy intelligent systems.",
-    speed: 46,
+    speed: 150,
     wide: true,
   },
 ];
@@ -72,10 +54,11 @@ export function VideoShowcase() {
         const drift = (progress - 0.5) * speed;
         const media = card.firstElementChild as HTMLElement | null;
         if (media) {
-          const base = wide ? 1.18 : 1.12;
-          media.style.transform = `scale(${base + Math.abs(drift) / 400}) translateY(${drift * -0.6}px)`;
+          const base = wide ? 1.15 : 1.10;
+          const scaleEffect = Math.abs(drift) / 300;
+          media.style.transform = `scale(${base + scaleEffect}) translateY(${drift * -0.8}px)`;
         }
-        card.style.transform = `translateY(${drift}px)`;
+        card.style.transform = `translateY(${drift}px) translateX(${drift * 0.3}px)`;
       });
     };
 
@@ -120,16 +103,16 @@ export function VideoShowcase() {
           </Reveal>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {SHOWCASE_VIDEOS.slice(0, 3).map((video, i) => (
-            <Reveal key={video.kicker} delay={i * 120} className={i === 1 ? "lg:-mt-10" : ""}>
+        <div className="mt-14 grid grid-cols-1 gap-8 sm:grid-cols-2">
+          {SHOWCASE_VIDEOS.map((video, i) => (
+            <Reveal key={video.kicker} delay={i * 150}>
               <div
                 ref={(el) => { cardRefs.current[i] = el; }}
-                className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.45)] will-change-transform dark:border-white/[0.08] dark:bg-white/[0.02] dark:shadow-[0_40px_90px_-40px_rgba(0,0,0,0.8)]"
+                className="group relative aspect-[16/9] overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-[0_40px_100px_-40px_rgba(0,0,0,0.5)] will-change-transform dark:border-white/[0.08] dark:bg-white/[0.02] dark:shadow-[0_50px_120px_-40px_rgba(0,0,0,0.9)]"
                 style={{ transform: "translateY(0)" }}
               >
                 <video
-                  className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100 dark:opacity-70 dark:mix-blend-screen dark:group-hover:opacity-90"
+                  className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-90 transition-opacity duration-700 group-hover:opacity-100 dark:opacity-80 dark:mix-blend-screen dark:group-hover:opacity-95"
                   autoPlay
                   muted
                   loop
@@ -141,48 +124,17 @@ export function VideoShowcase() {
                   <source src={video.hd} type="video/mp4" />
                 </video>
 
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                <div className="absolute inset-x-0 bottom-0 p-6">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/60">{video.kicker}</p>
-                  <h3 className="mt-2 text-lg font-semibold leading-snug tracking-tight text-white">{video.title}</h3>
-                  <p className="mt-1.5 max-w-xs text-[12.5px] leading-relaxed text-white/70">{video.copy}</p>
+                <div className="absolute inset-x-0 bottom-0 p-8">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-white/60">{video.kicker}</p>
+                  <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">{video.title}</h3>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/80">{video.copy}</p>
                 </div>
               </div>
             </Reveal>
           ))}
         </div>
-
-        {/* Full-width cinematic nature banner */}
-        <Reveal delay={100} className="mt-5">
-          <div
-            ref={(el) => { cardRefs.current[3] = el; }}
-            className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.45)] will-change-transform sm:aspect-[21/9] dark:border-white/[0.08] dark:bg-white/[0.02] dark:shadow-[0_40px_90px_-40px_rgba(0,0,0,0.8)]"
-            style={{ transform: "translateY(0)" }}
-          >
-            <video
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100 dark:opacity-75 dark:group-hover:opacity-90"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-hidden="true"
-            >
-              <source src={SHOWCASE_VIDEOS[3].src} type="video/mp4" />
-            </video>
-
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-            <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/60">{SHOWCASE_VIDEOS[3].kicker}</p>
-                <h3 className="mt-2 text-xl font-semibold leading-snug tracking-tight text-white sm:text-2xl">{SHOWCASE_VIDEOS[3].title}</h3>
-                <p className="mt-1.5 max-w-md text-[12.5px] leading-relaxed text-white/70">{SHOWCASE_VIDEOS[3].copy}</p>
-              </div>
-            </div>
-          </div>
-        </Reveal>
       </div>
     </section>
   );
