@@ -103,33 +103,35 @@ export function VideoShowcase() {
           </Reveal>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-8 sm:grid-cols-2">
+        <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-2">
           {SHOWCASE_VIDEOS.map((video, i) => (
             <Reveal key={video.kicker} delay={i * 150}>
-              <div
-                ref={(el) => { cardRefs.current[i] = el; }}
-                className="group relative aspect-[16/9] overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-[0_40px_100px_-40px_rgba(0,0,0,0.5)] will-change-transform dark:border-white/[0.08] dark:bg-white/[0.02] dark:shadow-[0_50px_120px_-40px_rgba(0,0,0,0.9)]"
-                style={{ transform: "translateY(0)" }}
-              >
-                <video
-                  className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-90 transition-opacity duration-700 group-hover:opacity-100 dark:opacity-80 dark:mix-blend-screen dark:group-hover:opacity-95"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-hidden="true"
+              <div className="relative">
+                <div
+                  ref={(el) => { cardRefs.current[i] = el; }}
+                  className="group relative aspect-[16/9] max-w-2xl overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.4)] will-change-transform dark:border-white/[0.08] dark:bg-white/[0.02] dark:shadow-[0_40px_100px_-30px_rgba(0,0,0,0.8)]"
+                  style={{ transform: "translateY(0)" }}
                 >
-                  <source src={video.src} type="video/mp4" />
-                  <source src={video.hd} type="video/mp4" />
-                </video>
+                  <video
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-85 transition-opacity duration-700 group-hover:opacity-100 dark:opacity-75 dark:mix-blend-screen dark:group-hover:opacity-90"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    aria-hidden="true"
+                  >
+                    <source src={video.src} type="video/mp4" />
+                    <source src={video.hd} type="video/mp4" />
+                  </video>
 
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
 
-                <div className="absolute inset-x-0 bottom-0 p-8">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-white/60">{video.kicker}</p>
-                  <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">{video.title}</h3>
-                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/80">{video.copy}</p>
+                  <div className="absolute inset-x-0 bottom-0 p-6">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/60">{video.kicker}</p>
+                    <h3 className="mt-2 text-xl font-semibold leading-tight tracking-tight text-white sm:text-2xl">{video.title}</h3>
+                    <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-white/75">{video.copy}</p>
+                  </div>
                 </div>
               </div>
             </Reveal>
