@@ -313,7 +313,7 @@ export function buildProfile(spec: ProfileSpec): Profile {
 
     const isCat = col.type === "cat";
     const levelCounts: number[] | undefined = isCat
-      ? (col.categories ?? []).map((_, level) => values.reduce((acc, v) => acc + (v === level ? 1 : 0), 0))
+      ? (col.categories ?? []).map((_, level) => values.reduce<number>((acc, v) => acc + (v === level ? 1 : 0), 0))
       : undefined;
 
     return {
