@@ -1,43 +1,42 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Play } from "@phosphor-icons/react";
 import { Reveal } from "./Reveal";
 
 const SHOWCASE_VIDEOS = [
   {
-    src: "https://videos.pexels.com/video-files/3289569/3289569-hd_1280_720_25fps.mp4",
-    hd: "https://videos.pexels.com/video-files/3289569/3289569-hd_1920_1080_25fps.mp4",
-    kicker: "01 / Infrastructure",
-    title: "Real hardware under every run",
-    copy: "Your pipelines execute on clustered GPUs and CPUs, streamed straight into the dashboard.",
+    src: "https://videos.pexels.com/video-files/3129671/3129671-hd_1280_720_30fps.mp4",
+    hd: "https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4",
+    kicker: "01 / Analytics",
+    title: "Data that speaks for itself",
+    copy: "Transform raw numbers into actionable insights with interactive dashboards and real-time visualizations.",
     speed: 34,
     wide: false,
   },
   {
-    src: "https://cdn.pixabay.com/video/2023/04/12/158549-816999843_large.mp4",
-    hd: "https://cdn.pixabay.com/video/2023/04/12/158549-816999843_large.mp4",
-    kicker: "02 / Intelligence",
-    title: "Machines that learn like us",
-    copy: "Humanoid AI is no longer science fiction — train your own models on the same ideas.",
+    src: "https://videos.pexels.com/video-files/853800/853800-hd_1280_720_25fps.mp4",
+    hd: "https://videos.pexels.com/video-files/853800/853800-hd_1920_1080_25fps.mp4",
+    kicker: "02 / Collaboration",
+    title: "Teams that move together",
+    copy: "Share insights, iterate faster, and deploy models with your entire organization aligned.",
     speed: 58,
     wide: false,
   },
   {
-    src: "https://videos.pexels.com/video-files/4974708/4974708-hd_1280_720_25fps.mp4",
-    hd: "https://videos.pexels.com/video-files/4974708/4974708-hd_1920_1080_25fps.mp4",
-    kicker: "03 / Builders",
-    title: "Built by teams like yours",
-    copy: "From analysts to ML engineers, anyone assembles production pipelines on the canvas.",
+    src: "https://videos.pexels.com/video-files/5382181/5382181-hd_1280_720_24fps.mp4",
+    hd: "https://videos.pexels.com/video-files/5382181/5382181-hd_1920_1080_24fps.mp4",
+    kicker: "03 / Scale",
+    title: "From prototype to production",
+    copy: "Build once, deploy everywhere. Your ML pipelines scale seamlessly from laptop to cloud.",
     speed: 82,
     wide: false,
   },
   {
-    src: "https://cdn.pixabay.com/video/2022/08/04/126730-736705773_large.mp4",
-    hd: "https://cdn.pixabay.com/video/2022/08/04/126730-736705773_large.mp4",
-    kicker: "04 / Nature",
-    title: "Patterns all the way down",
-    copy: "The same statistics that teach your model shape coastlines, flocks and forests. Datlify just reads them faster.",
+    src: "https://videos.pexels.com/video-files/3165321/3165321-hd_1280_720_24fps.mp4",
+    hd: "https://videos.pexels.com/video-files/3165321/3165321-hd_1920_1080_24fps.mp4",
+    kicker: "04 / Innovation",
+    title: "The future of data science",
+    copy: "No-code ML platforms are redefining how teams build, train, and deploy intelligent systems.",
     speed: 46,
     wide: true,
   },
@@ -106,17 +105,17 @@ export function VideoShowcase() {
           <Reveal>
             <div>
               <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.3em] text-neutral-400 dark:text-zinc-500">
-                [ In the wild ]
+                [ Platform in action ]
               </p>
               <h2 className="max-w-xl text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] text-neutral-900 dark:text-white sm:text-5xl">
-                This is where your
-                <span className="text-neutral-400 dark:text-zinc-500"> models live.</span>
+                Built for modern
+                <span className="text-neutral-400 dark:text-zinc-500"> data teams.</span>
               </h2>
             </div>
           </Reveal>
           <Reveal delay={120}>
             <p className="max-w-sm text-sm leading-relaxed text-neutral-500 dark:text-zinc-400">
-              Real hardware, real robots, real builders, real nature. Scroll and watch the platform breathe.
+              From analytics to deployment, see how teams transform data into intelligence with our no-code platform.
             </p>
           </Reveal>
         </div>
@@ -149,10 +148,6 @@ export function VideoShowcase() {
                   <h3 className="mt-2 text-lg font-semibold leading-snug tracking-tight text-white">{video.title}</h3>
                   <p className="mt-1.5 max-w-xs text-[12.5px] leading-relaxed text-white/70">{video.copy}</p>
                 </div>
-
-                <span className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md transition-all duration-300 group-hover:scale-110 group-hover:bg-white group-hover:text-neutral-900">
-                  <Play size={12} weight="fill" className="translate-x-[1px]" />
-                </span>
               </div>
             </Reveal>
           ))}
@@ -185,9 +180,6 @@ export function VideoShowcase() {
                 <h3 className="mt-2 text-xl font-semibold leading-snug tracking-tight text-white sm:text-2xl">{SHOWCASE_VIDEOS[3].title}</h3>
                 <p className="mt-1.5 max-w-md text-[12.5px] leading-relaxed text-white/70">{SHOWCASE_VIDEOS[3].copy}</p>
               </div>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md transition-all duration-300 group-hover:scale-110 group-hover:bg-white group-hover:text-neutral-900">
-                <Play size={12} weight="fill" className="translate-x-[1px]" />
-              </span>
             </div>
           </div>
         </Reveal>
