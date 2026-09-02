@@ -169,6 +169,28 @@ function Canvas() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  // Auto-load the saved project when arriving via /canvas?load=1 (e.g. after
+  // applying an AI Architect blueprint) so the user lands on the new nodes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("load") !== "1") return;
+    try {
+      const project = loadProject();
+      if (!project) return;
+      setNodes(project.nodes as CanvasFlowNode[]);
+      setEdges(project.edges);
+      setSavedProjectAvailable(true);
+      notify("Loaded your AI Architect blueprint");
+      window.setTimeout(() => fitView({ padding: 0.28, duration: 450 }), 0);
+      // Clean the query param so a refresh doesn't reload over user edits.
+      window.history.replaceState(null, "", "/canvas");
+    } catch {
+      /* fall through — the user can still load manually */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const notify = useCallback((message: string, tone: ToastData["tone"] = "success") => {
     toastId.current += 1;
     setToast({ id: toastId.current, message, tone });
@@ -616,15 +638,15 @@ function Canvas() {
         onCode={openCode}
         onBuildAI={() => {
           // Save is best-effort only — large datasets can overflow local
-          // storage, and that must never block opening the AI builder.
+          // storage, and that must never block opening the AI architect.
           try {
             const project = saveProject(nodes, edges);
             setSavedProjectAvailable(true);
             void project;
           } catch {
-            notify("Pipeline too large for browser storage, the builder will attach what it can", "warn");
+            notify("Pipeline too large for browser storage, the architect will attach what it can", "warn");
           }
-          router.push("/canvas");
+          router.push("/build");
         }}
         onSave={handleSave}
         onLoad={handleLoad}

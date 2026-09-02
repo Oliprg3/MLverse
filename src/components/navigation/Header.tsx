@@ -178,7 +178,7 @@ export function Header({
           className="group hidden h-9 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white/50 px-3 text-[13px] font-semibold text-neutral-800 backdrop-blur-md transition-all duration-300 hover:border-neutral-400 hover:bg-white active:scale-[0.97] dark:border-white/15 dark:bg-white/[0.02] dark:text-zinc-200 dark:hover:border-white/30 dark:hover:bg-white/[0.06] md:inline-flex"
         >
           <Robot size={15} className="text-neutral-500 dark:text-zinc-400" />
-          <span className="hidden lg:inline">Build with AI</span>
+          <span className="hidden lg:inline">AI Architect</span>
         </button>
 
         <div className="mx-1 hidden h-5 w-px bg-neutral-200 dark:bg-white/10 sm:block" aria-hidden />
