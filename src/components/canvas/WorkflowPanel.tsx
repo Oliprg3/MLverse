@@ -21,6 +21,7 @@ interface EngineInfo {
   engine?: string;
   python_version?: string | null;
   machine_check?: string | null;
+  torch?: boolean;
 }
 
 export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, onExecute, onCode, onCollapse }: WorkflowPanelProps) {
@@ -80,7 +81,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
 
       <div className="border-b border-neutral-200/80 px-5 py-5 dark:border-white/[0.06]">
         <p className="nf-hud-label">execution</p>
-        <div className="mt-3 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Runtime</span><span className="font-medium text-neutral-700 dark:text-zinc-300">{route === "colab" ? "Colab GPU" : "Instant CPU"}</span></div>
+        <div className="mt-3 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Runtime</span><span className="font-medium text-neutral-700 dark:text-zinc-300">{route === "colab" ? (engine?.torch ? "Local PyTorch" : "Colab GPU") : "Instant CPU"}</span></div>
         <div className="mt-2 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Trigger</span><span className="font-medium text-neutral-700 dark:text-zinc-300">Manual</span></div>
         <div className="mt-2 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Persistence</span><span className="font-medium text-neutral-700 dark:text-zinc-300">Local project</span></div>
         <div className="mt-4 border-t border-neutral-200/80 pt-3 dark:border-white/[0.06]">
@@ -88,7 +89,14 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
           {engine === null ? (
             <p className="mt-1.5 text-[11px] text-neutral-400 dark:text-zinc-500">Checking deployment…</p>
           ) : native ? (
-            <p className="mt-1.5 text-[11px] font-medium leading-snug text-emerald-500">Native Python {engine.python_version}: the full model suite trains here.</p>
+            <>
+              <p className="mt-1.5 text-[11px] font-medium leading-snug text-emerald-500">Native Python {engine.python_version}: the full model suite trains here.</p>
+              {engine.torch ? (
+                <p className="mt-1 text-[11px] leading-snug text-sky-500">PyTorch detected — deep-learning graphs (MLP, CNN, LSTM, GRU, tabular transformer) train in-app, no Colab needed.</p>
+              ) : (
+                <p className="mt-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">PyTorch not installed — deep-learning graphs hand off to Colab. Install it (pip install torch) to train in-app.</p>
+              )}
+            </>
           ) : null}
         </div>
       </div>

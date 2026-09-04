@@ -9,6 +9,7 @@ uvicorn[standard]>=0.29
 scikit-learn>=1.4
 xgboost>=2.0            # optional — engine degrades gracefully if absent
 lightgbm>=4.0           # optional — engine degrades gracefully if absent
+torch>=2.2              # optional — enables in-app deep-learning training (MLP/CNN/LSTM/GRU/transformer); without it DL graphs hand off to Colab
 plotly>=5.20
 nbformat>=5.10
 networkx>=3.2

@@ -31,6 +31,8 @@ export interface HeaderProps {
   nodeCount: number;
   edgeCount: number;
   loading: boolean;
+  /** True when the server has PyTorch → deep-learning graphs train in-app on the local runtime. */
+  localDl?: boolean;
   paletteOpen: boolean;
   onTogglePalette: () => void;
   onGuide: () => void;
@@ -102,6 +104,7 @@ export function Header({
   nodeCount,
   edgeCount,
   loading,
+  localDl,
   paletteOpen,
   onTogglePalette,
   onGuide,
@@ -157,13 +160,29 @@ export function Header({
             className={cn(
               "hidden shrink-0 items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] 2xl:inline-flex",
               route === "colab"
-                ? "border-violet-500/40 text-violet-500"
+                ? localDl
+                  ? "border-sky-500/40 text-sky-500"
+                  : "border-violet-500/40 text-violet-500"
                 : "border-emerald-500/40 text-emerald-500",
             )}
-            title={route === "colab" ? "Deep-learning nodes route to a Colab GPU runtime" : "Classic ML trains instantly on CPU"}
+            title={
+              route === "colab"
+                ? localDl
+                  ? "PyTorch found on this machine — neural networks train in-app on the local runtime"
+                  : "Deep-learning nodes route to a Colab GPU runtime"
+                : "Classic ML trains instantly on CPU"
+            }
           >
-            {route === "colab" ? <Rocket size={10} weight="bold" /> : <Cpu size={10} weight="bold" />}
-            {route === "colab" ? "GPU" : "CPU"}
+            {route === "colab" ? (
+              localDl ? (
+                <Cpu size={10} weight="bold" />
+              ) : (
+                <Rocket size={10} weight="bold" />
+              )
+            ) : (
+              <Cpu size={10} weight="bold" />
+            )}
+            {route === "colab" ? (localDl ? "LOCAL TORCH" : "GPU") : "CPU"}
           </span>
         </div>
       </div>
@@ -212,7 +231,15 @@ export function Header({
             <Play size={13} weight="fill" className="relative" />
           )}
           <span className="relative hidden sm:inline">
-            {loading ? "Training…" : hasModel ? (route === "colab" ? "Train on Colab GPU" : "Train Instantly") : "Add a model node"}
+            {loading
+              ? "Training…"
+              : hasModel
+                ? route === "colab"
+                  ? localDl
+                    ? "Train In-App"
+                    : "Train on Colab GPU"
+                  : "Train Instantly"
+                : "Add a model node"}
           </span>
           <span className="relative sm:hidden">{loading ? "…" : "Train"}</span>
         </button>

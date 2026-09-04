@@ -10,12 +10,13 @@ export const dynamic = "force-dynamic";
 
 const EXEC_TIMEOUT_MS = 90_000;
 
-type EngineProbe = { available: boolean; version: string | null; reason: string | null };
+type EngineProbe = { available: boolean; version: string | null; reason: string | null; torch: boolean };
 
 let probeCache: { at: number; probe: EngineProbe } | null = null;
 const PROBE_TTL_MS = 60_000;
 
-/** Probe the host machine for a usable Python engine (sklearn + helpers).
+/** Probe the host machine for a usable Python engine (sklearn + helpers) and
+ *  whether PyTorch is importable (enables in-app deep-learning training).
  *  Result is cached briefly so repeated Train clicks don't re-pay the cost. */
 function probePythonEngine(): Promise<EngineProbe> {
   if (probeCache && Date.now() - probeCache.at < PROBE_TTL_MS) {
@@ -34,21 +35,23 @@ function probePythonEngine(): Promise<EngineProbe> {
     };
     let child;
     try {
+      // Third token of stdout: "ok|no-torch|torch" marks whether torch imports.
       child = spawn(
         bin,
-        ["-c", "import sys, sklearn, plotly, nbformat, networkx; print(sys.version.split()[0])"],
+        ["-c", "import sys, sklearn, plotly, nbformat, networkx\ntry:\n import torch\n has='torch'\nexcept Exception:\n has='no-torch'\nprint(sys.version.split()[0], has)"],
         { cwd: process.cwd(), env: process.env, stdio: ["ignore", "pipe", "pipe"], timeout: 20_000 },
       );
     } catch {
-      finish({ available: false, version: null, reason: `${bin} runtime not found on this machine` });
+      finish({ available: false, version: null, reason: `${bin} runtime not found on this machine`, torch: false });
       return;
     }
     child.stdout?.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
     child.stderr?.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
-    child.on("error", () => finish({ available: false, version: null, reason: `${bin} runtime not found on this machine` }));
+    child.on("error", () => finish({ available: false, version: null, reason: `${bin} runtime not found on this machine`, torch: false }));
     child.on("close", (code) => {
       if (code === 0) {
-        finish({ available: true, version: stdout.trim() || null, reason: null });
+        const [version, has] = stdout.trim().split(/\s+/);
+        finish({ available: true, version: version || null, reason: null, torch: has === "torch" });
         return;
       }
       const missing = stderr.match(/No module named ['"]([\w.]+)['"]/);
@@ -56,6 +59,7 @@ function probePythonEngine(): Promise<EngineProbe> {
         available: false,
         version: null,
         reason: missing ? `missing Python package "${missing[1]}"` : "required Python packages are not installed",
+        torch: false,
       });
     });
   });
@@ -199,7 +203,7 @@ async function streamTs(graph: GraphPayload, send: (obj: unknown) => void, probe
     const isDeepLearning = graph.nodes.some((node) => node.category === "deep_learning");
     const probeNote = probe && !probe.available && probe.reason ? ` Machine check failed: ${probe.reason}.` : "";
     const message = isDeepLearning
-      ? "Deep-learning training requires the Python runtime with PyTorch. Open the editable notebook in Colab to train on GPU."
+      ? "Deep-learning training requires the Python runtime with PyTorch. Install it on this machine (pip install torch) to train in-app on local CPU — or open the editable notebook in Colab to train on GPU."
       : `The selected model (${model?.label ?? "classical ML"}) requires the Python scikit-learn engine.${probeNote} Install backend requirements on this machine and restart the app.`;
     const error = {
       route: "instant",
@@ -247,6 +251,7 @@ export async function GET() {
     service: "Hybrid Execution Router (streaming NDJSON)",
     engine: probe.available ? "native-python" : "typescript-fallback",
     python_version: probe.version,
+    torch: probe.torch,
     machine_check: probe.available ? "ok" : probe.reason,
   });
 }

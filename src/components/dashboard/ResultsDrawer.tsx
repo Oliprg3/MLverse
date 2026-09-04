@@ -214,7 +214,8 @@ function saveBase64Artifact(filename: string, base64: string, mime: string) {
 
 function ModelExportBar({ res }: { res: InstantExecutionResponse }) {
   const artifacts = (res.model as typeof res.model & { artifacts?: Record<string, { filename: string; mime: string; base64?: string } | null> }).artifacts ?? {};
-  const [format, setFormat] = useState<"pickle" | "joblib">("pickle");
+  const hasTorch = Boolean(artifacts.torch?.base64);
+  const [format, setFormat] = useState<"pickle" | "joblib" | "torch">(hasTorch ? "torch" : "pickle");
   const [saved, setSaved] = useState(false);
   const download = () => {
     const artifact = artifacts[format];
@@ -228,12 +229,17 @@ function ModelExportBar({ res }: { res: InstantExecutionResponse }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Package className="h-4 w-4 text-emerald-400" /> Model artifact ready</div>
-          <p className="mt-1 text-[11px] text-muted-2">Download the fitted preprocessing pipeline and trained model for reuse in Python.</p>
+          <p className="mt-1 text-[11px] text-muted-2">
+            {hasTorch
+              ? "Download the trained PyTorch state_dict (.pt) and reload it with torch.load() in Python."
+              : "Download the fitted preprocessing pipeline and trained model for reuse in Python."}
+          </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <select value={format} onChange={(event) => setFormat(event.target.value as "pickle" | "joblib")} className="h-8 max-w-40 rounded-md border border-border bg-surface px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-400/40" aria-label="Model export format">
+          <select value={format} onChange={(event) => setFormat(event.target.value as "pickle" | "joblib" | "torch")} className="h-8 max-w-40 rounded-md border border-border bg-surface px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-400/40" aria-label="Model export format">
             <option value="pickle">Python pickle (.pkl)</option>
             <option value="joblib">Joblib (.joblib)</option>
+            {hasTorch && <option value="torch">PyTorch state_dict (.pt)</option>}
           </select>
           <Button variant="default" size="sm" onClick={download} disabled={!artifacts[format]?.base64}><DownloadSimple size={16} /> {saved ? "Saved" : "Save model"}</Button>
         </div>

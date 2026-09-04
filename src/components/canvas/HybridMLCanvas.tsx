@@ -33,7 +33,7 @@ import { Toast, type ToastData } from "@/components/ui/toast";
 import { getPaletteItem, hasModelNode, resolveRoute } from "@/lib/canvasConfig";
 import { generateCode, generateNodeServer, type GeneratedCode } from "@/lib/codeGen";
 import { autoConnectChain, summarizeDiagnostics, validatePipeline, type Diagnostic } from "@/lib/pipelineValidation";
-import { pyodideSupported, serverHasNativePython, trainInBrowser } from "@/lib/localEngine";
+import { pyodideSupported, probeServerEngine, serverHasNativePython, trainInBrowser } from "@/lib/localEngine";
 import { deserializeWorkflow, downloadWorkflow, serializeWorkflow } from "@/lib/workflowSerialization";
 import type { TerminalLine } from "@/components/dashboard/TerminalConsole";
 import { hasSavedProject, loadProject, saveProject } from "@/lib/projectStorage";
@@ -63,6 +63,10 @@ const DEFAULT_EDGE_OPTIONS = {
 
 /** Opens a fresh Colab notebook (within a user gesture to avoid popup blockers). */
 const COLAB_CREATE_URL = "https://colab.research.google.com/#create=true";
+
+/** Deep-learning node types the local PyTorch engine can train in-app.
+ *  Everything else (HF Transformer, GAN, Autoencoder) stays on the Colab path. */
+const LOCAL_DL_TYPES = ["dl:pytorch_mlp", "dl:cnn", "dl:lstm", "dl:gru", "dl:tabular_transformer"];
 
 /**
  * Copy text to the clipboard SYNCHRONOUSLY (within a user gesture).
@@ -141,6 +145,8 @@ function Canvas() {
 
   const [loading, setLoading] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
+  /** null = probing, true = server Python imports PyTorch (in-app DL training). */
+  const [serverTorch, setServerTorch] = useState<boolean | null>(null);
   const [response, setResponse] = useState<ExecutionResponse | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(true);
@@ -167,6 +173,17 @@ function Canvas() {
       setStorageReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  // Probe once on mount so Train-click decisions (in-app DL vs Colab hand-off)
+  // are made from cached state — never mid-click, which would break the
+  // synchronous clipboard/window.open gesture the Colab path depends on.
+  useEffect(() => {
+    let cancelled = false;
+    probeServerEngine()
+      .then((info) => { if (!cancelled) setServerTorch(info.torch); })
+      .catch(() => { if (!cancelled) setServerTorch(false); });
+    return () => { cancelled = true; };
   }, []);
 
   // Auto-load the saved project when arriving via /canvas?load=1 (e.g. after
@@ -439,11 +456,28 @@ function Canvas() {
     stampStatuses("running");
     pushLine(`Dispatching ${payload.nodes.length}-step ${route === "colab" ? "Colab GPU" : "instant CPU"} pipeline…`, "system");
 
-    // Deep-learning route: open Colab + copy the code SYNCHRONOUSLY (before await).
-    if (route === "colab") {
+    // Deep-learning route: when the server has PyTorch AND every DL node is one
+    // the local engine can train (MLP / CNN / LSTM / GRU / tabular transformer),
+    // the neural network trains in-app and the NDJSON stream carries live epoch
+    // events — no Colab hand-off. Otherwise fall back to the notebook path:
+    // open Colab + copy the code SYNCHRONOUSLY (before any await, so the click
+    // gesture survives and clipboard/window.open both work).
+    const dlTypes = nodes.map((n) => n.data.type).filter((t) => t.startsWith("dl:"));
+    const locallyTrainable =
+      serverTorch === true &&
+      dlTypes.length > 0 &&
+      dlTypes.every((t) => LOCAL_DL_TYPES.includes(t));
+    if (route === "colab" && !locallyTrainable) {
       const gen = handOffToColab(payload);
       setGeneratedCode(gen); // seed the code viewer with the same script
-      pushLine("Training code copied, paste it into the opened Colab notebook.", "system");
+      pushLine(
+        serverTorch === false
+          ? "Training code copied, paste it into the opened Colab notebook."
+          : "This model needs the Colab GPU runtime (HF/BERT, GAN or autoencoder) — training code copied to the opened notebook.",
+        "system",
+      );
+    } else if (route === "colab") {
+      pushLine("Server has PyTorch — training the deep-learning graph in-app on the local runtime…", "system");
     }
 
     try {
@@ -628,6 +662,7 @@ function Canvas() {
     <div className="nf-canvas-bg flex h-screen w-full flex-col">
       <Header
         route={route}
+        localDl={serverTorch === true}
         hasModel={hasModel}
         nodeCount={nodes.length}
         edgeCount={edges.length}

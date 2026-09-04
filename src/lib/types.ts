@@ -45,7 +45,9 @@ export type ChartKey =
   | "cv_scores"
   | "calibration"
   | "class_balance"
-  | "correlation";
+  | "correlation"
+  // deep-learning
+  | "training_history";
 
 /** A draggable node palette definition. */
 export interface PaletteItem {

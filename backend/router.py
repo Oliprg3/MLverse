@@ -29,7 +29,12 @@ import networkx as nx
 import basic_ml_engine
 import notebook_builder
 
-ENGINE_VERSION = "hybrid-v1.0.0"
+try:
+    import deep_learning_engine
+except Exception:  # torch missing / import error → Colab path stays the default
+    deep_learning_engine = None  # type: ignore
+
+ENGINE_VERSION = "hybrid-v1.2.0"
 COLAB_CATEGORY = "deep_learning"
 
 
@@ -123,6 +128,22 @@ def dispatch(payload: Dict[str, Any], emit: Any = None) -> Dict[str, Any]:
 
         route = resolve_route(ordered_nodes)
         if route == "colab":
+            # Local PyTorch path: when torch is installed AND every DL node is one
+            # the engine can train (MLP / CNN / LSTM / GRU / tabular transformer),
+            # train in-app on the local CPU/GPU instead of handing off to Colab.
+            if deep_learning_engine is not None and deep_learning_engine.can_train_locally(ordered_nodes):
+                _emit({"type": "step", "message": "PyTorch found on this machine — training the neural network in-app (no Colab needed)…"})
+                result = _jsonable(deep_learning_engine.execute(ordered_nodes, emit=_emit))
+                _emit({"type": "result", "data": result})
+                return result
+            dl_types = sorted({n.get("type") for n in ordered_nodes if n.get("category") == COLAB_CATEGORY})
+            _emit({
+                "type": "step",
+                "message": (
+                    "Deep-learning graphs without a local PyTorch engine hand off to Colab. "
+                    "Install it (pip install torch) to train these nodes in-app: " + ", ".join(dl_types)
+                ),
+            })
             _emit({"type": "step", "message": "Generating Google Colab notebook…"})
             _, meta = notebook_builder.build_notebook(ordered_nodes)
             response: Dict[str, Any] = {"route": "colab", "status": "success", "engine": ENGINE_VERSION}

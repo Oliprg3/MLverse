@@ -76,6 +76,8 @@ export const CHART_CATALOG: ChartSpec[] = [
   { key: "calibration", label: "Calibration Curve", short: "Calibration curve", subtitle: "Predicted probability vs observed frequency: is 80% really 80%?", group: "diagnostics" },
   { key: "class_balance", label: "Class Balance", short: "Class balance", subtitle: "Train / test / predicted counts per class", group: "diagnostics" },
   { key: "correlation", label: "Feature Correlation", short: "Feature correlation", subtitle: "Pearson correlation between the most important features", group: "diagnostics", height: 400 },
+  /* ── Deep learning ──────────────────────────────────────────────────── */
+  { key: "training_history", label: "Training History", short: "Training history", subtitle: "Train loss vs validation accuracy per epoch — watch the loss fall and the model learn", group: "diagnostics", height: 360 },
 ];
 
 const BY_KEY = new Map(CHART_CATALOG.map((c) => [c.key, c]));

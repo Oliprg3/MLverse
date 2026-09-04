@@ -84,18 +84,32 @@ export function trainInBrowser(
 }
 
 /** Cached server-engine probe so the canvas can pick the best tier per run. */
-let serverEngineCache: { at: number; native: boolean } | null = null;
+let serverEngineCache: { at: number; native: boolean; torch: boolean } | null = null;
+
+export interface ServerEngineInfo {
+  /** True when the server has the sklearn Python stack. */
+  native: boolean;
+  /** True when the server's Python also imports PyTorch → DL trains in-app. */
+  torch: boolean;
+}
 
 export async function serverHasNativePython(): Promise<boolean> {
-  if (serverEngineCache && Date.now() - serverEngineCache.at < 60_000) return serverEngineCache.native;
+  return (await probeServerEngine()).native;
+}
+
+/** Full probe: sklearn availability + PyTorch availability (in-app DL training). */
+export async function probeServerEngine(): Promise<ServerEngineInfo> {
+  if (serverEngineCache && Date.now() - serverEngineCache.at < 60_000) {
+    return { native: serverEngineCache.native, torch: serverEngineCache.torch };
+  }
+  let info: ServerEngineInfo = { native: false, torch: false };
   try {
     const res = await fetch("/api/execute", { cache: "no-store" });
-    const data = (await res.json()) as { engine?: string };
-    const native = data.engine === "native-python";
-    serverEngineCache = { at: Date.now(), native };
-    return native;
+    const data = (await res.json()) as { engine?: string; torch?: boolean };
+    info = { native: data.engine === "native-python", torch: data.torch === true };
   } catch {
-    serverEngineCache = { at: Date.now(), native: false };
-    return false;
+    info = { native: false, torch: false };
   }
+  serverEngineCache = { at: Date.now(), ...info };
+  return info;
 }
