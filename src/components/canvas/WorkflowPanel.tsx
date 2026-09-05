@@ -40,11 +40,11 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
   const statusTone = errors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500";
 
   return (
-    <aside className="hidden h-full w-72 shrink-0 flex-col border-l border-neutral-200/80 bg-white/95 glass-panel lg:flex dark:bg-[#050506]/60">
-      <div className="border-b border-neutral-200/80 px-5 py-4 dark:border-white/[0.06]">
+    <aside className="hidden h-full w-[292px] shrink-0 flex-col border-l border-neutral-200/80 bg-white/90 shadow-[-14px_0_40px_-34px_rgba(15,23,42,0.7)] glass-panel lg:flex dark:border-white/[0.07] dark:bg-[#080c12]/80">
+      <div className="border-b border-neutral-200/80 bg-white/45 px-5 py-5 dark:border-white/[0.06] dark:bg-white/[0.02]">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={15} weight="regular" className="text-neutral-400 dark:text-zinc-500" />
-          <h2 className="text-[13px] font-semibold tracking-tight text-neutral-900 dark:text-white">Workflow</h2>
+          <h2 className="text-[14px] font-semibold tracking-tight text-neutral-900 dark:text-white">Run overview</h2>
           {onCollapse ? (
             <button
               type="button"
@@ -57,10 +57,10 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
             </button>
           ) : null}
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">Review the pipeline before running it.</p>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">Review readiness, runtime, and outputs.</p>
       </div>
 
-      <div className="border-b border-neutral-200/80 px-5 py-5 dark:border-white/[0.06]">
+      <div className="border-b border-neutral-200/80 px-5 py-6 dark:border-white/[0.06]">
         <div className="flex items-center justify-between">
           <span className="nf-hud-label">status</span>
           <span className={cn("text-[11px] font-semibold", statusTone)}>
@@ -126,7 +126,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
 
 function Summary({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-neutral-200/80 bg-white/50 px-3 py-3 dark:border-white/[0.07] dark:bg-white/[0.02]">
+    <div className="rounded-xl border border-neutral-200/80 bg-white/65 px-3.5 py-3.5 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.03]">
       <p className="font-mono text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">{value}</p>
       <p className="nf-hud-label mt-1">{label}</p>
     </div>

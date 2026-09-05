@@ -125,7 +125,7 @@ export function Header({
   const analyticsDisabled = !hasDataForAnalytics;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-neutral-200/80 bg-white/95 px-3 glass-panel dark:border-white/[0.06] dark:bg-[#050506]/80 lg:px-4">
+    <header className="sticky top-0 z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-neutral-200/80 bg-white/90 px-3 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.5)] glass-panel dark:border-white/[0.07] dark:bg-[#070b11]/85 lg:px-5">
       {/* Left — brand + pipeline path */}
       <div className="flex min-w-0 items-center gap-2">
         <button
@@ -155,7 +155,7 @@ export function Header({
         <span className="hidden h-4 w-px bg-neutral-200 dark:bg-white/10 md:block" aria-hidden />
 
         <div className="hidden min-w-0 items-center gap-2 md:flex">
-          <span className="nf-hud-label truncate">canvas://{nodeCount > 0 ? `pipeline (${nodeCount} steps)` : "untitled"}</span>
+          <span className="rounded-md bg-neutral-100/80 px-2 py-1 font-mono text-[10px] font-medium tracking-wide text-neutral-500 dark:bg-white/[0.05] dark:text-zinc-400">canvas://{nodeCount > 0 ? `pipeline (${nodeCount} steps)` : "untitled"}</span>
           <span
             className={cn(
               "hidden shrink-0 items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] 2xl:inline-flex",
@@ -219,7 +219,7 @@ export function Header({
           onClick={onExecute}
           disabled={disabled}
           className={cn(
-            "group relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-xl px-4 text-[13px] font-semibold transition-all duration-300 active:scale-[0.97]",
+            "group relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-xl px-4 text-[13px] font-semibold shadow-[0_8px_24px_-12px_rgba(2,132,199,0.75)] transition-all duration-300 active:scale-[0.97]",
             "bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200",
             "disabled:pointer-events-none disabled:opacity-35",
           )}

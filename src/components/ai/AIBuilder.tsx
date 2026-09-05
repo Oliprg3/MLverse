@@ -321,21 +321,21 @@ export function AIBuilder() {
   };
 
   return (
-    <main className="flex h-screen min-h-[620px] flex-col overflow-hidden bg-background bg-[radial-gradient(circle_at_55%_-20%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_40%)] text-foreground">
+    <main className="flex h-screen min-h-[620px] flex-col overflow-hidden bg-background text-foreground">
       {/* Header */}
-      <header className="glass-panel sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-surface/70 px-5">
+      <header className="glass-panel sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-surface/80 px-5 shadow-[0_12px_36px_-30px_rgba(15,23,42,0.7)] lg:px-7">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/canvas" aria-label="Back to canvas" title="Back to canvas" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-background/50 text-muted transition-all hover:border-border-strong hover:bg-foreground/[0.04] hover:text-foreground">
             <ArrowLeft size={14} weight="bold" />
           </Link>
           <div className="h-6 w-px bg-border/70" />
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background/50 text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/20 bg-primary/[0.08] text-primary shadow-sm">
               <Robot size={16} weight="duotone" />
             </span>
             <div className="min-w-0">
-              <span className="block truncate text-sm font-semibold tracking-tight">AI Model Architect</span>
-              <span className="hidden text-[10px] uppercase tracking-[0.16em] text-muted sm:block">Designs model nodes & suggests algorithms</span>
+              <span className="block truncate text-[15px] font-semibold tracking-tight">AI Model Architect</span>
+              <span className="hidden text-[10px] uppercase tracking-[0.16em] text-muted sm:block">Turn a brief into a canvas-ready plan</span>
             </div>
             {project ? (
               <span className="hidden max-w-52 truncate border-l border-border pl-2.5 font-mono text-[11px] text-muted sm:inline">
@@ -364,10 +364,10 @@ export function AIBuilder() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-0 lg:flex-row lg:p-4 lg:pt-3">
         {/* Chat column */}
-        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border/70 bg-surface/55 lg:w-[420px] lg:border-b-0 lg:border-r">
-          <div className="border-b border-border/70 px-6 py-5">
+        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border/70 bg-surface/75 lg:w-[420px] lg:rounded-2xl lg:border lg:shadow-sm">
+          <div className="border-b border-border/70 bg-primary/[0.03] px-6 py-6 lg:rounded-t-2xl">
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Design session</div>
             <p className="mt-2 text-xs leading-6 text-muted">
               Describe the ML problem you want to solve. The architect proposes canvas-ready model nodes and ranks the algorithms that fit best.
@@ -454,8 +454,8 @@ export function AIBuilder() {
         </aside>
 
         {/* Blueprint column */}
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-background-2/80">
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-surface/55 px-5">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-background-2/80 lg:ml-4 lg:rounded-2xl lg:border lg:border-border/70 lg:shadow-sm">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-border/70 bg-surface/65 px-6 lg:rounded-t-2xl">
             <div className="flex items-center gap-2.5">
               <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Blueprint</span>
               {blueprintLabel ? (
@@ -519,8 +519,8 @@ export function AIBuilder() {
                 </div>
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center">
-                <div className="animate-builder-panel max-w-md rounded-[28px] border border-border/70 bg-card/80 p-9 text-center shadow-2xl backdrop-blur-xl">
+              <div className="flex h-full items-center justify-center px-5">
+                <div className="animate-builder-panel max-w-md rounded-3xl border border-border/70 bg-card/90 p-10 text-center shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-surface text-primary">
                     <Robot size={24} weight="duotone" />
                   </div>

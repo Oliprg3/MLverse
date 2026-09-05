@@ -1,100 +1,112 @@
 "use client";
 
-import { Quotes, Star } from "@phosphor-icons/react";
+import {
+  ArrowUpRight,
+  ChartLineUp,
+  CheckCircle,
+  CirclesFour,
+  Lightning,
+  ShieldCheck,
+} from "@phosphor-icons/react";
 import { SectionHead } from "./SectionHead";
 import { Reveal } from "./Reveal";
 
-const QUOTES = [
+const SIGNALS = [
   {
-    quote:
-      "Our marketing team built a churn model in one afternoon. No data science ticket, no two-week backlog. It just… trained.",
-    name: "Mara Chen",
-    role: "Head of Growth · Loopwire",
-    initials: "MC",
+    icon: CirclesFour,
+    label: "One visual workspace",
+    title: "Make the whole pipeline legible",
+    copy: "Keep sources, transformations, models, and outputs in one surface. No notebook archaeology or hidden handoffs.",
+    tone: "text-sky-600 dark:text-sky-300",
+    bg: "bg-sky-500/10",
   },
   {
-    quote:
-      "The canvas is what Figma did to design files, but for ML. I can see the whole pipeline and export real Python whenever I want.",
-    name: "Diego Alvarez",
-    role: "ML Engineer · Northbeam Labs",
-    initials: "DA",
+    icon: Lightning,
+    label: "Fast iteration",
+    title: "Go from question to experiment",
+    copy: "Start with a dataset, wire a baseline, and run it without spending the first hour configuring an environment.",
+    tone: "text-amber-600 dark:text-amber-300",
+    bg: "bg-amber-500/10",
   },
   {
-    quote:
-      "We replaced a stack of notebooks with Datlify dashboards. Execs actually look at them — that never happened before.",
-    name: "Priya Nair",
-    role: "VP Data · Castellan Retail",
-    initials: "PN",
+    icon: ChartLineUp,
+    label: "Useful outputs",
+    title: "Turn model runs into decisions",
+    copy: "Inspect metrics, predictions, and charts beside the workflow so the result stays connected to the reasoning.",
+    tone: "text-emerald-600 dark:text-emerald-300",
+    bg: "bg-emerald-500/10",
   },
-  {
-    quote:
-      "Instant CPU training for prototypes, Colab GPUs for the heavy runs. The hybrid switch alone saves us hundreds per month.",
-    name: "Tomas Berg",
-    role: "CTO · Fieldnote Analytics",
-    initials: "TB",
-  },
-  {
-    quote:
-      "I teach an intro ML course on it. Students ship their first model on day one instead of fighting environment setup.",
-    name: "Dr. Amara Osei",
-    role: "Lecturer · Kingsford Institute",
-    initials: "AO",
-  },
-  {
-    quote:
-      "From raw CSV to a live prediction endpoint during a client call. The demo closed the deal on the spot.",
-    name: "Jonas Reinholt",
-    role: "Founder · Reinholt Consulting",
-    initials: "JR",
-  },
+];
+
+const PRINCIPLES = [
+  "Transparent, editable pipelines",
+  "Local-first project persistence",
+  "Generated Python when you need it",
+  "Clear runtime and validation states",
 ];
 
 export function Testimonials() {
   return (
-    <section className="relative py-28 sm:py-36">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+    <section className="relative overflow-hidden border-y border-neutral-200/70 bg-neutral-50/70 py-28 sm:py-36 dark:border-white/[0.06] dark:bg-white/[0.015]">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-80 w-[42rem] -translate-x-1/2 rounded-full bg-sky-400/[0.07] blur-3xl dark:bg-sky-400/[0.04]" />
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHead
           index="07"
-          kicker="Field notes"
-          title={
-            <>
-              Loved by analysts,
-              <br />
-              <span className="text-neutral-400 dark:text-zinc-500">respected by engineers.</span>
-            </>
-          }
+          kicker="Why Datlify"
+          title={<>A clearer way to build with data.</>}
+          copy="Skip the made-up success stories. Datlify is designed around a simple promise: make experimentation easier to understand, easier to run, and easier to hand off."
         />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {QUOTES.map((q, i) => (
-            <Reveal key={q.name} delay={(i % 3) * 100} className="h-full">
-              <figure className="nf-hud-corners group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-neutral-200 bg-white p-7 transition-all duration-500 hover:-translate-y-1 hover:border-neutral-900 hover:bg-neutral-50 hover:shadow-[0_24px_60px_-32px_rgba(0,0,0,0.3)] dark:border-white/[0.06] dark:bg-white/[0.015] dark:hover:border-white/[0.2] dark:hover:bg-white/[0.03] dark:hover:shadow-[0_24px_60px_-32px_rgba(255,255,255,0.12)]">
-                <div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <Quotes
-                      size={22}
-                      weight="fill"
-                      className="text-neutral-300 transition-colors duration-500 group-hover:text-neutral-900 dark:text-zinc-700 dark:group-hover:text-zinc-200"
-                    />
-                    <span className="flex items-center gap-0.5" aria-label="5 out of 5 stars">
-                      {Array.from({ length: 5 }).map((_, si) => (
-                        <Star key={si} size={10} weight="fill" className="text-neutral-400 dark:text-zinc-500" />
-                      ))}
-                    </span>
-                  </div>
-                  <blockquote className="text-[15px] leading-relaxed text-neutral-700 dark:text-zinc-300">“{q.quote}”</blockquote>
+
+        <div className="grid gap-4 lg:grid-cols-[1.05fr_1.95fr]">
+          <Reveal className="h-full">
+            <div className="relative flex h-full min-h-[330px] flex-col justify-between overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-950 p-7 text-white shadow-[0_30px_80px_-40px_rgba(15,23,42,0.55)] sm:p-9 dark:border-white/[0.1] dark:bg-[#0b111a]">
+              <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-sky-400/20 blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-sky-300">
+                  <ShieldCheck size={15} weight="duotone" /> Built for clarity
                 </div>
-                <figcaption className="mt-6 flex items-center gap-3 border-t border-neutral-100 pt-5 dark:border-white/[0.06]">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 bg-neutral-100 font-mono text-[11px] font-semibold text-neutral-700 transition-colors duration-500 group-hover:border-neutral-900 group-hover:bg-neutral-900 group-hover:text-white dark:border-white/20 dark:bg-white/10 dark:text-zinc-300 dark:group-hover:border-white dark:group-hover:bg-white dark:group-hover:text-neutral-900">
-                    {q.initials}
-                  </span>
-                  <span>
-                    <span className="block text-sm font-medium text-neutral-900 dark:text-white">{q.name}</span>
-                    <span className="block font-mono text-[10px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">{q.role}</span>
-                  </span>
-                </figcaption>
-              </figure>
-            </Reveal>
-          ))}
+                <h3 className="mt-8 max-w-sm text-3xl font-semibold leading-tight tracking-[-0.03em] sm:text-4xl">
+                  Your workflow should explain itself.
+                </h3>
+                <p className="mt-5 max-w-sm text-sm leading-7 text-white/60">
+                  Every node has a purpose, every connection has context, and every run leaves you with an artifact you can inspect.
+                </p>
+              </div>
+              <div className="relative mt-10 grid grid-cols-2 gap-3 border-t border-white/10 pt-5">
+                {PRINCIPLES.map((principle) => (
+                  <div key={principle} className="flex items-start gap-2 text-[11px] leading-5 text-white/65">
+                    <CheckCircle size={14} weight="fill" className="mt-0.5 shrink-0 text-sky-300" />
+                    {principle}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+            {SIGNALS.map((signal, index) => {
+              const Icon = signal.icon;
+              return (
+                <Reveal key={signal.title} delay={index * 90} className="h-full">
+                  <div className="group flex h-full items-start gap-5 rounded-3xl border border-neutral-200 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-neutral-400 hover:shadow-[0_22px_55px_-35px_rgba(15,23,42,0.45)] sm:p-7 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-white/20">
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${signal.bg}`}>
+                      <Icon size={21} weight="duotone" className={signal.tone} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 dark:text-zinc-500">{signal.label}</p>
+                          <h3 className="mt-2 text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">{signal.title}</h3>
+                        </div>
+                        <ArrowUpRight size={17} className="shrink-0 text-neutral-300 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 dark:text-zinc-600" />
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-zinc-400">{signal.copy}</p>
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

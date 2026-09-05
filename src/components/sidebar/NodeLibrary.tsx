@@ -111,13 +111,13 @@ export function NodeLibrary() {
   }).length;
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-neutral-200/80 bg-white/95 glass-panel max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-20 max-md:shadow-2xl dark:bg-[#050506]/60">
+    <aside className="flex h-full w-[292px] shrink-0 flex-col border-r border-neutral-200/80 bg-white/90 shadow-[14px_0_40px_-34px_rgba(15,23,42,0.7)] glass-panel max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-20 max-md:shadow-2xl dark:border-white/[0.07] dark:bg-[#080c12]/80">
       {/* Search */}
-      <div className="border-b border-neutral-200/80 p-4 dark:border-white/[0.06]">
+      <div className="border-b border-neutral-200/80 bg-white/45 p-5 dark:border-white/[0.06] dark:bg-white/[0.02]">
         <div className="mb-3 flex items-center justify-between px-1">
           <div>
-            <p className="text-[13px] font-semibold tracking-tight text-neutral-900 dark:text-white">Node library</p>
-            <p className="mt-0.5 text-[10px] leading-relaxed text-neutral-400 dark:text-zinc-500">Drag a step into the workspace.</p>
+            <p className="text-[14px] font-semibold tracking-tight text-neutral-900 dark:text-white">Build blocks</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">Drag a step into your pipeline.</p>
           </div>
           <span className="nf-hud-label shrink-0">{NODE_PALETTE.length} nodes</span>
         </div>
@@ -128,7 +128,7 @@ export function NodeLibrary() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search nodes…"
-            className="h-9 w-full rounded-lg border border-neutral-200 bg-white/70 pl-8 pr-9 text-[12px] text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-neutral-400 focus:bg-white dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white/30"
+            className="h-10 w-full rounded-xl border border-neutral-200 bg-white/80 pl-9 pr-9 text-[12px] text-neutral-900 placeholder:text-neutral-400 shadow-sm transition-all focus:border-sky-500/50 focus:bg-white focus:ring-4 focus:ring-sky-500/10 dark:border-white/[0.09] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
           />
           {hasQuery ? (
             <button
@@ -158,8 +158,8 @@ export function NodeLibrary() {
           </div>
         )}
       </div>
-      <div className="border-t border-neutral-200/80 px-4 py-3 dark:border-white/[0.06]">
-        <p className="nf-hud-label">Press ⌘K to search nodes</p>
+      <div className="border-t border-neutral-200/80 bg-white/35 px-5 py-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
+        <p className="nf-hud-label">⌘K to search · drag to connect</p>
       </div>
     </aside>
   );
