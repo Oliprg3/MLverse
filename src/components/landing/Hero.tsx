@@ -2,18 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  CheckCircle,
-  Database,
-  Faders,
-  Brain,
-  ChartLineUp,
-  Sparkle,
-  Play,
-} from "@phosphor-icons/react";
+import { ArrowRight, Play, CaretDown } from "@phosphor-icons/react";
 
-function CountUp({ to, suffix = "", decimals = 0 }: { to: number; suffix?: string; decimals?: number }) {
+const HERO_VIDEO = "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4";
+const HERO_VIDEO_FALLBACK = "https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4";
+
+function CountUp({ to, suffix = "", prefix = "", decimals = 0 }: { to: number; suffix?: string; prefix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement | null>(null);
   const [val, setVal] = useState(0);
   const started = useRef(false);
@@ -21,159 +15,145 @@ function CountUp({ to, suffix = "", decimals = 0 }: { to: number; suffix?: strin
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting || started.current) return;
-      started.current = true;
-      const start = performance.now();
-      const tick = (now: number) => {
-        const progress = Math.min(1, (now - start) / 1400);
-        setVal(to * (1 - Math.pow(1 - progress, 4)));
-        if (progress < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    });
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started.current) {
+          started.current = true;
+          const t0 = performance.now();
+          const dur = 1800;
+          const tick = (t: number) => {
+            const p = Math.min(1, (t - t0) / dur);
+            const eased = 1 - Math.pow(2, -10 * p);
+            setVal(to * (p === 1 ? 1 : eased));
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+      },
+      { threshold: 0.4 }
+    );
     io.observe(el);
     return () => io.disconnect();
   }, [to]);
 
-  return <span ref={ref}>{val.toFixed(decimals)}{suffix}</span>;
-}
-
-const pipeline = [
-  { icon: Database, label: "customers.csv", meta: "24.8k rows", tone: "sky" },
-  { icon: Faders, label: "Clean data", meta: "6 transforms", tone: "violet" },
-  { icon: Brain, label: "XGBoost", meta: "training", tone: "amber" },
-  { icon: ChartLineUp, label: "Evaluate", meta: "94.8% accuracy", tone: "emerald" },
-] as const;
-
-function ProductPreview() {
   return (
-    <div className="nf-product-preview relative mx-auto w-full max-w-[660px] lg:mr-0">
-      <div className="absolute -inset-12 -z-10 rounded-full bg-sky-400/20 blur-3xl dark:bg-sky-500/10" />
-      <div className="overflow-hidden rounded-[22px] border border-white/80 bg-white/85 shadow-[0_32px_90px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-white/10 dark:bg-[#0b0e14]/90 dark:shadow-[0_35px_100px_-25px_rgba(0,0,0,0.8)]">
-        <div className="flex h-12 items-center justify-between border-b border-slate-200/80 px-4 dark:border-white/[0.07]">
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1.5" aria-hidden="true">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
-            </div>
-            <span className="h-4 w-px bg-slate-200 dark:bg-white/10" />
-            <span className="text-[11px] font-semibold text-slate-600 dark:text-zinc-300">Customer churn · Pipeline</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" /> Live
-          </div>
-        </div>
-
-        <div className="relative min-h-[390px] overflow-hidden bg-[#f8fafc] p-5 sm:p-8 dark:bg-[#080b10]">
-          <div className="nf-preview-grid pointer-events-none absolute inset-0" />
-          <div className="relative grid gap-4 sm:grid-cols-2">
-            {pipeline.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div key={step.label} className={`nf-pipeline-node nf-node-${step.tone} relative rounded-2xl border bg-white p-4 shadow-sm dark:bg-[#111620] ${index > 1 ? "sm:ml-8" : ""}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="nf-node-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-                      <Icon size={19} weight="duotone" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-slate-800 dark:text-zinc-100">{step.label}</p>
-                      <p className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">{step.meta}</p>
-                    </div>
-                    {index === 2 && <span className="ml-auto h-2 w-2 animate-pulse rounded-full bg-amber-400" />}
-                    {index === 3 && <CheckCircle className="ml-auto text-emerald-500" size={17} weight="fill" />}
-                  </div>
-                  {index < 3 && <span className="nf-pipeline-wire" aria-hidden="true" />}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="relative mt-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#111620]">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-semibold text-slate-800 dark:text-zinc-100">Validation accuracy</p>
-                <p className="mt-0.5 font-mono text-[8px] uppercase tracking-widest text-slate-400">50 epochs · auto-tuned</p>
-              </div>
-              <span className="text-lg font-semibold tracking-tight text-emerald-600 dark:text-emerald-400">94.8%</span>
-            </div>
-            <svg viewBox="0 0 520 62" className="h-14 w-full overflow-visible" preserveAspectRatio="none" aria-hidden="true">
-              <defs>
-                <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#0ea5e9" stopOpacity=".24" />
-                  <stop offset="1" stopColor="#0ea5e9" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d="M0 54 C55 50 70 45 112 42 S172 37 210 31 S274 35 312 24 S365 25 407 15 S470 13 520 5 L520 62 L0 62Z" fill="url(#chart-fill)" />
-              <path d="M0 54 C55 50 70 45 112 42 S172 37 210 31 S274 35 312 24 S365 25 407 15 S470 13 520 5" fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" className="nf-chart-path" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div className="nf-floating-card absolute -bottom-6 -left-3 hidden items-center gap-3 rounded-2xl border border-white/80 bg-white/90 p-3 pr-5 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#111620]/90 sm:flex">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">
-          <Sparkle size={17} weight="fill" />
-        </div>
-        <div><p className="text-[10px] font-semibold text-slate-800 dark:text-zinc-100">Auto-optimized</p><p className="text-[9px] text-slate-400">12 parameters tuned</p></div>
-      </div>
-    </div>
+    <span ref={ref}>
+      {prefix}
+      {val.toFixed(decimals)}
+      {suffix}
+    </span>
   );
 }
 
 export function Hero() {
   return (
-    <section className="relative isolate min-h-[100svh] overflow-hidden bg-[#f8fafc] pt-20 dark:bg-[#05070a]">
-      <div className="nf-hero-mesh pointer-events-none absolute inset-0 -z-10" />
-      <div className="pointer-events-none absolute left-[8%] top-28 -z-10 h-72 w-72 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-600/10" />
-      <div className="pointer-events-none absolute right-[4%] top-20 -z-10 h-96 w-96 rounded-full bg-sky-300/30 blur-3xl dark:bg-sky-500/10" />
+    <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white dark:bg-[#030304]">
+      {/* Layer 1 — background video (dark mode only) */}
+      <video
+        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover opacity-25 mix-blend-screen dark:block"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+      >
+        <source src={HERO_VIDEO} type="video/mp4" />
+        <source src={HERO_VIDEO_FALLBACK} type="video/mp4" />
+      </video>
 
-      <div className="mx-auto grid min-h-[calc(100svh-5rem)] max-w-[1440px] items-center gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:gap-12 lg:py-20 xl:px-14">
-        <div className="relative z-10 max-w-xl">
-          <div className="nf-fade-up inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-sky-800 shadow-sm backdrop-blur dark:border-sky-400/20 dark:bg-sky-400/[0.07] dark:text-sky-300">
-            <Sparkle size={13} weight="fill" />
-            The visual workspace for applied AI
-            <ArrowRight size={12} weight="bold" />
-          </div>
+      {/* Layer 3 — cinematic overlays */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/70 via-transparent to-white dark:from-[#030304]/70 dark:to-[#050506]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent dark:from-[#050506]" />
 
-          <h1 className="mt-7 text-balance text-[46px] font-semibold leading-[0.98] tracking-[-0.055em] text-slate-950 dark:text-white sm:text-6xl lg:text-[68px] xl:text-[76px]">
-            <span className="nf-hero-line block">From raw data</span>
-            <span className="nf-hero-line nf-gradient-text mt-1 block [animation-delay:100ms]">to real intelligence.</span>
-          </h1>
+      {/* HUD grid lines */}
+      <div className="nf-grid-bg pointer-events-none absolute inset-0 opacity-[0.35]" />
 
-          <p className="nf-fade-up mt-7 max-w-lg text-pretty text-base leading-7 text-slate-600 [animation-delay:260ms] dark:text-zinc-400 sm:text-lg">
-            Build production-ready machine learning pipelines on a visual canvas. Clean data, train models, and ship predictions — without wrestling with code.
-          </p>
+      {/* Content */}
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-5 pb-24 pt-36 text-center sm:px-8">
+        <h1 className="max-w-5xl text-balance text-[42px] font-semibold leading-[1.04] tracking-[-0.03em] text-neutral-900 dark:text-white sm:text-6xl md:text-7xl lg:text-[84px]">
+          {"Train AI models at the|speed of thought.".split("|").map((line, li) => (
+            <span key={li} className="block overflow-hidden pb-1">
+              <span className={`nf-hero-line block ${li === 1 ? "text-neutral-400 dark:text-zinc-500" : ""}`}>
+                {li === 1 ? (
+                  <>
+                    speed of{" "}
+                    <span className="relative inline-block text-neutral-900 underline decoration-neutral-300 decoration-[3px] underline-offset-8 dark:text-white dark:decoration-white/40">
+                      thought
+                    </span>
+                    .
+                  </>
+                ) : (
+                  line
+                )}
+              </span>
+            </span>
+          ))}
+        </h1>
 
-          <div className="nf-fade-up mt-9 flex flex-col gap-3 [animation-delay:400ms] sm:flex-row">
-            <Link href="/canvas" className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 text-sm font-semibold text-white shadow-[0_12px_30px_-10px_rgba(2,132,199,.65)] transition-all hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-[0_16px_36px_-10px_rgba(2,132,199,.8)] active:translate-y-0 dark:bg-white dark:text-slate-950 dark:hover:bg-sky-300">
-              Start building free
-              <ArrowRight size={16} weight="bold" className="transition-transform group-hover:translate-x-1" />
-            </Link>
-            <a href="#training-demo" className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white/70 px-6 text-sm font-semibold text-slate-700 backdrop-blur transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-200 dark:hover:bg-white/[0.08]">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300"><Play size={10} weight="fill" /></span>
-              See it in action
-            </a>
-          </div>
+        <p className="nf-fade-up mt-7 max-w-2xl text-pretty text-base leading-relaxed text-neutral-500 [animation-delay:350ms] dark:text-zinc-400 sm:text-lg">
+          Datlify is the no-code canvas where anyone can build, train and deploy
+          machine-learning pipelines — visually. Drag nodes, connect data, hit train.
+          No notebooks. No boilerplate. Just intelligence.
+        </p>
 
-          <div className="nf-fade-up mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-slate-200/80 pt-6 [animation-delay:540ms] dark:border-white/[0.08]">
-            {[
-              [128, "k+", "models trained"],
-              [94, " sec", "to first model"],
-              [99.9, "%", "uptime"],
-            ].map(([value, suffix, label], i) => (
-              <div key={String(label)} className="flex items-baseline gap-1.5">
-                <span className="text-sm font-bold text-slate-900 dark:text-white"><CountUp to={Number(value)} suffix={String(suffix)} decimals={i === 2 ? 1 : 0} /></span>
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-600">{label}</span>
+        <div className="nf-fade-up mt-10 flex flex-col items-center gap-4 [animation-delay:550ms] sm:flex-row">
+          <Link
+            href="/canvas"
+            className="nf-button-glow group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-neutral-900 px-7 text-sm font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          >
+            <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-full dark:bg-neutral-900/10" />
+            <span className="relative">Start training free</span>
+            <ArrowRight size={16} weight="bold" className="relative transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+          <a
+            href="#training-demo"
+            className="group inline-flex h-12 items-center gap-2.5 rounded-xl border border-neutral-300 bg-white/50 px-7 text-sm font-semibold text-neutral-800 backdrop-blur-md transition-all duration-300 hover:border-neutral-500 hover:bg-white active:scale-[0.97] dark:border-white/15 dark:bg-white/[0.02] dark:text-zinc-200 dark:hover:border-white/30 dark:hover:bg-white/[0.06]"
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 transition-colors group-hover:bg-neutral-700 dark:bg-white/10 dark:group-hover:bg-white">
+              <Play size={10} weight="fill" className="translate-x-[1px] text-white dark:text-white" />
+            </span>
+            Watch how it trains
+          </a>
+        </div>
+
+        {/* Stats strip */}
+        <div className="nf-fade-up mt-20 grid w-full max-w-3xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 [animation-delay:750ms] dark:border-white/[0.07] dark:bg-white/[0.04] sm:grid-cols-3">
+          {[
+            { label: "Models trained", value: 128400, suffix: "+" },
+            { label: "Avg. time to first model", value: 94, suffix: "s" },
+            { label: "Pipeline uptime", value: 99.98, suffix: "%", decimals: 2 },
+          ].map((s) => (
+            <div key={s.label} className="bg-white/90 px-6 py-5 backdrop-blur-sm dark:bg-[#07070a]/90">
+              <div className="font-mono text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
+                <CountUp to={s.value} suffix={s.suffix} decimals={s.decimals ?? 0} />
               </div>
-            ))}
-          </div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-500">{s.label}</div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div className="nf-fade-up relative z-10 [animation-delay:320ms]">
-          <ProductPreview />
+      {/* Scroll cue */}
+      <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2">
+        <div className="flex animate-bounce flex-col items-center gap-1 text-neutral-400 dark:text-zinc-600">
+          <span className="font-mono text-[9px] uppercase tracking-[0.3em]">Scroll</span>
+          <CaretDown size={14} />
         </div>
+      </div>
+
+      {/* Side HUD decorations */}
+      <div className="pointer-events-none absolute left-6 top-1/2 hidden -translate-y-1/2 select-none flex-col items-center gap-4 lg:flex" aria-hidden="true">
+        <span className="h-16 w-px bg-gradient-to-b from-transparent via-neutral-300 to-transparent dark:via-white/15" />
+        <span className="rotate-90 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.35em] text-neutral-400 dark:text-zinc-600">
+          NF://core.engine.v3
+        </span>
+        <span className="h-16 w-px bg-gradient-to-b from-transparent via-neutral-300 to-transparent dark:via-white/15" />
+      </div>
+      <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 select-none flex-col items-end gap-2 font-mono text-[9px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-600 lg:flex" aria-hidden="true">
+        {["CPU CLUSTER — ONLINE", "GPU MESH — IDLE", "SYNC — 12MS"].map((t) => (
+          <span key={t}>{t}</span>
+        ))}
       </div>
     </section>
   );
