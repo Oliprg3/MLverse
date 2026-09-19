@@ -87,17 +87,18 @@ export function LandingNav() {
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link href="/" className="group flex items-center gap-2.5">
-          <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-transparent">
+          <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-sky-500 via-blue-600 to-violet-600 shadow-[0_8px_20px_-8px_rgba(2,132,199,.8)] transition-transform duration-300 group-hover:rotate-3 group-hover:scale-105">
+            <span className="absolute inset-px rounded-[11px] bg-gradient-to-br from-white/20 to-transparent" />
             <Image
               src="/datlify-mark.png"
               alt="Datlify"
-              width={52}
-              height={52}
-              className="h-full w-full object-contain p-2 dark:brightness-0 dark:invert"
+              width={36}
+              height={36}
+              className="relative h-full w-full object-contain p-2 brightness-0 invert"
               priority
             />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">Datlify</span>
+          <span className="text-[15px] font-bold tracking-[-0.02em] text-slate-900 dark:text-white">Datlify</span>
         </Link>
 
         <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">
@@ -140,7 +141,7 @@ export function LandingNav() {
           >
             {resolvedTheme === "dark" ? <Sun size={17} weight="bold" /> : <Moon size={17} weight="bold" />}
           </button>
-          <Link href="/canvas" className="group inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2 text-[13px] font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+          <Link href="/canvas" className="group inline-flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_8px_24px_-10px_rgba(2,132,199,.75)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-sky-600 active:translate-y-0 dark:bg-white dark:text-slate-950 dark:hover:bg-sky-300">
             Launch App
             <ArrowRight size={14} weight="bold" className="transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
