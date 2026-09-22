@@ -9,7 +9,6 @@ import {
   FolderOpen,
   Moon,
   Robot,
-  Rocket,
   SidebarSimple,
   Sun,
   Trash,
@@ -162,27 +161,19 @@ export function Header({
               route === "colab"
                 ? localDl
                   ? "border-sky-500/40 text-sky-500"
-                  : "border-violet-500/40 text-violet-500"
+                  : "border-amber-500/40 text-amber-500"
                 : "border-emerald-500/40 text-emerald-500",
             )}
             title={
               route === "colab"
                 ? localDl
                   ? "PyTorch found on this machine — neural networks train in-app on the local runtime"
-                  : "Deep-learning nodes route to a Colab GPU runtime"
+                  : "Neural networks train in-app, but PyTorch was not detected — run: pip install torch"
                 : "Classic ML trains instantly on CPU"
             }
           >
-            {route === "colab" ? (
-              localDl ? (
-                <Cpu size={10} weight="bold" />
-              ) : (
-                <Rocket size={10} weight="bold" />
-              )
-            ) : (
-              <Cpu size={10} weight="bold" />
-            )}
-            {route === "colab" ? (localDl ? "LOCAL TORCH" : "GPU") : "CPU"}
+            <Cpu size={10} weight="bold" />
+            {route === "colab" ? (localDl ? "LOCAL TORCH" : "TORCH ?") : "CPU"}
           </span>
         </div>
       </div>
@@ -235,9 +226,7 @@ export function Header({
               ? "Training…"
               : hasModel
                 ? route === "colab"
-                  ? localDl
-                    ? "Train In-App"
-                    : "Train on Colab GPU"
+                  ? "Train In-App"
                   : "Train Instantly"
                 : "Add a model node"}
           </span>

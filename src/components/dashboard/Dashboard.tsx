@@ -51,7 +51,7 @@ const TEMPLATES = [
   },
   {
     title: "Deep learning",
-    description: "PyTorch MLP pipeline exported as a ready-to-run Colab notebook.",
+    description: "PyTorch neural nets trained right inside the app — live epochs, no notebooks.",
     icon: Brain,
     gradient: "from-fuchsia-500/20 to-pink-500/20",
     border: "hover:border-fuchsia-500/30",
@@ -138,7 +138,7 @@ export function Dashboard() {
               <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">without code</span>
             </h1>
             <p className="animate-slide-up mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg" style={{ animationDelay: "120ms" }}>
-              Wire datasets, preprocessing, and models on a visual canvas. Train instantly, generate real Python for Colab, then let AI wrap your model in a web app.
+              Wire datasets, preprocessing, and models on a visual canvas. Train instantly — classic ML and neural networks alike — generate real Python, then let AI wrap your model in a web app.
             </p>
             <div className="animate-slide-up mt-8 flex flex-wrap items-center gap-4" style={{ animationDelay: "180ms" }}>
               <TransitionLink href="/canvas" label="Opening canvas" className="inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 px-6 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 active:scale-[0.97]">

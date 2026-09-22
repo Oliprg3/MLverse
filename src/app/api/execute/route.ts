@@ -203,7 +203,7 @@ async function streamTs(graph: GraphPayload, send: (obj: unknown) => void, probe
     const isDeepLearning = graph.nodes.some((node) => node.category === "deep_learning");
     const probeNote = probe && !probe.available && probe.reason ? ` Machine check failed: ${probe.reason}.` : "";
     const message = isDeepLearning
-      ? "Deep-learning training requires the Python runtime with PyTorch. Install it on this machine (pip install torch) to train in-app on local CPU — or open the editable notebook in Colab to train on GPU."
+      ? "Deep-learning training runs in-app on this machine via PyTorch. Install it (pip install torch) and press Train again — everything happens inside the app, no external notebook needed."
       : `The selected model (${model?.label ?? "classical ML"}) requires the Python scikit-learn engine.${probeNote} Install backend requirements on this machine and restart the app.`;
     const error = {
       route: "instant",

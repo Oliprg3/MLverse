@@ -64,9 +64,18 @@ const DEFAULT_EDGE_OPTIONS = {
 /** Opens a fresh Colab notebook (within a user gesture to avoid popup blockers). */
 const COLAB_CREATE_URL = "https://colab.research.google.com/#create=true";
 
-/** Deep-learning node types the local PyTorch engine can train in-app.
- *  Everything else (HF Transformer, GAN, Autoencoder) stays on the Colab path. */
-const LOCAL_DL_TYPES = ["dl:pytorch_mlp", "dl:cnn", "dl:lstm", "dl:gru", "dl:tabular_transformer"];
+/** Every deep-learning node type trains in-app via the local PyTorch engine —
+ *  the Colab redirect is gone; Colab remains only as an explicit code export. */
+const LOCAL_DL_TYPES = [
+  "dl:pytorch_mlp",
+  "dl:cnn",
+  "dl:lstm",
+  "dl:gru",
+  "dl:tabular_transformer",
+  "dl:transformer",
+  "dl:autoencoder",
+  "dl:gan",
+];
 
 /**
  * Copy text to the clipboard SYNCHRONOUSLY (within a user gesture).
@@ -197,9 +206,12 @@ function Canvas() {
       if (!project) return;
       setNodes(project.nodes as CanvasFlowNode[]);
       setEdges(project.edges);
-      setSavedProjectAvailable(true);
+      // Defer setState past the effect body to avoid cascading renders.
+      window.setTimeout(() => {
+        setSavedProjectAvailable(true);
+        fitView({ padding: 0.28, duration: 450 });
+      }, 0);
       notify("Loaded your AI Architect blueprint");
-      window.setTimeout(() => fitView({ padding: 0.28, duration: 450 }), 0);
       // Clean the query param so a refresh doesn't reload over user edits.
       window.history.replaceState(null, "", "/canvas");
     } catch {
@@ -454,30 +466,27 @@ function Canvas() {
     setDrawerOpen(true);
     lastLineAt.current = null;
     stampStatuses("running");
-    pushLine(`Dispatching ${payload.nodes.length}-step ${route === "colab" ? "Colab GPU" : "instant CPU"} pipeline…`, "system");
+    pushLine(`Dispatching ${payload.nodes.length}-step ${route === "colab" ? "in-app PyTorch" : "instant CPU"} pipeline…`, "system");
 
-    // Deep-learning route: when the server has PyTorch AND every DL node is one
-    // the local engine can train (MLP / CNN / LSTM / GRU / tabular transformer),
-    // the neural network trains in-app and the NDJSON stream carries live epoch
-    // events — no Colab hand-off. Otherwise fall back to the notebook path:
-    // open Colab + copy the code SYNCHRONOUSLY (before any await, so the click
-    // gesture survives and clipboard/window.open both work).
+    // Deep-learning route: everything trains in-app — the backend is
+    // authoritative. If PyTorch is missing it returns a friendly in-app error
+    // (pip install torch) instead of redirecting to Colab. We still refresh the
+    // probe so the header badge reflects reality, but the probe never gates the
+    // run (it could still be in flight on the first click).
     const dlTypes = nodes.map((n) => n.data.type).filter((t) => t.startsWith("dl:"));
-    const locallyTrainable =
-      serverTorch === true &&
-      dlTypes.length > 0 &&
-      dlTypes.every((t) => LOCAL_DL_TYPES.includes(t));
-    if (route === "colab" && !locallyTrainable) {
-      const gen = handOffToColab(payload);
-      setGeneratedCode(gen); // seed the code viewer with the same script
+    if (route === "colab") {
+      if (serverTorch !== true) {
+        probeServerEngine()
+          .then((info) => setServerTorch(info.torch))
+          .catch(() => setServerTorch(false));
+      }
+      const allLocal = dlTypes.length > 0 && dlTypes.every((t) => LOCAL_DL_TYPES.includes(t));
       pushLine(
-        serverTorch === false
-          ? "Training code copied, paste it into the opened Colab notebook."
-          : "This model needs the Colab GPU runtime (HF/BERT, GAN or autoencoder) — training code copied to the opened notebook.",
+        allLocal
+          ? "Deep-learning graph detected — training in-app with the local PyTorch engine (no Colab, no tab switch)…"
+          : "Deep-learning graph detected — sending it to the local PyTorch engine…",
         "system",
       );
-    } else if (route === "colab") {
-      pushLine("Server has PyTorch — training the deep-learning graph in-app on the local runtime…", "system");
     }
 
     try {
@@ -558,7 +567,7 @@ function Canvas() {
     } finally {
       setLoading(false);
     }
-  }, [blockingErrors, buildPayload, hasModel, notify, pushLine, route, handOffToColab, stampStatuses]);
+  }, [blockingErrors, buildPayload, hasModel, nodes, notify, pushLine, route, serverTorch, stampStatuses]);
 
   /** Re-copy + re-open from the drawer button (fresh click gesture). */
   const handleOpenColab = useCallback((editedCode?: string) => {

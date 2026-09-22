@@ -12,7 +12,7 @@ const FAQS = [
   },
   {
     q: "How does the hybrid engine work?",
-    a: "Small and medium datasets train instantly inside your browser using our compiled in-process engine — no queue, no cold start. When a dataset or model needs serious compute, the same canvas transparently dispatches the run to a Colab GPU session with one toggle.",
+    a: "Small and medium datasets train instantly inside your browser using our compiled in-process engine — no queue, no cold start. Deep-learning models train in-app on the local PyTorch engine (CPU or GPU when available), streaming live epochs to the console — you never leave the canvas.",
   },
   {
     q: "What models can I train?",

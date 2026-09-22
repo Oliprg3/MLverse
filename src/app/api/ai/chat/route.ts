@@ -96,7 +96,7 @@ const PLANS: Record<string, TaskPlan> = {
     },
   },
   vision: {
-    reply: "For image data I wired an image dataset straight into a ResNet-style CNN — convolutional models are the right inductive bias for pixels. This pipeline routes to a Colab GPU runtime for training.",
+    reply: "For image data I wired an image dataset straight into a CNN — convolutional models are the right inductive bias for pixels. It trains right here in the app on the local PyTorch engine.",
     blueprint: {
       nodes: [
         { type: "data:images", reason: "Upload images grouped by class folders; they are vectorized automatically." },
@@ -106,27 +106,27 @@ const PLANS: Record<string, TaskPlan> = {
       suggestions: [
         { algorithm: "CNN (ResNet)", type: "dl:cnn", score: 0.93, reason: "Convolutions capture spatial structure; ResNet skip connections train deep stacks reliably." },
         { algorithm: "PyTorch MLP", type: "dl:pytorch_mlp", score: 0.6, reason: "Lighter alternative for tiny images or flattened pixel inputs." },
-        { algorithm: "HF Transformer", type: "dl:transformer", score: 0.55, reason: "Vision transformers shine with very large labeled datasets." },
+        { algorithm: "Transformer Encoder", type: "dl:transformer", score: 0.55, reason: "Attention baseline that also trains in-app on local PyTorch." },
       ],
     },
   },
   nlp: {
-    reply: "For text I attached a Hugging Face transformer fine-tuning node — pre-trained language models dominate text classification. Training runs on a Colab GPU.",
+    reply: "For text I attached a transformer encoder node — attention over feature tokens is a strong text baseline. It trains in-app on the local PyTorch engine, no notebook needed.",
     blueprint: {
       nodes: [
         { type: "data:csv", reason: "Text corpus with a label column, loaded from your own CSV." },
-        { type: "dl:transformer", reason: "Fine-tunes BERT with the HF Trainer — state of the art for text." },
+        { type: "dl:transformer", reason: "Transformer encoder over feature tokens — trains in-app." },
         { type: "viz:metrics", reason: "Evaluation metrics to validate the fine-tune." },
       ],
       suggestions: [
-        { algorithm: "HF Transformer", type: "dl:transformer", score: 0.9, reason: "Pre-trained contextual embeddings transfer to almost any text task." },
+        { algorithm: "Transformer Encoder", type: "dl:transformer", score: 0.9, reason: "Self-attention over feature tokens trains in-app in seconds." },
         { algorithm: "PyTorch MLP", type: "dl:pytorch_mlp", score: 0.55, reason: "Baseline over bag-of-words or embedding-average features." },
         { algorithm: "Logistic Regression", type: "ml:logistic", score: 0.5, reason: "Surprisingly strong TF-IDF baseline that trains in seconds." },
       ],
     },
   },
   timeseries: {
-    reply: "For sequence data I scaled the inputs and used an LSTM — recurrent models keep temporal order, which feed-forward models discard. Training routes to a Colab GPU.",
+    reply: "For sequence data I scaled the inputs and used an LSTM — recurrent models keep temporal order, which feed-forward models discard. It trains in-app on the local PyTorch engine.",
     blueprint: {
       nodes: [
         { type: "data:csv", reason: "Your sequential observations with a target column." },
@@ -189,6 +189,17 @@ function cleanBlueprint(value: unknown, prompt: string): Blueprint {
 
 /* ── Route handler ──────────────────────────────────────────────────────── */
 
+function isCasualMessage(prompt: string): boolean {
+  return /^(hi|hello|hey|hiya|yo|good morning|good afternoon|good evening|thanks|thank you|help|what can you do)\s*[!.?]*$/i.test(prompt.trim());
+}
+
+function casualReply(prompt: string): string {
+  const normalized = prompt.trim().toLowerCase();
+  if (normalized.startsWith("thank")) return "You’re welcome. When you’re ready, describe the data or prediction problem you want to solve.";
+  if (normalized === "help" || normalized.startsWith("what can you do")) return "I can turn an ML goal into a canvas-ready pipeline. Try something like “predict customer churn” or “forecast weekly demand.”";
+  return "Hi — I’m the Datlify Model Architect. Tell me what you want to predict, classify, group, or forecast, and I’ll map it into a pipeline.";
+}
+
 export async function POST(request: NextRequest) {
   let body: { message?: string; history?: ChatMessage[]; graph?: GraphSummary };
   try {
@@ -198,6 +209,9 @@ export async function POST(request: NextRequest) {
   }
   const prompt = body.message?.trim();
   if (!prompt) return NextResponse.json({ error: "A message is required." }, { status: 400 });
+  if (isCasualMessage(prompt)) {
+    return NextResponse.json({ reply: casualReply(prompt), provider: "local", casual: true });
+  }
 
   const local = localPlan(prompt);
   const apiKey = process.env.OPENCODE_ZEN_API_KEY;

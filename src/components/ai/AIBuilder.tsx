@@ -42,10 +42,10 @@ const AGENT_STEPS = [
 ];
 
 const SUGGESTION_CHIPS = [
-  "Build a classification pipeline",
-  "Suggest algorithms for my dataset",
-  "Design a deep learning pipeline for images",
-  "Compare boosting vs SVM",
+  "Predict customer churn",
+  "Forecast weekly demand",
+  "Classify support tickets",
+  "Detect defects in product photos",
 ];
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
@@ -247,6 +247,14 @@ export function AIBuilder() {
   const graphSummary = useMemo(() => toGraphSummary(project), [project]);
   const hasModel = graphSummary.nodes.some((node) => node.category === "classic_ml" || node.category === "deep_learning");
 
+  const isCasualMessage = (value: string) => /^(hi|hello|hey|hiya|yo|good morning|good afternoon|good evening|thanks|thank you|help|what can you do)\s*[!.?]*$/i.test(value.trim());
+  const casualReply = (value: string) => {
+    const normalized = value.trim().toLowerCase();
+    if (normalized.startsWith("thank")) return "You’re welcome. When you’re ready, describe the data or prediction problem you want to solve.";
+    if (normalized === "help" || normalized.startsWith("what can you do")) return "I can turn an ML goal into a canvas-ready pipeline. Try “predict customer churn” or “forecast weekly demand.”";
+    return "Hi — I’m the Datlify Model Architect. Tell me what you want to predict, classify, group, or forecast, and I’ll map it into a pipeline.";
+  };
+
   /** Reveal the reply progressively so responses feel streamed. */
   const typewrite = useCallback((full: string) => {
     if (typeTimerRef.current) window.clearInterval(typeTimerRef.current);
@@ -273,18 +281,28 @@ export function AIBuilder() {
     const next = [...messages, { role: "user" as const, content: message }];
     setMessages(next);
     setDraft("");
-    setLoading(true);
     setApplied(false);
-    setNotice("The architect is designing your pipeline…");
+    if (isCasualMessage(message)) {
+      setMessages([...next, { role: "assistant" as const, content: casualReply(message) }]);
+      setNotice("Ready for your ML brief");
+      return;
+    }
+    setLoading(true);
+    setNotice("Designing your pipeline…");
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, history: next, graph: graphSummary }),
       });
-      const result = (await response.json()) as { reply?: string; blueprint?: Blueprint; error?: string };
+      const result = (await response.json()) as { reply?: string; blueprint?: Blueprint; error?: string; casual?: boolean };
       if (!response.ok) throw new Error(result.error ?? "The AI architect could not respond.");
       const reply = result.reply ?? "I designed a pipeline for you.";
+      if (result.casual) {
+        setMessages((current) => [...current, { role: "assistant", content: reply }]);
+        setNotice("Ready for your ML brief");
+        return;
+      }
       if (result.blueprint && Array.isArray(result.blueprint.nodes) && result.blueprint.nodes.length > 0) {
         setBlueprint(result.blueprint);
         setBlueprintLabel(message.length > 42 ? `${message.slice(0, 42)}…` : message);
@@ -368,9 +386,12 @@ export function AIBuilder() {
         {/* Chat column */}
         <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border/70 bg-surface/75 lg:w-[420px] lg:rounded-2xl lg:border lg:shadow-sm">
           <div className="border-b border-border/70 bg-primary/[0.03] px-6 py-6 lg:rounded-t-2xl">
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Design session</div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Design session</div>
+              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Ready</span>
+            </div>
             <p className="mt-2 text-xs leading-6 text-muted">
-              Describe the ML problem you want to solve. The architect proposes canvas-ready model nodes and ranks the algorithms that fit best.
+              Describe the ML problem you want to solve. I’ll map it into a canvas-ready plan when you ask.
             </p>
           </div>
 
@@ -420,6 +441,10 @@ export function AIBuilder() {
           </div>
 
           <div className="border-t border-border/70 bg-surface/45 p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2">Start with an example</span>
+              <span className="text-[10px] text-muted-2">No setup required</span>
+            </div>
             <div className="mb-3 flex flex-wrap gap-1.5">
               {SUGGESTION_CHIPS.map((suggestion) => (
                 <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-left text-[11px] font-medium text-muted transition-all hover:border-border-strong hover:text-foreground disabled:opacity-50">
@@ -520,13 +545,14 @@ export function AIBuilder() {
               </div>
             ) : (
               <div className="flex h-full items-center justify-center px-5">
-                <div className="animate-builder-panel max-w-md rounded-3xl border border-border/70 bg-card/90 p-10 text-center shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+                <div className="animate-builder-panel max-w-lg rounded-3xl border border-border/70 bg-card/90 p-10 text-center shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-surface text-primary">
                     <Robot size={24} weight="duotone" />
                   </div>
-                  <h2 className="mt-6 text-lg font-bold tracking-tight">No blueprint yet</h2>
-                  <p className="mt-2.5 text-sm leading-7 text-muted">
-                    Describe your ML task in the chat — the architect will propose canvas-ready model nodes and rank the best algorithms for the job.
+                  <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-primary">Workspace ready</p>
+                  <h2 className="mt-3 text-2xl font-bold tracking-tight">What are you building?</h2>
+                  <p className="mt-3 text-sm leading-7 text-muted">
+                    Start with a plain-English goal. Datlify will turn it into a pipeline you can review, edit, and run on the canvas.
                   </p>
                   <div className="mt-6 grid gap-2 text-left">
                     {SUGGESTION_CHIPS.map((chip) => (

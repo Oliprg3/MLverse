@@ -21,10 +21,10 @@ interface GuideModalProps {
 const STEPS = [
   { icon: Database, title: "1. Add a data source", body: "Drag a node from the left panel: a built-in dataset, your own CSV, or an image folder (sub-folders = classes)." },
   { icon: SlidersHorizontal, title: "2. Preprocess", body: "Optionally chain a Scaler, PCA, Polynomial Features, or Imputer between your data and the model." },
-  { icon: Brain, title: "3. Choose a model", body: "Pick from the full scikit-learn suite (trains instantly on the CPU) or a PyTorch architecture (runs on Colab GPU)." },
+  { icon: Brain, title: "3. Choose a model", body: "Pick from the full scikit-learn suite (trains instantly on the CPU) or a PyTorch architecture (trains in-app on your machine)." },
   { icon: CursorClick, title: "4. Wire the graph", body: "Drag from a node's right handle to the next node's left handle to connect the pipeline." },
   { icon: Gear, title: "5. Configure", body: "Click any node to open the inspector and tune hyperparameters or upload data." },
-  { icon: Play, title: "6. Run", body: "Hit the action button. Classic ML returns live Plotly dashboards; deep learning exports a Colab notebook." },
+  { icon: Play, title: "6. Run", body: "Hit the action button. Classic ML and deep learning both train in-app and return live Plotly dashboards — no external notebooks." },
   { icon: Code, title: "7. Export", body: "Open Code to view, copy, or download the real Python generated from your canvas." },
 ];
 
@@ -40,7 +40,7 @@ export function GuideModal({ open, onClose }: GuideModalProps) {
           <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
             Your canvas is read as a directed graph. If it contains only <span className="font-medium text-foreground">Classic ML</span> nodes it
             trains instantly in-app and returns interactive Plotly charts. Add <span className="font-medium text-foreground">Deep Learning</span>
-            nodes and it switches to the Colab route, generating a GPU-ready notebook.
+            nodes and the local PyTorch engine trains them in-app too, streaming live epochs to the console.
           </p>
         </div>
 

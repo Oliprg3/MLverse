@@ -11,7 +11,7 @@ export const CATEGORIES: Record<NodeCategory, CategoryConfig> = {
   data: { id: "data", label: "Data Sources", accent: "#10b981", description: "Datasets that flow into the pipeline." },
   preprocessing: { id: "preprocessing", label: "Preprocessing", accent: "#f59e0b", description: "Transform & clean features." },
   classic_ml: { id: "classic_ml", label: "Classic ML", accent: "#0ea5e9", description: "The full scikit-learn suite on instant CPU." },
-  deep_learning: { id: "deep_learning", label: "Deep Learning", accent: "#8b5cf6", description: "PyTorch and Transformers on Colab GPU." },
+  deep_learning: { id: "deep_learning", label: "Deep Learning", accent: "#8b5cf6", description: "PyTorch neural nets trained in-app on your machine." },
   visualization: { id: "visualization", label: "Visualization", accent: "#ec4899", description: "Plotly analytics dashboards." },
 };
 
@@ -147,13 +147,15 @@ export const NODE_PALETTE: PaletteItem[] = [
     { key: "optimizer", label: "Optimizer", value: "adamw", options: ["adamw", "adam", "sgd"] },
     { key: "dropout", label: "Dropout", value: 0.3 },
   ] },
-  { type: "dl:transformer", label: "HF Transformer", description: "Fine-tune BERT with Trainer", category: "deep_learning", icon: "Blocks", accent: CATEGORIES.deep_learning.accent, params: [
-    { key: "model_name", label: "Model", value: "bert-base-uncased" },
-    { key: "epochs", label: "Epochs", value: 3 },
-    { key: "batch_size", label: "Batch size", value: 16 },
-    { key: "lr", label: "Learning rate", value: 0.00002 },
+  { type: "dl:transformer", label: "Transformer Encoder", description: "Attention over feature tokens — trains in-app", category: "deep_learning", icon: "Blocks", accent: CATEGORIES.deep_learning.accent, params: [
+    { key: "epochs", label: "Epochs", value: 20 },
+    { key: "batch_size", label: "Batch size", value: 32 },
+    { key: "lr", label: "Learning rate", value: 0.001 },
+    { key: "embed_dim", label: "Embed dim", value: 64 },
+    { key: "heads", label: "Attention heads", value: 4 },
+    { key: "layers", label: "Layers", value: 2 },
   ] },
-  { type: "dl:cnn", label: "CNN (ResNet)", description: "Convolutional image classifier", category: "deep_learning", icon: "Image", accent: CATEGORIES.deep_learning.accent, params: [
+  { type: "dl:cnn", label: "CNN", description: "Convolutional classifier (images or features) — trains in-app", category: "deep_learning", icon: "Image", accent: CATEGORIES.deep_learning.accent, params: [
     { key: "epochs", label: "Epochs", value: 20 },
     { key: "batch_size", label: "Batch size", value: 32 },
     { key: "optimizer", label: "Optimizer", value: "adamw", options: ["adamw", "adam", "sgd"] },
@@ -169,12 +171,12 @@ export const NODE_PALETTE: PaletteItem[] = [
     { key: "hidden_size", label: "Hidden size", value: 128 },
     { key: "num_layers", label: "Layers", value: 2 },
   ] },
-  { type: "dl:autoencoder", label: "Autoencoder", description: "Unsupervised representation learning", category: "deep_learning", icon: "Layers", accent: CATEGORIES.deep_learning.accent, params: [
+  { type: "dl:autoencoder", label: "Autoencoder", description: "Reconstruction pretraining + classifier head — trains in-app", category: "deep_learning", icon: "Layers", accent: CATEGORIES.deep_learning.accent, params: [
     { key: "epochs", label: "Epochs", value: 30 },
     { key: "latent_dim", label: "Latent dim", value: 32 },
     { key: "lr", label: "Learning rate", value: 0.001 },
   ] },
-  { type: "dl:gan", label: "GAN", description: "Generative adversarial network", category: "deep_learning", icon: "Orbit", accent: CATEGORIES.deep_learning.accent, params: [
+  { type: "dl:gan", label: "GAN", description: "Generates synthetic samples to boost a classifier — trains in-app", category: "deep_learning", icon: "Orbit", accent: CATEGORIES.deep_learning.accent, params: [
     { key: "epochs", label: "Epochs", value: 50 },
     { key: "latent_dim", label: "Latent dim", value: 100 },
     { key: "lr", label: "Learning rate", value: 0.0002 },

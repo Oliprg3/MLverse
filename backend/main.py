@@ -10,8 +10,8 @@ Endpoints
 * ``GET  /health``   — liveness probe + dependency report.
 * ``POST /execute``  — accepts the canvas graph (DAG) and routes execution to
                        either the instant Scikit-Learn/XGBoost engine or the
-                       Google Colab notebook generator, returning Plotly JSON
-                       or a notebook payload respectively.
+                       in-app PyTorch deep-learning engine, returning Plotly
+                       JSON plus live training events.
 
 Run locally::
 
@@ -33,7 +33,7 @@ import router
 
 app = FastAPI(
     title="Hybrid ML Canvas Engine",
-    description="DAG-aware hybrid router: instant CPU ML or Google Colab GPU notebooks.",
+    description="DAG-aware hybrid router: instant CPU ML or in-app PyTorch deep-learning training.",
     version=router.ENGINE_VERSION,
 )
 

@@ -104,6 +104,32 @@ function PipelineStrip({ steps }: { steps: PipelineStep[] }) {
   );
 }
 
+/** Tiny live sparkline (loss + val accuracy) drawn from streamed epoch lines. */
+function LiveCurve({ loss, acc }: { loss: number[]; acc: number[] }) {
+  const w = 160;
+  const h = 40;
+  const toPts = (values: number[], hi: number) =>
+    values
+      .map((v, i) => `${((i / Math.max(1, values.length - 1)) * w).toFixed(1)},${(h - 3 - (Math.min(v, hi) / hi) * (h - 6)).toFixed(1)}`)
+      .join(" ");
+  const lossHi = Math.max(...loss, 1e-9);
+  return (
+    <div className="rounded-xl border border-border bg-surface p-3">
+      <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-muted">
+        <span>Live training curve</span>
+        <span className="flex items-center gap-3 normal-case">
+          <span className="inline-flex items-center gap-1 text-rose-400"><span className="h-1 w-3 rounded-full bg-rose-400" />loss</span>
+          {acc.length > 1 ? <span className="inline-flex items-center gap-1 text-emerald-400"><span className="h-1 w-3 rounded-full bg-emerald-400" />val acc</span> : null}
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="mt-1.5 h-16 w-full" preserveAspectRatio="none" aria-hidden>
+        {acc.length > 1 ? <polyline points={toPts(acc, 1)} fill="none" stroke="#34d399" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" /> : null}
+        {loss.length > 1 ? <polyline points={toPts(loss, lossHi)} fill="none" stroke="#fb7185" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" /> : null}
+      </svg>
+    </div>
+  );
+}
+
 /** Live training console shown while the stream is running. */
 function LiveConsole({ logs, liveMetrics, running }: { logs: TerminalLine[]; liveMetrics: Record<string, number>; running: boolean }) {
   const epochState = useMemo(() => {
@@ -111,15 +137,26 @@ function LiveConsole({ logs, liveMetrics, running }: { logs: TerminalLine[]; liv
     let total = 0;
     let loss: number | null = null;
     let accuracy: number | null = null;
+    const lossSeries: number[] = [];
+    const accSeries: number[] = [];
     for (const log of logs) {
-      const match = log.text.match(/epoch\s+(\d+)(?:\s*\/\s*(\d+))?.*loss[=:]\s*([\d.]+).*?(?:val_acc|acc)[=:]\s*([\d.]+)/i);
-      if (!match) continue;
-      current = Number(match[1]);
-      total = Number(match[2] ?? total);
-      loss = Number(match[3]);
-      accuracy = Number(match[4]);
+      const ep = log.text.match(/epoch\s+(\d+)(?:\s*\/\s*(\d+))?/i);
+      if (!ep) continue;
+      current = Number(ep[1]);
+      total = Number(ep[2] ?? total);
+      // Matches loss=, g_loss=, recon_loss= (first loss-ish value on the line).
+      const lossM = log.text.match(/loss[=:]\s*([\d.]+)/i);
+      const accM = log.text.match(/(?:val_acc|acc)[=:]\s*([\d.]+)/i);
+      if (lossM) {
+        loss = Number(lossM[1]);
+        lossSeries.push(loss);
+      }
+      if (accM) {
+        accuracy = Number(accM[1]);
+        accSeries.push(accuracy);
+      }
     }
-    return { current, total, loss, accuracy };
+    return { current, total, loss, accuracy, lossSeries, accSeries };
   }, [logs]);
 
   return (
@@ -133,6 +170,7 @@ function LiveConsole({ logs, liveMetrics, running }: { logs: TerminalLine[]; liv
           <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full bg-sky-400 transition-all duration-500" style={{ width: `${epochState.total ? Math.min(100, (epochState.current / epochState.total) * 100) : 100}%` }} /></div>
         </div>
       ) : null}
+      {epochState.lossSeries.length > 1 ? <LiveCurve loss={epochState.lossSeries} acc={epochState.accSeries} /> : null}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
         {METRIC_META.map((m) => (
           <MetricCard key={m.key} label={m.label} value={m.key in liveMetrics ? liveMetrics[m.key] : null} />
@@ -476,7 +514,7 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
               <div className="flex items-center gap-2">
                 {isError ? <XCircle size={15} weight="fill" className="text-rose-400" /> : loading ? <CircleNotch size={16} className="animate-spin text-muted-2" /> : <CheckCircle size={16} weight="fill" className="text-emerald-400" />}
                 <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                  {loading ? (route === "colab" ? "Generating Colab notebook…" : "Training model…") : isError ? "Execution error" : route === "colab" ? "Colab Notebook Ready" : "Training Results & Dashboards"}
+                  {loading ? (route === "colab" ? "Preparing notebook export…" : "Training model…") : isError ? "Execution error" : route === "colab" ? "Notebook Export Ready" : "Training Results & Dashboards"}
                 </h3>
               </div>
               {successMeta ? <p className="font-mono text-[11px] text-muted">{successMeta}</p> : null}

@@ -13,8 +13,10 @@ Responsibilities
 2. Validate it is a DAG (raise on cycles).
 3. Topologically order the nodes so preprocessing steps are sequenced.
 4. Apply the Hybrid Execution Router rule:
-     * any deep-learning node  → ``notebook_builder`` (Colab path)
-     * only basic ML nodes      → ``basic_ml_engine`` (instant path)
+     * any deep-learning node  → ``deep_learning_engine`` (in-app PyTorch
+       training on the local CPU/GPU); the Colab notebook exporter is only
+       used when the caller explicitly opts in via ``meta.export_notebook``
+     * only basic ML nodes     → ``basic_ml_engine`` (instant path)
 5. Return a JSON-serialisable response.
 """
 
@@ -128,29 +130,35 @@ def dispatch(payload: Dict[str, Any], emit: Any = None) -> Dict[str, Any]:
 
         route = resolve_route(ordered_nodes)
         if route == "colab":
-            # Local PyTorch path: when torch is installed AND every DL node is one
-            # the engine can train (MLP / CNN / LSTM / GRU / tabular transformer),
-            # train in-app on the local CPU/GPU instead of handing off to Colab.
+            # Local PyTorch path: every deep-learning node type trains in-app
+            # on the local CPU/GPU and streams live epoch events to the UI.
             if deep_learning_engine is not None and deep_learning_engine.can_train_locally(ordered_nodes):
                 _emit({"type": "step", "message": "PyTorch found on this machine — training the neural network in-app (no Colab needed)…"})
                 result = _jsonable(deep_learning_engine.execute(ordered_nodes, emit=_emit))
                 _emit({"type": "result", "data": result})
                 return result
+            # Explicit opt-in only: the caller asked for a notebook export.
+            if (payload.get("meta") or {}).get("export_notebook"):
+                _emit({"type": "step", "message": "Generating Jupyter notebook export…"})
+                _, meta = notebook_builder.build_notebook(ordered_nodes)
+                response: Dict[str, Any] = {"route": "colab", "status": "success", "engine": ENGINE_VERSION}
+                response.update(meta)
+                result = _jsonable(response)
+                _emit({ "type": "result", "data": result})
+                return result
+            # No silent Colab hand-off: explain how to enable in-app training.
             dl_types = sorted({n.get("type") for n in ordered_nodes if n.get("category") == COLAB_CATEGORY})
             _emit({
                 "type": "step",
-                "message": (
-                    "Deep-learning graphs without a local PyTorch engine hand off to Colab. "
-                    "Install it (pip install torch) to train these nodes in-app: " + ", ".join(dl_types)
-                ),
+                "message": "Deep-learning nodes train in-app with PyTorch, which is not installed on this machine.",
             })
-            _emit({"type": "step", "message": "Generating Google Colab notebook…"})
-            _, meta = notebook_builder.build_notebook(ordered_nodes)
-            response: Dict[str, Any] = {"route": "colab", "status": "success", "engine": ENGINE_VERSION}
-            response.update(meta)
-            result = _jsonable(response)
-            _emit({"type": "result", "data": result})
-            return result
+            r = _err(
+                "Deep-learning nodes (" + ", ".join(dl_types) + ") train inside the app via PyTorch, "
+                "but PyTorch is not installed on this machine. Run `pip install torch` and press Train again — "
+                "no external notebook is needed."
+            )
+            _emit({"type": "result", "data": r})
+            return r
 
         result = _jsonable(basic_ml_engine.execute(ordered_nodes, emit=_emit))
         _emit({"type": "result", "data": result})

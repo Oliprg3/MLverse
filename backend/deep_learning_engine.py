@@ -8,16 +8,23 @@ When the host machine has PyTorch installed, deep-learning graphs no longer
 hand off to Google Colab — they train right inside the app on the local CPU
 (or GPU if torch.cuda is available) and stream live epoch events to the UI.
 
-Locally trainable node types
-----------------------------
+Locally trainable node types — every deep-learning node trains in-app
+---------------------------------------------------------------------
   * dl:pytorch_mlp          — multi-layer perceptron (tabular)
   * dl:cnn                  — small conv net (image datasets → Conv2d,
                               tabular → Conv1d over the feature vector)
   * dl:lstm / dl:gru        — recurrent sequence classifiers
   * dl:tabular_transformer  — feature-tokenising transformer (FT-Transformer)
+  * dl:transformer          — TransformerEncoder classifier over feature
+                              tokens (trained from scratch locally — no
+                              Hugging Face download required)
+  * dl:autoencoder          — reconstruction-pretrained encoder + linear
+                              classifier head, fine-tuned end-to-end
+  * dl:gan                  — conditional GAN that synthesises extra training
+                              samples, then an MLP classifier on real+synthetic
 
-Still Colab-only (need the HF stack / long GPU training):
-  * dl:transformer (HF BERT fine-tune), dl:autoencoder, dl:gan
+Nothing hands off to Google Colab anymore: when PyTorch is importable every
+deep-learning graph trains in-app and streams live epoch events to the UI.
 
 Everything returned is JSON-serialisable and shaped exactly like the
 ``basic_ml_engine`` instant response, so the existing ResultsDrawer renders
@@ -64,13 +71,22 @@ except Exception:  # pragma: no cover
     torch = None  # type: ignore
     nn = None  # type: ignore
 
-ENGINE_VERSION = "pytorch-local-v1.0.0"
+ENGINE_VERSION = "pytorch-local-v2.0.0"
 
-# Node types this engine can train without a notebook hand-off.
-LOCALLY_TRAINABLE = {"dl:pytorch_mlp", "dl:cnn", "dl:lstm", "dl:gru", "dl:tabular_transformer"}
+# Node types this engine can train without a notebook hand-off — all of them.
+LOCALLY_TRAINABLE = {
+    "dl:pytorch_mlp",
+    "dl:cnn",
+    "dl:lstm",
+    "dl:gru",
+    "dl:tabular_transformer",
+    "dl:transformer",
+    "dl:autoencoder",
+    "dl:gan",
+}
 
 # Epoch caps for CPU runs so a click never turns into minutes of silence.
-CPU_EPOCH_CAPS = {"dl:cnn": 12}
+CPU_EPOCH_CAPS = {"dl:cnn": 12, "dl:gan": 15, "dl:autoencoder": 20, "dl:transformer": 15}
 DEFAULT_CPU_EPOCH_CAP = 25
 
 
@@ -80,7 +96,7 @@ def torch_available() -> bool:
 
 def can_train_locally(ordered_nodes: List[Dict[str, Any]]) -> bool:
     """True when torch is importable AND every deep-learning node is one the
-    local engine knows how to train. Anything else keeps the Colab notebook path."""
+    local engine knows how to train (all of them, as of pytorch-local-v2)."""
     if torch is None:
         return False
     dl_nodes = [n for n in ordered_nodes if n.get("category") == "deep_learning"]
@@ -104,7 +120,20 @@ def _build_mlp(n_features: int, n_classes: int, params: Dict[str, Any]) -> tuple
 
 
 def _build_cnn(n_features: int, n_classes: int, params: Dict[str, Any], image_shape: tuple | None):
-    """Conv2d when we have real image geometry, else Conv1d over the feature vector."""
+    """Conv2d when we have real image geometry, else Conv1d over the feature vector.
+
+    The training loop feeds flat ``(B, F)`` tensors, so the net is wrapped in a
+    reshaping module that restores the conv geometry on every forward pass."""
+
+    class ConvNet(nn.Module):
+        def __init__(self, core, shape):
+            super().__init__()
+            self.core = core
+            self.shape = shape
+
+        def forward(self, x):  # x: (B, F)
+            return self.core(x.reshape(x.shape[0], *self.shape))
+
     if image_shape:
         c, h, w = image_shape
         chans = 16
@@ -117,7 +146,7 @@ def _build_cnn(n_features: int, n_classes: int, params: Dict[str, Any], image_sh
             dummy = torch.zeros(1, c, h, w)
             flat = net(dummy).shape[1]
         net.add_module("fc", nn.Linear(flat, n_classes))
-        return net, f"CNN (2×Conv2d, {chans}/{chans * 2}ch, {h}×{w})"
+        return ConvNet(net, (c, h, w)), f"CNN (2×Conv2d, {chans}/{chans * 2}ch, {h}×{w})"
     net = nn.Sequential(
         nn.Conv1d(1, 16, kernel_size=3, padding=1), nn.ReLU(), nn.MaxPool1d(2),
         nn.Conv1d(16, 32, kernel_size=3, padding=1), nn.ReLU(), nn.AdaptiveAvgPool1d(8),
@@ -125,7 +154,7 @@ def _build_cnn(n_features: int, n_classes: int, params: Dict[str, Any], image_sh
         nn.Linear(32 * 8, 64), nn.ReLU(),
         nn.Linear(64, n_classes),
     )
-    return net, "CNN (2×Conv1d over features)"
+    return ConvNet(net, (1, n_features)), "CNN (2×Conv1d over features)"
 
 
 def _build_rnn(n_features: int, n_classes: int, params: Dict[str, Any], kind: str):
@@ -180,6 +209,156 @@ def _build_tabular_transformer(n_features: int, n_classes: int, params: Dict[str
     return FTNet(), f"Tabular Transformer (d={embed_dim}, h={heads}, L={layers})"
 
 
+def _build_transformer(n_features: int, n_classes: int, params: Dict[str, Any]):
+    """Local stand-in for the old HF BERT node: a TransformerEncoder trained
+    from scratch on feature tokens. No model download, trains in-app."""
+    merged = {
+        "embed_dim": int(params.get("embed_dim", 64) or 64),
+        "heads": int(params.get("heads", 4) or 4),
+        "layers": int(params.get("layers", 2) or 2),
+    }
+    model, _ = _build_tabular_transformer(n_features, n_classes, merged)
+    return model, f"Transformer Encoder (d={merged['embed_dim']}, h={merged['heads']}, L={merged['layers']}, in-app)"
+
+
+def _build_autoencoder(n_features: int, n_classes: int, params: Dict[str, Any]):
+    """Encoder → latent → decoder for reconstruction pretraining; a linear head
+    on the latent code turns it into a classifier for fine-tuning."""
+    latent = int(params.get("latent_dim", 32) or 32)
+    latent = max(2, min(latent, max(2, n_features * 2)))
+    hidden = max(32, latent * 2)
+
+    class Autoencoder(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.encoder = nn.Sequential(
+                nn.Linear(n_features, hidden), nn.ReLU(),
+                nn.Linear(hidden, latent), nn.ReLU(),
+            )
+            self.decoder = nn.Sequential(
+                nn.Linear(latent, hidden), nn.ReLU(),
+                nn.Linear(hidden, n_features),
+            )
+
+        def forward(self, x):
+            return self.decoder(self.encoder(x))
+
+    class AEClassifier(nn.Module):
+        def __init__(self, encoder):
+            super().__init__()
+            self.encoder = encoder
+            self.head = nn.Linear(latent, n_classes)
+
+        def forward(self, x):
+            return self.head(self.encoder(x))
+
+    ae = Autoencoder()
+    return ae, AEClassifier(ae.encoder), f"Autoencoder (latent={latent}) + linear head"
+
+
+def _gan_augment(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    n_classes: int,
+    params: Dict[str, Any],
+    device: Any,
+    emit: Any,
+) -> tuple:
+    """Train a small conditional GAN on the (scaled) feature matrix and return
+    synthetic ``(X_syn, y_syn)`` samples, class-balanced, for augmentation."""
+    n_features = int(X_train.shape[1])
+    latent = max(8, min(int(params.get("latent_dim", 100) or 100), 128))
+    lr = float(params.get("lr", 0.0002) or 0.0002)
+    epochs = int(params.get("epochs", 50) or 50)
+    if device.type != "cuda":
+        epochs = min(epochs, CPU_EPOCH_CAPS["dl:gan"])
+    epochs = max(5, epochs)
+    batch_size = max(16, min(64, X_train.shape[0]))
+    cond = n_classes
+
+    class Generator(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.net = nn.Sequential(
+                nn.Linear(latent + cond, 128), nn.ReLU(),
+                nn.Linear(128, 128), nn.ReLU(),
+                nn.Linear(128, n_features),
+            )
+
+        def forward(self, z, oh):
+            return self.net(torch.cat([z, oh], dim=1))
+
+    class Discriminator(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.net = nn.Sequential(
+                nn.Linear(n_features + cond, 128), nn.ReLU(),
+                nn.Linear(128, 64), nn.ReLU(),
+                nn.Linear(64, 1),
+            )
+
+        def forward(self, x, oh):
+            return self.net(torch.cat([x, oh], dim=1)).squeeze(-1)
+
+    gen = Generator().to(device)
+    disc = Discriminator().to(device)
+    opt_g = torch.optim.Adam(gen.parameters(), lr=lr, betas=(0.5, 0.999))
+    opt_d = torch.optim.Adam(disc.parameters(), lr=lr, betas=(0.5, 0.999))
+    bce = nn.BCEWithLogitsLoss()
+
+    X_t = torch.from_numpy(X_train).to(device)
+    y_t = torch.from_numpy(y_train).to(device)
+    rng = np.random.default_rng(7)
+    n_train = X_t.shape[0]
+
+    emit({"type": "step", "message": f"Training conditional GAN (latent={latent}) for {epochs} epochs on {device.type.upper()}…"})
+    for epoch in range(1, epochs + 1):
+        perm = rng.permutation(n_train)
+        g_tot = d_tot = 0.0
+        batches = 0
+        for i in range(0, n_train, batch_size):
+            idx = perm[i : i + batch_size]
+            xb, yb = X_t[idx], y_t[idx]
+            b = xb.shape[0]
+            oh = nn.functional.one_hot(yb, cond).float()
+            # — discriminator —
+            z = torch.randn(b, latent, device=device)
+            with torch.no_grad():
+                fake = gen(z, oh)
+            d_real = disc(xb, oh)
+            d_fake = disc(fake, oh)
+            d_loss = 0.5 * (bce(d_real, torch.ones_like(d_real)) + bce(d_fake, torch.zeros_like(d_fake)))
+            opt_d.zero_grad()
+            d_loss.backward()
+            opt_d.step()
+            # — generator —
+            z = torch.randn(b, latent, device=device)
+            g_loss = bce(disc(gen(z, oh), oh), torch.ones(b, device=device))
+            opt_g.zero_grad()
+            g_loss.backward()
+            opt_g.step()
+            g_tot += float(g_loss.item())
+            d_tot += float(d_loss.item())
+            batches += 1
+        emit({"type": "step", "message": f"epoch {epoch}/{epochs} · g_loss={g_tot / max(batches, 1):.4f} · d_loss={d_tot / max(batches, 1):.4f}"})
+
+    # Sample a class-balanced synthetic set the size of the real training set.
+    gen.eval()
+    per_class = max(1, n_train // n_classes)
+    xs, ys = [], []
+    with torch.no_grad():
+        for cls in range(n_classes):
+            z = torch.randn(per_class, latent, device=device)
+            oh = torch.zeros(per_class, cond, device=device)
+            oh[:, cls] = 1.0
+            xs.append(gen(z, oh).cpu().numpy())
+            ys.append(np.full(per_class, cls, dtype=np.int64))
+    X_syn = np.vstack(xs).astype(np.float32)
+    y_syn = np.concatenate(ys)
+    emit({"type": "step", "message": f"GAN generated {X_syn.shape[0]} synthetic samples ({per_class}/class) — augmenting the training set."})
+    return X_syn, y_syn
+
+
 # ── Execution ────────────────────────────────────────────────────────────────
 
 def execute(nodes: List[Dict[str, Any]], emit: Any = None) -> Dict[str, Any]:
@@ -189,7 +368,7 @@ def execute(nodes: List[Dict[str, Any]], emit: Any = None) -> Dict[str, Any]:
         return ExecutionResult(
             status="error",
             engine=ENGINE_VERSION,
-            error="PyTorch is not installed on this machine. pip install torch, then retry — or use the Colab notebook.",
+            error="PyTorch is not installed on this machine. Run `pip install torch` and press Train again — deep-learning graphs train in-app, no notebook hand-off.",
             timing={"total_seconds": time.perf_counter() - start},
         ).to_dict()
     try:
@@ -260,18 +439,33 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any) -> Exec
         if side * side == X.shape[1] and side >= 8:
             image_shape = (1, side, side)
 
-    if model_type == "dl:pytorch_mlp":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # GAN: synthesise extra training samples first, then classify the union.
+    if model_type == "dl:gan":
+        X_syn, y_syn = _gan_augment(X_train, y_train, n_classes, params, device, emit)
+        X_train = np.vstack([X_train, X_syn]).astype(np.float32)
+        y_train = np.concatenate([y_train, y_syn]).astype(np.int64)
+        steps_desc.append({"name": "GAN augmentation", "detail": f"+{X_syn.shape[0]} synthetic samples", "kind": "model"})
+
+    ae_net = None
+    if model_type in ("dl:pytorch_mlp", "dl:gan"):
         model, arch_desc = _build_mlp(n_features, n_classes, params)
+        if model_type == "dl:gan":
+            arch_desc = f"GAN-augmented {arch_desc}"
     elif model_type == "dl:cnn":
         model, arch_desc = _build_cnn(n_features, n_classes, params, image_shape)
     elif model_type in ("dl:lstm", "dl:gru"):
         model, arch_desc = _build_rnn(n_features, n_classes, params, model_type.split(":")[1])
     elif model_type == "dl:tabular_transformer":
         model, arch_desc = _build_tabular_transformer(n_features, n_classes, params)
+    elif model_type == "dl:transformer":
+        model, arch_desc = _build_transformer(n_features, n_classes, params)
+    elif model_type == "dl:autoencoder":
+        ae_net, model, arch_desc = _build_autoencoder(n_features, n_classes, params)
     else:
-        raise ValueError(f"{model_type} cannot be trained locally — use the Colab notebook.")
+        raise ValueError(f"{model_type} is not a known deep-learning node type.")
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     total_params = int(sum(p.numel() for p in model.parameters()))
 
@@ -301,6 +495,32 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any) -> Exec
     rng = np.random.default_rng(42)
     torch.manual_seed(42)
     n_train = Xtr_t.shape[0]
+
+    # Autoencoder: reconstruction pretraining before the classification phase.
+    if ae_net is not None:
+        ae_net = ae_net.to(device)
+        ae_epochs = max(3, epochs // 2)
+        opt_ae = torch.optim.Adam(ae_net.parameters(), lr=lr)
+        mse = nn.MSELoss()
+        steps_desc.append({"name": "Autoencoder pretraining", "detail": f"{ae_epochs} reconstruction epochs", "kind": "model"})
+        emit({"type": "step", "message": f"Pretraining autoencoder on reconstruction loss for {ae_epochs} epochs…"})
+        for epoch in range(1, ae_epochs + 1):
+            ae_net.train()
+            perm = rng.permutation(n_train)
+            tot = 0.0
+            n_batches = 0
+            for i in range(0, n_train, batch_size):
+                idx = perm[i : i + batch_size]
+                xb = Xtr_t[idx]
+                opt_ae.zero_grad()
+                recon = mse(ae_net(xb), xb)
+                recon.backward()
+                opt_ae.step()
+                tot += float(recon.item())
+                n_batches += 1
+            emit({"type": "step", "message": f"epoch {epoch}/{ae_epochs} · recon_loss={tot / max(n_batches, 1):.4f}"})
+        emit({"type": "step", "message": "Encoder pretrained — fine-tuning the classifier head on the latent space…"})
+
     hist_loss: List[float] = []
     hist_acc: List[float] = []
     t0 = time.perf_counter()

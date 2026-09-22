@@ -128,7 +128,7 @@ function EngineIllustration() {
           ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
           : "border-neutral-200 text-neutral-400 dark:border-white/10 dark:text-zinc-600"
       }`}>
-        Colab GPU
+        Local PyTorch
       </span>
     </div>
   );
@@ -287,7 +287,7 @@ export function Capabilities() {
             index="/ 03"
             icon={Lightning}
             title="Hybrid execution engine"
-            copy="Small datasets train instantly in-browser on CPU. Heavy lifting scales out to Colab GPUs automatically — one toggle, zero config."
+            copy="Small datasets train instantly in-browser on CPU. Deep learning trains in-app on the local PyTorch engine — live epochs, zero tab-switching."
           >
             <EngineIllustration />
           </Card>

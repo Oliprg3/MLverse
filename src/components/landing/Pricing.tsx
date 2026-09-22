@@ -31,7 +31,7 @@ const TIERS = [
     href: "/canvas",
     features: [
       "Everything in Explorer",
-      "Unlimited Colab GPU training",
+      "Unlimited in-app deep-learning training",
       "AI Builder — full access",
       "Production endpoints & autoscaling",
       "Run comparison dashboards",
