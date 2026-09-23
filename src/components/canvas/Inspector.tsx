@@ -181,7 +181,9 @@ export function Inspector({ node, onClose }: InspectorProps) {
   };
 
   return (
-    <aside className="animate-slide-up flex h-full w-80 shrink-0 flex-col border-l border-neutral-200/80 bg-white/95 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0a0a0d]/75">
+    <aside
+      className="animate-slide-up absolute inset-y-0 right-0 z-20 flex h-full w-[min(20rem,85vw)] shrink-0 flex-col border-l border-neutral-200/80 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0a0a0d]/75 lg:static lg:z-auto lg:w-80 lg:shadow-none"
+    >
       <div className="flex items-center justify-between border-b border-neutral-200/80 px-4 py-3 dark:border-white/[0.06]">
         <span className="nf-hud-label flex items-center gap-1.5">
           <SlidersHorizontal className="h-3.5 w-3.5" /> Node Settings

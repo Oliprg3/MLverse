@@ -744,6 +744,7 @@ function Canvas() {
             connectionRadius={32}
             snapGrid={[16, 16]}
             deleteKeyCode={["Backspace", "Delete"]}
+            selectNodesOnDrag={false}
             className="bg-transparent"
           >
             <CanvasControls />
