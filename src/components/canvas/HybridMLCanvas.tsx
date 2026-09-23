@@ -369,6 +369,22 @@ function Canvas() {
 
   const onDragLeave = useCallback(() => setIsDragActive(false), []);
 
+  /** Add a palette item to the canvas at a screen point (drag-and-drop + tap-to-add). */
+  const addPaletteItem = useCallback(
+    (item: PaletteItem, point: { x: number; y: number }) => {
+      const data = makeNodeData(item.type);
+      if (!data) return;
+      const position = screenToFlowPosition(point);
+      idCounter.current += 1;
+      const flowType = item.type === "data:db" ? "dbSource" : "custom";
+      setNodes((nds) =>
+        nds.concat({ id: `${item.type}-${idCounter.current}`, type: flowType, position, data }),
+      );
+      notify(`${item.label} added`);
+    },
+    [notify, screenToFlowPosition, setNodes],
+  );
+
   const onDrop = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
@@ -381,16 +397,9 @@ function Canvas() {
       } catch {
         return;
       }
-      const data = makeNodeData(item.type);
-      if (!data) return;
-      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-      idCounter.current += 1;
-      const flowType = item.type === "data:db" ? "dbSource" : "custom";
-      setNodes((nds) =>
-        nds.concat({ id: `${item.type}-${idCounter.current}`, type: flowType, position, data }),
-      );
+      addPaletteItem(item, { x: event.clientX, y: event.clientY });
     },
-    [screenToFlowPosition, setNodes],
+    [addPaletteItem],
   );
 
   const buildPayload = useCallback(
@@ -723,7 +732,7 @@ function Canvas() {
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[var(--background)] to-transparent" aria-hidden />
         </div>
 
-        {paletteOpen ? <NodeLibrary /> : null}
+        {paletteOpen ? <NodeLibrary onAddItem={addPaletteItem} /> : null}
         <main className="relative flex-1">
           <ReactFlow
             nodes={nodes}

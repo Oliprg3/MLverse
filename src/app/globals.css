@@ -226,6 +226,20 @@
 }
 .react-flow__node.selected .nf-node-shell .nf-node-glow { opacity: 1; }
 
+/*
+ * Draggable nodes must take over the pointer gesture on touch devices.
+ * The pane already sets touch-action: none; without it on the node the
+ * browser claims the touchmove for page-scrolling and node drags never start.
+ */
+.react-flow__node.draggable {
+  touch-action: none;
+}
+.react-flow__node.draggable,
+.react-flow__nodesselection,
+.react-flow__edge.interaction {
+  -webkit-touch-callout: none;
+}
+
 /* Canvas backdrop — cinematic HUD grid + aurora, matches the landing hero */
 .nf-canvas-bg {
   background-color: var(--background);

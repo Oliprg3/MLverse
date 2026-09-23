@@ -18,7 +18,12 @@ const CATEGORY_ORDER: NodeCategory[] = [
   "visualization",
 ];
 
-function LibraryCard({ item }: { item: PaletteItem }) {
+interface NodeLibraryProps {
+  /** Adds the tapped item to the canvas — HTML5 drag alone can't fire on touch. */
+  onAddItem?: (item: PaletteItem, point: { x: number; y: number }) => void;
+}
+
+function LibraryCard({ item, onAddItem }: { item: PaletteItem; onAddItem?: NodeLibraryProps["onAddItem"] }) {
   const Icon = resolveIcon(item.icon);
 
   const onDragStart = (event: DragEvent<HTMLDivElement>) => {
@@ -30,8 +35,9 @@ function LibraryCard({ item }: { item: PaletteItem }) {
     <div
       draggable
       onDragStart={onDragStart}
+      onClick={(e) => onAddItem?.(item, { x: e.clientX, y: e.clientY })}
       className="group flex cursor-grab items-center gap-2.5 rounded-lg border border-transparent px-2 py-2 transition-all duration-200 hover:border-neutral-200/80 hover:bg-white/60 active:cursor-grabbing active:scale-[0.98] dark:hover:border-white/[0.07] dark:hover:bg-white/[0.03]"
-      title={`Drag onto canvas: ${item.label}`}
+      title="Drag onto canvas or tap to add"
     >
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-neutral-200/90 transition-transform duration-200 group-hover:scale-105 dark:border-white/[0.1]">
         <Icon className="h-3.5 w-3.5 text-neutral-500 transition-colors group-hover:text-neutral-800 dark:text-zinc-400 dark:group-hover:text-white" weight="regular" />
@@ -44,7 +50,7 @@ function LibraryCard({ item }: { item: PaletteItem }) {
   );
 }
 
-function Section({ catId, query }: { catId: NodeCategory; query: string }) {
+function Section({ catId, query, onAddItem }: { catId: NodeCategory; query: string; onAddItem?: NodeLibraryProps["onAddItem"] }) {
   const [open, setOpen] = useState(true);
   const items = useMemo(() => NODE_PALETTE.filter((i) => i.category === catId), [catId]);
 
@@ -75,7 +81,7 @@ function Section({ catId, query }: { catId: NodeCategory; query: string }) {
         <div className="overflow-hidden">
           <div className="space-y-0.5 px-1 pb-1 pt-0.5">
             {filtered.map((item) => (
-              <LibraryCard key={item.type} item={item} />
+              <LibraryCard key={item.type} item={item} onAddItem={onAddItem} />
             ))}
           </div>
         </div>
@@ -84,7 +90,7 @@ function Section({ catId, query }: { catId: NodeCategory; query: string }) {
   );
 }
 
-export function NodeLibrary() {
+export function NodeLibrary({ onAddItem }: NodeLibraryProps) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const hasQuery = query.trim().length > 0;
@@ -148,7 +154,7 @@ export function NodeLibrary() {
       {/* Sections */}
       <div className="scroll-thin flex-1 overflow-y-auto px-2 py-2">
         {filteredCount > 0 ? (
-          CATEGORY_ORDER.map((catId) => <Section key={catId} catId={catId} query={query} />)
+          CATEGORY_ORDER.map((catId) => <Section key={catId} catId={catId} query={query} onAddItem={onAddItem} />)
         ) : (
           <div className="animate-fade-in px-3 py-10 text-center">
             <MagnifyingGlass className="mx-auto h-5 w-5 text-neutral-300 dark:text-zinc-600" />
