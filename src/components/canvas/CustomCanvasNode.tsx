@@ -52,8 +52,8 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
         aria-label="Delete node"
         title="Delete node"
         className={cn(
-          "absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 opacity-0 transition-all duration-200 hover:bg-rose-500/10 hover:text-rose-500 focus-visible:opacity-100 group-hover:opacity-100",
-          selected && "opacity-100",
+          "absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 hover:bg-rose-500/10 hover:text-rose-500 md:opacity-0 md:transition-all md:duration-200 md:focus-visible:opacity-100 md:group-hover:opacity-100",
+          selected && "md:opacity-100",
         )}
       >
         <Trash size={13} />
@@ -68,11 +68,11 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
           <CircleNotch size={10} className="animate-spin" /> run
         </span>
       ) : data.executionStatus === "success" ? (
-        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-500" title="Succeeded">
+        <span className="absolute right-9 top-2 inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-500" title="Succeeded">
           <CheckCircle size={10} weight="fill" /> ok
         </span>
       ) : data.executionStatus === "error" ? (
-        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-rose-500" title="Failed">
+        <span className="absolute right-9 top-2 inline-flex items-center gap-1 rounded-md border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-rose-500" title="Failed">
           <XCircle size={10} weight="fill" /> err
         </span>
       ) : null}
