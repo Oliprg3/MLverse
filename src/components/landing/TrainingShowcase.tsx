@@ -391,7 +391,7 @@ export function TrainingShowcase() {
   const ActiveIcon = CHAPTERS[chapter].icon;
 
   return (
-    <section id="training-demo" className="relative scroll-mt-24 py-28 sm:py-36">
+    <section id="training-demo" className="relative scroll-mt-24 overflow-hidden py-28 sm:py-36">
       {/* backdrop accents */}
       <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       <div className="pointer-events-none absolute left-1/2 top-24 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-neutral-200/50 blur-[120px] dark:bg-white/[0.025]" />

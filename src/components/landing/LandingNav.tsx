@@ -97,7 +97,7 @@ export function LandingNav() {
               priority
             />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">Datlify</span>
+          <span className="hidden text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white sm:inline">Datlify</span>
         </Link>
 
         <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">

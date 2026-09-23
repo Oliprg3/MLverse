@@ -267,7 +267,7 @@ export function ModelPlayground() {
   const flagged = m ? m.tp + m.fp : 0;
 
   return (
-    <section id="playground" className="relative scroll-mt-24 py-28 sm:py-36">
+    <section id="playground" className="relative scroll-mt-24 overflow-hidden py-28 sm:py-36">
       <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-px w-2/3 bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       <div className="pointer-events-none absolute left-1/2 top-32 h-[460px] w-[760px] -translate-x-1/2 rounded-full bg-neutral-200/50 blur-[130px] dark:bg-white/[0.022]" />
 
