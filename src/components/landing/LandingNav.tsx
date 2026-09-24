@@ -93,7 +93,7 @@ export function LandingNav() {
               alt="Datlify"
               width={52}
               height={52}
-              className="h-full w-full object-contain p-2 dark:brightness-0 dark:invert"
+              className="h-full w-full object-contain p-2 brightness-0 dark:invert"
               priority
             />
           </span>

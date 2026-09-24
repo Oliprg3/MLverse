@@ -130,7 +130,7 @@ function Field({
 }) {
   return (
     <label className="group/field block">
-      <span className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-neutral-400 dark:text-zinc-500">
+      <span className="mb-2 flex items-center gap-1.5 text-sm font-medium text-neutral-400 dark:text-zinc-500">
         {icon}
         {label}
       </span>
@@ -141,7 +141,7 @@ function Field({
           className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left bg-neutral-900 scale-x-0 transition-transform duration-500 ease-out group-focus-within/field:scale-x-100 dark:bg-sky-400"
         />
       </span>
-      {hint ? <span className="mt-1.5 block text-xs text-neutral-400 dark:text-zinc-500">{hint}</span> : null}
+      {hint ? <span className="mt-1.5 block text-sm text-neutral-400 dark:text-zinc-500">{hint}</span> : null}
     </label>
   );
 }
@@ -219,11 +219,11 @@ export function AuthPage() {
           {/* Brand */}
           <div className="nf-auth-line flex items-center gap-2.5">
             <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]">
-              <Image src="/datlify-mark.png" alt="" width={40} height={40} className="h-8 w-8 object-contain dark:brightness-0 dark:invert" />
+              <Image src="/datlify-mark.png" alt="" width={40} height={40} className="h-8 w-8 object-contain brightness-0 dark:invert" />
             </span>
             <div>
               <p className="text-[15px] font-semibold tracking-tight text-white">Datlify</p>
-              <p className="text-xs text-white/45">Identity console</p>
+              <p className="text-sm text-white/45">Identity console</p>
             </div>
           </div>
 
@@ -239,30 +239,30 @@ export function AuthPage() {
               <TrendDown size={13} className="text-emerald-400" weight="bold" />
               <div>
                 <p className="font-mono text-sm leading-none text-white">0.00312</p>
-                <p className="mt-1 text-xs text-white/45">val_loss</p>
+                <p className="mt-1 text-sm text-white/45">val_loss</p>
               </div>
             </div>
             <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-2 [animation-delay:120ms]">
               <CheckCircle size={13} className="text-sky-400" weight="fill" />
               <div>
                 <p className="font-mono text-sm leading-none text-white">98.4%</p>
-                <p className="mt-1 text-xs text-white/45">val_acc</p>
+                <p className="mt-1 text-sm text-white/45">val_acc</p>
               </div>
             </div>
             <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-2 [animation-delay:240ms]">
               <CaretRight size={13} className="text-white/60" weight="bold" />
               <div>
                 <p className="font-mono text-sm leading-none text-white">12 / 50</p>
-                <p className="mt-1 text-xs text-white/45">epoch</p>
+                <p className="mt-1 text-sm text-white/45">epoch</p>
               </div>
             </div>
-            <div className="text-xs text-white/45">
+            <div className="text-sm text-white/45">
               GPU mesh <span className="text-emerald-400">●</span> online
             </div>
           </div>
 
           {/* Trust strip */}
-          <div className="nf-auth-line flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-white/45 [animation-delay:300ms]">
+          <div className="nf-auth-line flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/45 [animation-delay:300ms]">
             <span>SOC 2</span>
             <span>GDPR</span>
             <span>TLS 1.3</span>
@@ -284,18 +284,18 @@ export function AuthPage() {
         <div className="relative w-full max-w-md">
           {/* Mobile brand */}
           <div className="nf-auth-line mb-8 flex items-center justify-center gap-2 lg:hidden">
-            <Image src="/datlify-mark.png" alt="Datlify" width={34} height={34} className="h-8 w-8 object-contain dark:brightness-0 dark:invert" />
+            <Image src="/datlify-mark.png" alt="Datlify" width={34} height={34} className="h-8 w-8 object-contain brightness-0 dark:invert" />
             <span className="text-[15px] font-semibold tracking-tight text-white">Datlify</span>
           </div>
 
           <div className="glass-card overflow-hidden rounded-3xl shadow-[0_60px_160px_-60px_rgba(0,0,0,0.9)]">
             {/* Header */}
             <div className="border-b border-white/[0.06] px-7 pb-6 pt-8">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/40">Datlify // identity</p>
+              <p className="text-sm font-medium uppercase tracking-[0.14em] text-white/40">Datlify // identity</p>
               <h1 key={mode} className="nf-auth-flip mt-2 text-2xl font-semibold tracking-tight text-white">
                 {mode === "signin" ? "Welcome back" : "Create your account"}
               </h1>
-              <p key={`${mode}-sub`} className="nf-auth-flip mt-1.5 text-[13px] text-white/45 [animation-delay:90ms]">
+              <p key={`${mode}-sub`} className="nf-auth-flip mt-1.5 text-sm text-white/45 [animation-delay:90ms]">
                 {mode === "signin" ? "Sign in to continue to your pipelines." : "One account for the whole AI workspace."}
               </p>
             </div>
@@ -314,7 +314,7 @@ export function AuthPage() {
                     type="button"
                     onClick={() => switchMode(m)}
                     aria-pressed={mode === m}
-                    className={`relative z-10 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors duration-300 ${
+                    className={`relative z-10 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-300 ${
                       mode === m ? "text-white" : "text-white/40 hover:text-white/70"
                     }`}
                   >
@@ -368,7 +368,7 @@ export function AuthPage() {
               {/* Divider */}
               <div className="my-6 flex items-center gap-3">
                 <span className="h-px flex-1 bg-white/[0.07]" />
-                <span className="text-xs font-medium text-white/45">or continue with email</span>
+                <span className="text-sm font-medium text-white/45">or continue with email</span>
                 <span className="h-px flex-1 bg-white/[0.07]" />
               </div>
 
@@ -437,16 +437,16 @@ export function AuthPage() {
                         />
                       ))}
                     </div>
-                    <p className="mt-1.5 text-xs font-medium text-white/50">{strengthLabel}</p>
+                    <p className="mt-1.5 text-sm font-medium text-white/50">{strengthLabel}</p>
                   </div>
                 ) : null}
 
                 {mode === "signin" ? (
                   <div className="flex items-center justify-between">
-                    <Link href="/forgot-password" className="text-[13px] font-medium text-sky-400/80 transition-colors hover:text-sky-300">
+                    <Link href="/forgot-password" className="text-sm font-medium text-sky-400/80 transition-colors hover:text-sky-300">
                       Forgot password?
                     </Link>
-                    <span className="text-xs text-white/30">NF:// secure</span>
+                    <span className="text-sm text-white/30">NF:// secure</span>
                   </div>
                 ) : null}
 
@@ -477,7 +477,7 @@ export function AuthPage() {
               </form>
 
               {/* Mode swap prompt */}
-              <p key={`${mode}-prompt`} className="nf-auth-flip mt-6 text-center text-[13px] text-white/45 [animation-delay:120ms]">
+              <p key={`${mode}-prompt`} className="nf-auth-flip mt-6 text-center text-sm text-white/45 [animation-delay:120ms]">
                 {mode === "signin" ? (
                   <>
                     New to Datlify?{" "}
@@ -499,12 +499,12 @@ export function AuthPage() {
 
           {/* Legal + back */}
           <div className="nf-auth-line mt-6 flex flex-col items-center gap-3 [animation-delay:200ms]">
-            <p className="text-center text-[11px] leading-relaxed text-white/30">
+            <p className="text-center text-sm leading-relaxed text-white/30">
               By continuing you agree to our{" "}
               <a href="#" className="text-white/50 transition-colors hover:text-white">Terms</a> and{" "}
               <a href="#" className="text-white/50 transition-colors hover:text-white">Privacy Policy</a>.
             </p>
-            <Link href="/" className="text-[13px] text-white/40 transition-colors hover:text-white">
+            <Link href="/" className="text-sm text-white/40 transition-colors hover:text-white">
               ← Back to home
             </Link>
           </div>

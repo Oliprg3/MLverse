@@ -44,7 +44,7 @@ export function Footer() {
                   alt="Datlify"
                   width={52}
                   height={52}
-                  className="h-full w-full object-contain p-2 dark:brightness-0 dark:invert"
+                  className="h-full w-full object-contain p-2 brightness-0 dark:invert"
                 />
               </span>
               <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">Datlify</span>

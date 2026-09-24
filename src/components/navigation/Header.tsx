@@ -144,7 +144,7 @@ export function Header({
               alt="Datlify"
               width={40}
               height={40}
-              className="h-full w-full object-contain p-1 dark:brightness-0 dark:invert"
+              className="h-full w-full object-contain p-1 brightness-0 dark:invert"
               priority
             />
           </span>
