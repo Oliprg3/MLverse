@@ -132,6 +132,9 @@ export function LandingNav() {
           <TransitionLink href="/canvas" label="Opening canvas" className="text-[13px] font-medium text-neutral-500 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-white">
             Open canvas
           </TransitionLink>
+          <Link href="/auth" className="text-[13px] font-medium text-neutral-500 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-white">
+            Sign in
+          </Link>
           <button
             type="button"
             onClick={toggle}

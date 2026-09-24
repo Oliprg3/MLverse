@@ -911,6 +911,43 @@
   transform: scaleX(var(--nf-progress, 0));
 }
 
+/* ── Auth page ─────────────────────────────────────────────────────── */
+@keyframes nf-auth-line-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nf-auth-line { animation: nf-auth-line-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes nf-auth-flip {
+  from { opacity: 0; transform: translateY(16px) rotateX(7deg); }
+  to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+.nf-auth-flip {
+  animation: nf-auth-flip 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-style: preserve-3d;
+}
+
+@keyframes nf-conn-spin {
+  to { transform: rotate(360deg); }
+}
+.nf-conn-spin { animation: nf-conn-spin 0.8s linear infinite; }
+
+@keyframes nf-check-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.nf-check-pop { animation: nf-check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes nf-strength-in {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+.nf-strength-in {
+  transform-origin: left center;
+  animation: nf-strength-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nf-hist-bar,
   .nf-grow-l,

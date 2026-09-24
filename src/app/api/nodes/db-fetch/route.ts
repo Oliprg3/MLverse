@@ -64,7 +64,7 @@ interface ParsedUri {
 /** Hosts that are known to require TLS (Supabase, Neon, RDS, …). */
 const TLS_HOSTS = /(?:neon\.tech|supabase\.(?:co|com|net)|amazonaws\.com|azure\.com|render\.com|timescale\.com|aivencloud\.com|elephantsql\.com)$/i;
 
-export class DbError extends Error {
+class DbError extends Error {
   hint?: string;
   constructor(message: string, hint?: string) {
     super(message);
