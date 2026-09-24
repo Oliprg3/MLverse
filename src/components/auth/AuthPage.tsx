@@ -70,8 +70,8 @@ function NeuralField() {
     <svg viewBox="0 0 560 380" className="h-full w-full" aria-hidden="true" style={{ overflow: "visible" }}>
       <defs>
         <linearGradient id="nf-auth-edge" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.07" />
-          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.85" />
+          <stop offset="0%" stopColor="var(--auth-node)" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="var(--auth-node)" stopOpacity="0.75" />
         </linearGradient>
       </defs>
       {edges.map(([x1, y1, x2, y2], k) => (
@@ -96,8 +96,8 @@ function NeuralField() {
               cy={y}
               r="13"
               fill="none"
-              stroke="#38bdf8"
-              strokeOpacity="0.18"
+              stroke="var(--auth-node)"
+              strokeOpacity="0.22"
               style={{ animationDelay: `${(li * 3 + ni) * 0.12}s` }}
               className="animate-pulse-ring"
             />
@@ -105,7 +105,7 @@ function NeuralField() {
               cx={layer.x}
               cy={y}
               r="4.5"
-              fill={li === LAYERS.length - 1 ? "#7dd3fc" : "#38bdf8"}
+              fill="var(--auth-node-hi)"
               className="nf-glow-dot"
               style={{ animationDelay: `${(li * 3 + ni) * 0.12}s` }}
             />
@@ -130,7 +130,7 @@ function Field({
 }) {
   return (
     <label className="group/field block">
-      <span className="mb-2 flex items-center gap-1.5 text-sm font-medium text-neutral-400 dark:text-zinc-500">
+      <span className="mb-2 flex items-center gap-1.5 text-sm font-medium text-neutral-500 dark:text-zinc-400">
         {icon}
         {label}
       </span>
@@ -138,10 +138,10 @@ function Field({
         {children}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left bg-neutral-900 scale-x-0 transition-transform duration-500 ease-out group-focus-within/field:scale-x-100 dark:bg-sky-400"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-neutral-900 transition-transform duration-500 ease-out group-focus-within/field:scale-x-100 dark:bg-sky-400"
         />
       </span>
-      {hint ? <span className="mt-1.5 block text-sm text-neutral-400 dark:text-zinc-500">{hint}</span> : null}
+      {hint ? <span className="mt-1.5 block text-sm text-neutral-500 dark:text-zinc-500">{hint}</span> : null}
     </label>
   );
 }
@@ -208,66 +208,66 @@ export function AuthPage() {
   const busy = flow === "processing" || flow === "success" || pendingProvider !== null;
 
   return (
-    <div className="dark relative flex min-h-[100svh] w-full flex-col overflow-hidden bg-[#050506] lg:flex-row">
+    <div className="auth-panel relative flex min-h-[100svh] w-full flex-col overflow-hidden bg-white text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white dark:bg-[#050506] dark:text-zinc-200 dark:selection:bg-white/90 lg:flex-row">
       {/* Left — animated brand panel */}
-      <aside className="relative hidden w-1/2 overflow-hidden border-r border-white/[0.06] bg-[#030304] lg:block">
-        <div className="nf-aurora pointer-events-none absolute -right-40 -top-40 h-[36rem] w-[36rem] rounded-full bg-sky-500/10 blur-[120px]" />
+      <aside className="relative hidden w-1/2 overflow-hidden border-r border-neutral-200/80 bg-white dark:border-white/[0.06] dark:bg-[#030304] lg:block">
+        <div className="nf-aurora pointer-events-none absolute -right-40 -top-40 h-[36rem] w-[36rem] rounded-full bg-sky-500/15 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-56 -left-40 h-[34rem] w-[34rem] rounded-full bg-indigo-500/10 blur-[130px]" />
-        <div className="nf-grid-bg pointer-events-none absolute inset-0 opacity-[0.18]" />
+        <div className="nf-grid-bg pointer-events-none absolute inset-0 opacity-[0.4] dark:opacity-[0.18]" />
 
         <div className="relative flex h-full flex-col justify-between px-10 py-9 xl:px-14">
           {/* Brand */}
           <div className="nf-auth-line flex items-center gap-2.5">
-            <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]">
+            <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 dark:border-white/10 dark:bg-white/[0.04]">
               <Image src="/datlify-mark.png" alt="" width={40} height={40} className="h-8 w-8 object-contain brightness-0 dark:invert" />
             </span>
             <div>
-              <p className="text-[15px] font-semibold tracking-tight text-white">Datlify</p>
-              <p className="text-sm text-white/45">Identity console</p>
+              <p className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">Datlify</p>
+              <p className="text-sm text-neutral-500 dark:text-white/45">Identity console</p>
             </div>
           </div>
 
           {/* Neural field */}
           <div className="relative mx-auto w-full max-w-[560px]">
-            <div className="nf-scan pointer-events-none absolute -inset-x-8 h-16 bg-gradient-to-b from-transparent via-sky-400/10 to-transparent" />
+            <div className="nf-scan pointer-events-none absolute -inset-x-8 h-16 bg-gradient-to-b from-transparent via-sky-500/10 to-transparent dark:via-sky-400/10" />
             <NeuralField />
           </div>
 
           {/* Live training readout */}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-2">
-              <TrendDown size={13} className="text-emerald-400" weight="bold" />
+            <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.03]">
+              <TrendDown size={13} className="text-emerald-600 dark:text-emerald-400" weight="bold" />
               <div>
-                <p className="font-mono text-sm leading-none text-white">0.00312</p>
-                <p className="mt-1 text-sm text-white/45">val_loss</p>
+                <p className="font-mono text-sm leading-none text-neutral-900 dark:text-white">0.00312</p>
+                <p className="mt-1 text-sm text-neutral-500 dark:text-white/45">val_loss</p>
               </div>
             </div>
-            <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-2 [animation-delay:120ms]">
-              <CheckCircle size={13} className="text-sky-400" weight="fill" />
+            <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-sm [animation-delay:120ms] dark:border-white/[0.07] dark:bg-white/[0.03]">
+              <CheckCircle size={13} className="text-sky-600 dark:text-sky-400" weight="fill" />
               <div>
-                <p className="font-mono text-sm leading-none text-white">98.4%</p>
-                <p className="mt-1 text-sm text-white/45">val_acc</p>
+                <p className="font-mono text-sm leading-none text-neutral-900 dark:text-white">98.4%</p>
+                <p className="mt-1 text-sm text-neutral-500 dark:text-white/45">val_acc</p>
               </div>
             </div>
-            <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-2 [animation-delay:240ms]">
-              <CaretRight size={13} className="text-white/60" weight="bold" />
+            <div className="nf-metric-pop flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-sm [animation-delay:240ms] dark:border-white/[0.07] dark:bg-white/[0.03]">
+              <CaretRight size={13} className="text-neutral-400 dark:text-white/60" weight="bold" />
               <div>
-                <p className="font-mono text-sm leading-none text-white">12 / 50</p>
-                <p className="mt-1 text-sm text-white/45">epoch</p>
+                <p className="font-mono text-sm leading-none text-neutral-900 dark:text-white">12 / 50</p>
+                <p className="mt-1 text-sm text-neutral-500 dark:text-white/45">epoch</p>
               </div>
             </div>
-            <div className="text-sm text-white/45">
-              GPU mesh <span className="text-emerald-400">●</span> online
+            <div className="text-sm text-neutral-500 dark:text-white/45">
+              GPU mesh <span className="text-emerald-600 dark:text-emerald-400">●</span> online
             </div>
           </div>
 
           {/* Trust strip */}
-          <div className="nf-auth-line flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/45 [animation-delay:300ms]">
+          <div className="nf-auth-line flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-neutral-500 [animation-delay:300ms] dark:text-white/45">
             <span>SOC 2</span>
             <span>GDPR</span>
             <span>TLS 1.3</span>
             <span className="ml-auto flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-glow-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-glow-pulse dark:bg-emerald-400" />
               All systems operational
             </span>
           </div>
@@ -277,34 +277,34 @@ export function AuthPage() {
       {/* Right — auth card */}
       <main className="relative flex flex-1 items-center justify-center px-5 py-12 sm:px-8">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="nf-aurora pointer-events-none absolute -left-32 top-10 h-[28rem] w-[28rem] rounded-full bg-sky-500/[0.07] blur-[110px]" />
-          <div className="nf-grid-bg pointer-events-none absolute inset-0 opacity-[0.14]" />
+          <div className="nf-aurora pointer-events-none absolute -left-32 top-10 h-[28rem] w-[28rem] rounded-full bg-sky-500/[0.09] blur-[110px]" />
+          <div className="nf-grid-bg pointer-events-none absolute inset-0 opacity-[0.4] dark:opacity-[0.14]" />
         </div>
 
         <div className="relative w-full max-w-md">
           {/* Mobile brand */}
           <div className="nf-auth-line mb-8 flex items-center justify-center gap-2 lg:hidden">
             <Image src="/datlify-mark.png" alt="Datlify" width={34} height={34} className="h-8 w-8 object-contain brightness-0 dark:invert" />
-            <span className="text-[15px] font-semibold tracking-tight text-white">Datlify</span>
+            <span className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">Datlify</span>
           </div>
 
-          <div className="glass-card overflow-hidden rounded-3xl shadow-[0_60px_160px_-60px_rgba(0,0,0,0.9)]">
+          <div className="glass-card overflow-hidden rounded-3xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] dark:shadow-[0_60px_160px_-60px_rgba(0,0,0,0.9)]">
             {/* Header */}
-            <div className="border-b border-white/[0.06] px-7 pb-6 pt-8">
-              <h1 key={mode} className="nf-auth-flip mt-0 text-2xl font-semibold tracking-tight text-white">
+            <div className="border-b border-neutral-200/80 px-7 pb-6 pt-8 dark:border-white/[0.06]">
+              <h1 key={mode} className="nf-auth-flip text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white">
                 {mode === "signin" ? "Welcome back" : "Create your account"}
               </h1>
-              <p key={`${mode}-sub`} className="nf-auth-flip mt-1.5 text-sm text-white/45 [animation-delay:90ms]">
+              <p key={`${mode}-sub`} className="nf-auth-flip mt-1.5 text-sm text-neutral-500 [animation-delay:90ms] dark:text-white/45">
                 {mode === "signin" ? "Sign in to continue to your pipelines." : "One account for the whole AI workspace."}
               </p>
             </div>
 
             <div className="px-7 py-7">
               {/* Mode switcher */}
-              <div className="relative mb-6 grid grid-cols-2 rounded-xl border border-white/[0.06] bg-white/[0.03] p-1">
+              <div className="relative mb-6 grid grid-cols-2 rounded-xl border border-neutral-200 bg-neutral-100 p-1 dark:border-white/[0.06] dark:bg-white/[0.03]">
                 <span
                   aria-hidden="true"
-                  className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white/[0.08] ring-1 ring-white/10 transition-transform duration-300 ease-out"
+                  className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-sm ring-1 ring-neutral-200 transition-transform duration-300 ease-out dark:bg-white/[0.08] dark:ring-white/10"
                   style={{ transform: mode === "signup" ? "translateX(100%)" : "translateX(0)" }}
                 />
                 {(["signin", "signup"] as Mode[]).map((m) => (
@@ -314,7 +314,7 @@ export function AuthPage() {
                     onClick={() => switchMode(m)}
                     aria-pressed={mode === m}
                     className={`relative z-10 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-300 ${
-                      mode === m ? "text-white" : "text-white/40 hover:text-white/70"
+                      mode === m ? "text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-800 dark:text-white/40 dark:hover:text-white/70"
                     }`}
                   >
                     {m === "signin" ? "Sign in" : "Create account"}
@@ -327,13 +327,13 @@ export function AuthPage() {
                 type="button"
                 onClick={() => handleProvider("Google")}
                 disabled={busy}
-                className={`group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-white transition-all duration-300 hover:border-white/25 hover:bg-white/[0.08] active:scale-[0.99] disabled:opacity-70 ${
-                  pendingProvider === "Google" ? "border-sky-400/50" : ""
+                className={`group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 transition-all duration-300 hover:bg-neutral-50 active:scale-[0.99] disabled:opacity-70 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] ${
+                  pendingProvider === "Google" ? "border-sky-500/50 dark:border-sky-400/50" : ""
                 }`}
               >
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/[0.06] to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/[0.03] to-transparent transition-transform duration-700 group-hover:translate-x-full dark:via-white/[0.06]" />
                 {pendingProvider === "Google" ? (
-                  <SpinnerGap size={17} className="nf-conn-spin text-sky-400" weight="bold" />
+                  <SpinnerGap size={17} className="nf-conn-spin text-sky-600 dark:text-sky-400" weight="bold" />
                 ) : (
                   <GoogleIcon />
                 )}
@@ -350,12 +350,12 @@ export function AuthPage() {
                     type="button"
                     onClick={() => handleProvider(p.id)}
                     disabled={busy}
-                    className={`group relative flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:border-white/25 hover:bg-white/[0.08] active:scale-[0.99] disabled:opacity-70 ${
-                      pendingProvider === p.id ? "border-sky-400/50" : ""
+                    className={`group relative flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-900 transition-all duration-300 hover:bg-neutral-50 active:scale-[0.99] disabled:opacity-70 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] ${
+                      pendingProvider === p.id ? "border-sky-500/50 dark:border-sky-400/50" : ""
                     }`}
                   >
                     {pendingProvider === p.id ? (
-                      <SpinnerGap size={16} className="nf-conn-spin text-sky-400" weight="bold" />
+                      <SpinnerGap size={16} className="nf-conn-spin text-sky-600 dark:text-sky-400" weight="bold" />
                     ) : (
                       p.icon
                     )}
@@ -366,15 +366,15 @@ export function AuthPage() {
 
               {/* Divider */}
               <div className="my-6 flex items-center gap-3">
-                <span className="h-px flex-1 bg-white/[0.07]" />
-                <span className="text-sm font-medium text-white/45">or continue with email</span>
-                <span className="h-px flex-1 bg-white/[0.07]" />
+                <span className="h-px flex-1 bg-neutral-200 dark:bg-white/[0.07]" />
+                <span className="text-sm text-neutral-500 dark:text-white/45">or continue with email</span>
+                <span className="h-px flex-1 bg-neutral-200 dark:bg-white/[0.07]" />
               </div>
 
               {/* Form */}
               <form key={mode} onSubmit={handleSubmit} className="nf-auth-flip flex flex-col gap-4">
                 {mode === "signup" ? (
-                  <Field label="Full name" icon={<User size={11} weight="bold" />}>
+                  <Field label="Full name" icon={<User size={12} weight="bold" />}>
                     <input
                       type="text"
                       value={name}
@@ -386,7 +386,7 @@ export function AuthPage() {
                   </Field>
                 ) : null}
 
-                <Field label="Email" icon={<At size={11} weight="bold" />}>
+                <Field label="Email" icon={<At size={12} weight="bold" />}>
                   <input
                     type="email"
                     value={email}
@@ -398,8 +398,8 @@ export function AuthPage() {
                 </Field>
 
                 <Field
-                  label={mode === "signup" ? "Password" : "Password"}
-                  icon={<Lock size={11} weight="bold" />}
+                  label="Password"
+                  icon={<Lock size={12} weight="bold" />}
                   hint={
                     mode === "signup"
                       ? "Use 8+ characters with a mix of cases, numbers and symbols."
@@ -431,32 +431,32 @@ export function AuthPage() {
                       {[0, 1, 2, 3].map((i) => (
                         <span
                           key={i}
-                          className={`nf-strength-in h-1 flex-1 rounded-full ${i < strength ? strengthColor : "bg-white/[0.08]"}`}
+                          className={`nf-strength-in h-1 flex-1 rounded-full ${i < strength ? strengthColor : "bg-neutral-200 dark:bg-white/[0.08]"}`}
                           style={{ animationDelay: `${i * 60}ms` }}
                         />
                       ))}
                     </div>
-                    <p className="mt-1.5 text-sm font-medium text-white/50">{strengthLabel}</p>
+                    <p className="mt-1.5 text-sm font-medium text-neutral-500 dark:text-white/50">{strengthLabel}</p>
                   </div>
                 ) : null}
 
                 {mode === "signin" ? (
                   <div className="flex items-center justify-between">
-                    <Link href="/forgot-password" className="text-sm font-medium text-sky-400/80 transition-colors hover:text-sky-300">
+                    <Link href="/forgot-password" className="text-sm font-medium text-sky-700 transition-colors hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300">
                       Forgot password?
                     </Link>
-                    <span className="text-sm text-white/30">NF:// secure</span>
+                    <span className="text-sm text-neutral-400 dark:text-white/30">NF:// secure</span>
                   </div>
                 ) : null}
 
                 <button
                   type="submit"
                   disabled={busy}
-                  className="group relative mt-1 flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-white text-sm font-semibold text-neutral-900 transition-all duration-300 hover:bg-neutral-200 active:scale-[0.99] disabled:opacity-80"
+                  className="group relative mt-1 flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-neutral-900 text-sm font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.99] disabled:opacity-80 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
                 >
-                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full dark:via-neutral-900/10" />
                   {flow === "success" ? (
-                    <span className="nf-check-pop flex items-center gap-2 text-emerald-600">
+                    <span className="nf-check-pop flex items-center gap-2 text-emerald-600 dark:text-emerald-500">
                       <Check size={16} weight="bold" /> Signed in — opening workspace
                     </span>
                   ) : flow === "processing" ? (
@@ -476,18 +476,18 @@ export function AuthPage() {
               </form>
 
               {/* Mode swap prompt */}
-              <p key={`${mode}-prompt`} className="nf-auth-flip mt-6 text-center text-sm text-white/45 [animation-delay:120ms]">
+              <p key={`${mode}-prompt`} className="nf-auth-flip mt-6 text-center text-sm text-neutral-500 [animation-delay:120ms] dark:text-white/45">
                 {mode === "signin" ? (
                   <>
                     New to Datlify?{" "}
-                    <button type="button" onClick={() => switchMode("signup")} className="font-medium text-sky-400 transition-colors hover:text-sky-300">
+                    <button type="button" onClick={() => switchMode("signup")} className="font-medium text-sky-700 transition-colors hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300">
                       Create an account
                     </button>
                   </>
                 ) : (
                   <>
                     Already have an account?{" "}
-                    <button type="button" onClick={() => switchMode("signin")} className="font-medium text-sky-400 transition-colors hover:text-sky-300">
+                    <button type="button" onClick={() => switchMode("signin")} className="font-medium text-sky-700 transition-colors hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300">
                       Sign in
                     </button>
                   </>
@@ -498,12 +498,12 @@ export function AuthPage() {
 
           {/* Legal + back */}
           <div className="nf-auth-line mt-6 flex flex-col items-center gap-3 [animation-delay:200ms]">
-            <p className="text-center text-sm leading-relaxed text-white/30">
+            <p className="text-center text-sm leading-relaxed text-neutral-500 dark:text-white/35">
               By continuing you agree to our{" "}
-              <a href="#" className="text-white/50 transition-colors hover:text-white">Terms</a> and{" "}
-              <a href="#" className="text-white/50 transition-colors hover:text-white">Privacy Policy</a>.
+              <a href="#" className="text-neutral-700 transition-colors hover:text-neutral-900 dark:text-white/50 dark:hover:text-white">Terms</a> and{" "}
+              <a href="#" className="text-neutral-700 transition-colors hover:text-neutral-900 dark:text-white/50 dark:hover:text-white">Privacy Policy</a>.
             </p>
-            <Link href="/" className="text-sm text-white/40 transition-colors hover:text-white">
+            <Link href="/" className="text-sm text-neutral-500 transition-colors hover:text-neutral-900 dark:text-white/40 dark:hover:text-white">
               ← Back to home
             </Link>
           </div>
@@ -513,9 +513,9 @@ export function AuthPage() {
       {/* Connecting overlay pulse for provider handshake */}
       {pendingProvider ? (
         <div key={pendingProvider} className="nf-auth-flip pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
-          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-5 py-3.5 backdrop-blur-2xl">
-            <SpinnerGap size={18} className="nf-conn-spin text-sky-400" weight="bold" />
-            <p className="text-sm text-white">Authenticating with {pendingProvider}…</p>
+          <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white/85 px-5 py-3.5 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.05]">
+            <SpinnerGap size={18} className="nf-conn-spin text-sky-600 dark:text-sky-400" weight="bold" />
+            <p className="text-sm text-neutral-900 dark:text-white">Authenticating with {pendingProvider}…</p>
           </div>
         </div>
       ) : null}
