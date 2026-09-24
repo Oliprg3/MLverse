@@ -189,6 +189,9 @@ export function LandingNav() {
               {l.label}
             </a>
           ))}
+          <Link href="/auth" onClick={() => setOpen(false)} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-700 dark:border-white/10 dark:text-zinc-300">
+            Sign in
+          </Link>
           <Link href="/canvas" className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-neutral-900">
             Launch App <ArrowRight size={14} weight="bold" />
           </Link>
