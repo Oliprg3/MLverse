@@ -291,8 +291,7 @@ export function AuthPage() {
           <div className="glass-card overflow-hidden rounded-3xl shadow-[0_60px_160px_-60px_rgba(0,0,0,0.9)]">
             {/* Header */}
             <div className="border-b border-white/[0.06] px-7 pb-6 pt-8">
-              <p className="text-sm font-medium uppercase tracking-[0.14em] text-white/40">Datlify // identity</p>
-              <h1 key={mode} className="nf-auth-flip mt-2 text-2xl font-semibold tracking-tight text-white">
+              <h1 key={mode} className="nf-auth-flip mt-0 text-2xl font-semibold tracking-tight text-white">
                 {mode === "signin" ? "Welcome back" : "Create your account"}
               </h1>
               <p key={`${mode}-sub`} className="nf-auth-flip mt-1.5 text-sm text-white/45 [animation-delay:90ms]">
