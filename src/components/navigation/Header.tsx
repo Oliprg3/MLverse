@@ -17,7 +17,6 @@ import {
   FloppyDisk,
   CircleNotch,
   Cpu,
-  Play,
 } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
