@@ -489,10 +489,11 @@ function Canvas() {
     pushLine(`Dispatching ${payload.nodes.length}-step ${route === "colab" ? "in-app PyTorch" : "instant CPU"} pipeline…`, "system");
 
     // Deep-learning route: everything trains in-app — the backend is
-    // authoritative. If PyTorch is missing it returns a friendly in-app error
-    // (pip install torch) instead of redirecting to Colab. We still refresh the
-    // probe so the header badge reflects reality, but the probe never gates the
-    // run (it could still be in flight on the first click).
+    // authoritative. If PyTorch is missing it auto-installs it on first run,
+    // and falls back to a ready-to-run Colab notebook only if the install
+    // fails. We still refresh the probe so the header badge reflects reality,
+    // but the probe never gates the run (it could still be in flight on the
+    // first click).
     const dlTypes = nodes.map((n) => n.data.type).filter((t) => t.startsWith("dl:"));
     if (route === "colab") {
       if (serverTorch !== true) {
@@ -503,7 +504,7 @@ function Canvas() {
       const allLocal = dlTypes.length > 0 && dlTypes.every((t) => LOCAL_DL_TYPES.includes(t));
       pushLine(
         allLocal
-          ? "Deep-learning graph detected — training in-app with the local PyTorch engine (no Colab, no tab switch)…"
+          ? "Deep-learning graph detected — training in-app via PyTorch (installs automatically if missing, no Colab needed)…"
           : "Deep-learning graph detected — sending it to the local PyTorch engine…",
         "system",
       );

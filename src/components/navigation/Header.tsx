@@ -168,7 +168,7 @@ export function Header({
               route === "colab"
                 ? localDl
                   ? "PyTorch found on this machine — neural networks train in-app on the local runtime"
-                  : "Neural networks train in-app, but PyTorch was not detected — run: pip install torch"
+                  : "Neural networks train in-app — PyTorch installs automatically on first run"
                 : "Classic ML trains instantly on CPU"
             }
           >

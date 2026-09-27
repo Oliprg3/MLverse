@@ -339,7 +339,7 @@ export function AIBuilder() {
   };
 
   return (
-    <main className="flex h-screen min-h-[620px] flex-col overflow-hidden bg-background text-foreground">
+    <main className="flex min-h-screen flex-col bg-background text-foreground lg:h-screen lg:min-h-[620px] lg:overflow-hidden">
       {/* Header */}
       <header className="glass-panel sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-surface/80 px-5 shadow-[0_12px_36px_-30px_rgba(15,23,42,0.7)] lg:px-7">
         <div className="flex min-w-0 items-center gap-3">
@@ -384,7 +384,7 @@ export function AIBuilder() {
 
       <div className="flex min-h-0 flex-1 flex-col gap-0 lg:flex-row lg:p-4 lg:pt-3">
         {/* Chat column */}
-        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border/70 bg-surface/75 lg:w-[420px] lg:rounded-2xl lg:border lg:shadow-sm">
+        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-border/70 bg-surface/75 max-lg:max-h-[55vh] lg:w-[420px] lg:rounded-2xl lg:border lg:shadow-sm">
           <div className="border-b border-border/70 bg-primary/[0.03] px-6 py-6 lg:rounded-t-2xl">
             <div className="flex items-center justify-between gap-3">
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Design session</div>

@@ -94,7 +94,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
               {engine.torch ? (
                 <p className="mt-1 text-[11px] leading-snug text-sky-500">PyTorch detected — deep-learning graphs (MLP, CNN, LSTM, GRU, tabular transformer) train in-app, no Colab needed.</p>
               ) : (
-                <p className="mt-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">PyTorch not installed — deep-learning graphs hand off to Colab. Install it (pip install torch) to train in-app.</p>
+                <p className="mt-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">PyTorch not detected — it will install automatically on the first deep-learning run, or we hand off to Colab if the install fails.</p>
               )}
             </>
           ) : null}

@@ -368,7 +368,7 @@ def execute(nodes: List[Dict[str, Any]], emit: Any = None) -> Dict[str, Any]:
         return ExecutionResult(
             status="error",
             engine=ENGINE_VERSION,
-            error="PyTorch is not installed on this machine. Run `pip install torch` and press Train again — deep-learning graphs train in-app, no notebook hand-off.",
+            error="PyTorch is not available in this engine process — the router auto-installs it or hands off to a Colab notebook.",
             timing={"total_seconds": time.perf_counter() - start},
         ).to_dict()
     try:

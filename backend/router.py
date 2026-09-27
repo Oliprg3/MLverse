@@ -22,8 +22,11 @@ Responsibilities
 
 from __future__ import annotations
 
+import importlib
 import json
 import math
+import subprocess
+import sys
 from typing import Any, Dict, List
 
 import networkx as nx
@@ -33,7 +36,7 @@ import notebook_builder
 
 try:
     import deep_learning_engine
-except Exception:  # torch missing / import error → Colab path stays the default
+except Exception:  # torch missing / import error → auto-install + Colab fallback
     deep_learning_engine = None  # type: ignore
 
 ENGINE_VERSION = "hybrid-v1.2.0"
@@ -84,6 +87,55 @@ def resolve_route(ordered_nodes: List[Dict[str, Any]]) -> str:
     return "instant"
 
 
+def _torch_ready() -> bool:
+    """True when the in-app PyTorch engine is importable and can train locally."""
+    return deep_learning_engine is not None and deep_learning_engine.torch_available()
+
+
+def _ensure_torch(emit: Any = None) -> bool:
+    """Best-effort on-demand PyTorch install.
+
+    Called once per process the first time a deep-learning graph is run without
+    torch. Sends a couple of self-explanatory events (so the live console shows
+    what is happening) and returns True the moment torch imports. Never raises.
+    """
+    global deep_learning_engine
+    if _torch_ready():
+        return True
+
+    _say = emit if callable(emit) else (lambda e: None)
+    _say({"type": "step", "message": "PyTorch is not installed — attempting an automatic install (pip install torch). This can take a few minutes…"})
+    try:
+        # Capture pip output so it can't corrupt the NDJSON stream on stdout.
+        completed = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--quiet", "torch"],
+            timeout=420,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception as exc:
+        _say({"type": "step", "message": f"Automatic PyTorch install could not start: {exc}."})
+        return False
+    if completed.returncode != 0:
+        _say({"type": "step", "message": "Automatic PyTorch install failed — handing off to a Colab notebook instead."})
+        return False
+
+    # Torch is now importable; (re)load the deep-learning engine in this process.
+    try:
+        if deep_learning_engine is None:
+            import deep_learning_engine as dle  # fresh import (torch present now)
+        else:
+            dle = importlib.reload(deep_learning_engine)
+        deep_learning_engine = dle
+    except Exception as exc:
+        _say({"type": "step", "message": f"PyTorch installed but the training engine did not reload ({exc})."})
+        return False
+
+    ok = _torch_ready()
+    _say({"type": "step", "message": "PyTorch installed and ready — training in-app." if ok else "PyTorch installed but the training engine is still unavailable."})
+    return ok
+
+
 def _jsonable(value: Any) -> Any:
     """Recursively coerce numpy scalars / NaNs into JSON-safe primitives."""
     if isinstance(value, dict):
@@ -132,8 +184,14 @@ def dispatch(payload: Dict[str, Any], emit: Any = None) -> Dict[str, Any]:
         if route == "colab":
             # Local PyTorch path: every deep-learning node type trains in-app
             # on the local CPU/GPU and streams live epoch events to the UI.
-            if deep_learning_engine is not None and deep_learning_engine.can_train_locally(ordered_nodes):
+            if _torch_ready() and deep_learning_engine.can_train_locally(ordered_nodes):
                 _emit({"type": "step", "message": "PyTorch found on this machine — training the neural network in-app (no Colab needed)…"})
+                result = _jsonable(deep_learning_engine.execute(ordered_nodes, emit=_emit))
+                _emit({"type": "result", "data": result})
+                return result
+            # PyTorch missing → try to install it automatically, then train in-app.
+            if _ensure_torch(_emit) and deep_learning_engine is not None and deep_learning_engine.can_train_locally(ordered_nodes):
+                _emit({"type": "step", "message": "Training the neural network in-app on the freshly installed PyTorch…"})
                 result = _jsonable(deep_learning_engine.execute(ordered_nodes, emit=_emit))
                 _emit({"type": "result", "data": result})
                 return result
@@ -146,19 +204,18 @@ def dispatch(payload: Dict[str, Any], emit: Any = None) -> Dict[str, Any]:
                 result = _jsonable(response)
                 _emit({ "type": "result", "data": result})
                 return result
-            # No silent Colab hand-off: explain how to enable in-app training.
-            dl_types = sorted({n.get("type") for n in ordered_nodes if n.get("category") == COLAB_CATEGORY})
+            # Graceful fallback: PyTorch could not be obtained, so hand the user
+            # a ready-made Colab notebook instead of a dead-end error.
             _emit({
                 "type": "step",
-                "message": "Deep-learning nodes train in-app with PyTorch, which is not installed on this machine.",
+                "message": "PyTorch could not be installed automatically — generating a ready-to-run Colab notebook instead.",
             })
-            r = _err(
-                "Deep-learning nodes (" + ", ".join(dl_types) + ") train inside the app via PyTorch, "
-                "but PyTorch is not installed on this machine. Run `pip install torch` and press Train again — "
-                "no external notebook is needed."
-            )
-            _emit({"type": "result", "data": r})
-            return r
+            _, meta = notebook_builder.build_notebook(ordered_nodes)
+            response = {"route": "colab", "status": "success", "engine": ENGINE_VERSION}
+            response.update(meta)
+            result = _jsonable(response)
+            _emit({"type": "result", "data": result})
+            return result
 
         result = _jsonable(basic_ml_engine.execute(ordered_nodes, emit=_emit))
         _emit({"type": "result", "data": result})

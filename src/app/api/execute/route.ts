@@ -9,6 +9,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const EXEC_TIMEOUT_MS = 90_000;
+/** Auto-installing PyTorch on first DL run takes minutes — let it breathe. */
+const DL_INSTALL_TIMEOUT_MS = 480_000;
 
 type EngineProbe = { available: boolean; version: string | null; reason: string | null; torch: boolean };
 
@@ -131,13 +133,14 @@ export async function POST(req: NextRequest) {
 function pipePython(graph: GraphPayload, pushLine: (line: string) => void): Promise<boolean> {
   return new Promise((resolve) => {
     const cliPath = path.join(process.cwd(), "backend", "cli.py");
+    const hasDl = graph.nodes.some((node) => node?.category === "deep_learning");
     let child;
     try {
       child = spawn(process.platform === "win32" ? "python" : "python3", [cliPath, "execute"], {
         cwd: process.cwd(),
         env: { ...process.env, PYTHONUNBUFFERED: "1" },
         stdio: ["pipe", "pipe", "pipe"],
-        timeout: EXEC_TIMEOUT_MS,
+        timeout: hasDl ? DL_INSTALL_TIMEOUT_MS : EXEC_TIMEOUT_MS,
       });
     } catch {
       resolve(false);
@@ -197,14 +200,20 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Never manufacture metrics when the real Python engine is unavailable. */
 async function streamTs(graph: GraphPayload, send: (obj: unknown) => void, probe?: EngineProbe) {
+  // Deep-learning graphs without a native torch engine hand off to a ready-made
+  // Colab notebook instead of dying — the frontend already renders that view.
+  if (graph.nodes.some((node) => node.category === "deep_learning")) {
+    await send({ type: "step", message: "This deployment has no PyTorch — generating a ready-to-run Colab notebook instead…" });
+    const result = executeGraph(graph);
+    await sleep(120);
+    await send({ type: "result", data: result });
+    return;
+  }
   const model = graph.nodes.find((node) => node.category === "classic_ml");
   const supportedFallback = model?.type === "ml:knn" || model?.type === "ml:naive_bayes";
-  if (graph.nodes.some((node) => node.category === "deep_learning") || !supportedFallback) {
-    const isDeepLearning = graph.nodes.some((node) => node.category === "deep_learning");
+  if (!supportedFallback) {
     const probeNote = probe && !probe.available && probe.reason ? ` Machine check failed: ${probe.reason}.` : "";
-    const message = isDeepLearning
-      ? "Deep-learning training runs in-app on this machine via PyTorch. Install it (pip install torch) and press Train again — everything happens inside the app, no external notebook needed."
-      : `The selected model (${model?.label ?? "classical ML"}) requires the Python scikit-learn engine.${probeNote} Install backend requirements on this machine and restart the app.`;
+    const message = `The selected model (${model?.label ?? "classical ML"}) requires the Python scikit-learn engine.${probeNote} Install backend requirements on this machine and restart the app.`;
     const error = {
       route: "instant",
       status: "error",
