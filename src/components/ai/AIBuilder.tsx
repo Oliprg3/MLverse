@@ -339,7 +339,7 @@ export function AIBuilder() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-background text-foreground lg:h-screen lg:min-h-[620px] lg:overflow-hidden">
+    <main className="flex h-screen w-full overflow-hidden bg-background text-foreground supports-[height:100dvh]:h-[100dvh] lg:min-h-[620px] lg:overflow-hidden">
       {/* Header */}
       <header className="glass-panel sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-surface/80 px-5 shadow-[0_12px_36px_-30px_rgba(15,23,42,0.7)] lg:px-7">
         <div className="flex min-w-0 items-center gap-3">
