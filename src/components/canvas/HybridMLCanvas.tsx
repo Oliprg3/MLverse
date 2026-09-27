@@ -235,11 +235,22 @@ function Canvas() {
   const hasModel = useMemo(() => hasModelNode(categories), [categories]);
   const selectedNode = useMemo(() => nodes.find((n) => n.selected) ?? null, [nodes]);
   
-  // Check if there's CSV data available for analytics
+  // Check if there's CSV data available for analytics — prefer whichever CSV
+  // node is actually wired into the pipeline so multi-source canvases analyze
+  // the dataset that would really be trained.
+  const csvDatasets = useMemo(
+    () => nodes.filter((n) => n.data.type === "data:csv" && n.data.dataset),
+    [nodes],
+  );
   const csvDataset = useMemo(() => {
-    const dataNode = nodes.find((n) => n.data.type === "data:csv" && n.data.dataset);
-    return dataNode?.data.dataset ?? null;
-  }, [nodes]);
+    if (csvDatasets.length === 0) return null;
+    const sourceIds = new Set(edges.map((e) => e.source));
+    return (
+      csvDatasets.find((n) => sourceIds.has(n.id))?.data.dataset ??
+      csvDatasets[0].data.dataset ??
+      null
+    );
+  }, [csvDatasets, edges]);
   
   const hasDataForAnalytics = useMemo(() => csvDataset != null, [csvDataset]);
 

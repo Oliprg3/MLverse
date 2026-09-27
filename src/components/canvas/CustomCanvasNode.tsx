@@ -8,6 +8,7 @@ import { Handle, Position, useReactFlow, type Node, type NodeProps } from "@xyfl
 import { CheckCircle, CircleNotch, Trash, CloudArrowUp, FileCsv, XCircle } from "@phosphor-icons/react";
 import { resolveIcon } from "@/lib/icons";
 import { getCategory } from "@/lib/canvasConfig";
+import { csvPreview } from "@/lib/dataProfiling";
 import type { CsvDataset, ImageDataset, MLNodeData } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -92,13 +93,16 @@ function CustomCanvasNodeBase({ id, data, selected }: NodeProps<CustomFlowNode>)
       <div className="mt-3">
         {isCsv ? (
           csv ? (
-            <div className="flex items-center gap-2 rounded-lg border border-neutral-200/70 bg-neutral-50/70 px-2.5 py-2 dark:border-white/[0.06] dark:bg-white/[0.03]">
-              <FileCsv size={14} weight="regular" className="shrink-0 text-neutral-400 dark:text-zinc-500" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{csv.filename}</div>
-                <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{csv.nrows.toLocaleString()} rows, {csv.columns.length} cols</div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 rounded-lg border border-neutral-200/70 bg-neutral-50/70 px-2.5 py-2 dark:border-white/[0.06] dark:bg-white/[0.03]">
+                <FileCsv size={14} weight="regular" className="shrink-0 text-neutral-400 dark:text-zinc-500" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[11px] font-medium text-neutral-700 dark:text-zinc-300">{csv.filename}</div>
+                  <div className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-500">{csv.nrows.toLocaleString()} rows, {csv.columns.length} cols</div>
+                </div>
+                <span className="shrink-0 rounded-md border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 font-mono text-[9px] font-medium text-neutral-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-400">{csv.targetColumn}</span>
               </div>
-              <span className="shrink-0 rounded-md border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 font-mono text-[9px] font-medium text-neutral-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-400">{csv.targetColumn}</span>
+              <CsvPreviewGrid csv={csv} />
             </div>
           ) : (
             <UploadHint icon={<CloudArrowUp size={14} />} text="Click to import CSV" />
@@ -145,6 +149,53 @@ function UploadHint({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex items-center gap-1.5 rounded-lg border border-dashed border-neutral-300 px-2.5 py-2 text-[11px] text-neutral-400 transition-colors hover:border-neutral-400 hover:text-neutral-500 dark:border-white/[0.12] dark:text-zinc-500 dark:hover:border-white/25 dark:hover:text-zinc-400">
       {icon}{text}
+    </div>
+  );
+}
+
+/** First rows of an attached CSV, rendered as a live mini-grid on the node. */
+function CsvPreviewGrid({ csv }: { csv: CsvDataset }) {
+  const preview = csvPreview(csv, 3, 5);
+  if (!preview.columns.length) return null;
+  return (
+    <div className="overflow-hidden rounded-lg border border-neutral-200/70 dark:border-white/[0.06]">
+      <table className="w-full table-fixed border-collapse">
+        <thead>
+          <tr>
+            {preview.columns.map((col) => (
+              <th
+                key={col}
+                className={`truncate border-b border-neutral-200/70 bg-neutral-100/70 px-1.5 py-1 text-left font-mono text-[8.5px] font-semibold text-neutral-500 dark:border-white/[0.06] dark:bg-white/[0.04] dark:text-zinc-400 ${
+                  col === csv.targetColumn ? "text-sky-600 dark:text-sky-400" : ""
+                }`}
+                title={col}
+              >
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {preview.rows.map((row, ri) => (
+            <tr key={ri} className="border-b border-neutral-200/50 last:border-0 dark:border-white/[0.04]">
+              {preview.columns.map((col, ci) => {
+                const isTarget = col === csv.targetColumn;
+                return (
+                  <td
+                    key={`${ri}-${ci}`}
+                    className={`truncate border-r border-neutral-200/50 px-1.5 py-1 font-mono text-[8.5px] text-neutral-600 last:border-r-0 dark:border-white/[0.04] dark:text-zinc-300 ${
+                      isTarget ? "bg-sky-500/[0.07] font-semibold text-sky-600 dark:text-sky-400" : ""
+                    }`}
+                    title={row[ci] ?? ""}
+                  >
+                    {row[ci] ?? ""}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { useReactFlow } from "@xyflow/react";
 import {
   Broom,
   CaretRight,
+  ChartBar,
   Folder,
   Images,
   SlidersHorizontal,
@@ -21,6 +22,7 @@ import { DataCleaningModal } from "./DataCleaningModal";
 import { getCategory } from "@/lib/canvasConfig";
 import { chartsInGroup, CHART_GROUPS, parseChartSelection, serializeChartSelection } from "@/lib/chartCatalog";
 import { analyzeCsv, hasIssues } from "@/lib/dataCleaning";
+import { profileCsv, profileImages, type ColumnProfile } from "@/lib/dataProfiling";
 import { resolveIcon } from "@/lib/icons";
 import type { CsvDataset, ImageDataset, MLNodeData, NodeParam } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -250,6 +252,9 @@ export function Inspector({ node, onClose }: InspectorProps) {
                   </p>
                 ) : null}
 
+                {/* Comprehensive analysis */}
+                <AnalysisCard csv={data.dataset} />
+
                 <div>
                   <SectionLabel icon={<Target className="h-3.5 w-3.5" />}>Target column</SectionLabel>
                   <select
@@ -301,6 +306,7 @@ export function Inspector({ node, onClose }: InspectorProps) {
                     })}
                   </div>
                 </div>
+                <ImageAnalysisCard images={data.imageDataset} />
                 <p className="text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">Instant path trains a grayscale baseline on the CPU. For a CNN, add a Deep Learning node to export a Colab notebook.</p>
               </div>
             ) : (
@@ -334,6 +340,169 @@ function SectionLabel({ icon, children }: { icon: React.ReactNode; children: Rea
   return (
     <div className="nf-hud-label flex items-center gap-1.5">
       {icon}{children}
+    </div>
+  );
+}
+
+/* ── Comprehensive data analysis ────────────────────────────────────────── */
+
+/** Per-column dtype badge with a colour matched to the profile kind. */
+function DtypeBadge({ dtype }: { dtype: ColumnProfile["dtype"] }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide",
+        dtype === "numeric" && "border-sky-500/25 bg-sky-500/[0.08] text-sky-600 dark:text-sky-400",
+        dtype === "categorical" && "border-violet-500/25 bg-violet-500/[0.08] text-violet-600 dark:text-violet-400",
+        dtype === "boolean" && "border-emerald-500/25 bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-400",
+        dtype === "text" && "border-amber-500/25 bg-amber-500/[0.08] text-amber-600 dark:text-amber-400",
+      )}
+    >
+      {dtype}
+    </span>
+  );
+}
+
+function fmt(n: number, digits = 2): string {
+  if (!Number.isFinite(n)) return "—";
+  return Number.isInteger(n) ? String(n) : n.toFixed(digits);
+}
+
+function Row({ label, value, tone }: { label: string; value: string; tone?: "ok" | "warn" }) {
+  return (
+    <div className="flex items-center justify-between gap-2 text-[11px]">
+      <span className="text-neutral-400 dark:text-zinc-500">{label}</span>
+      <span className={cn("font-mono text-[10.5px] font-medium", tone === "ok" ? "text-emerald-600 dark:text-emerald-400" : tone === "warn" ? "text-amber-600 dark:text-amber-400" : "text-neutral-700 dark:text-zinc-300")}>{value}</span>
+    </div>
+  );
+}
+
+/** Full statistical profile of an attached CSV — shown under the data card. */
+function AnalysisCard({ csv }: { csv: CsvDataset }) {
+  const profile = useMemo(() => profileCsv(csv), [csv]);
+
+  const stats: Array<{ label: string; value: string; tone?: "ok" | "warn" }> = [
+    { label: "Samples", value: csv.nrows.toLocaleString() },
+    { label: "Features", value: `${csv.columns.length} columns` },
+    { label: "Missing cells", value: `${profile.missingTotal.toLocaleString()} (${fmt(profile.missingPct)}%)`, tone: profile.missingPct > 5 ? "warn" : "ok" },
+    { label: "Duplicate rows", value: profile.duplicateRows.toLocaleString(), tone: profile.duplicateRows > 0 ? "warn" : "ok" },
+  ];
+
+  return (
+    <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/60 p-3 dark:border-white/[0.07] dark:bg-white/[0.02]">
+      <div className="nf-hud-label flex items-center gap-1.5">
+        <ChartBar className="h-3.5 w-3.5" /> Data analysis
+      </div>
+
+      <div className="mt-2.5 space-y-1.5">
+        {stats.map((s) => (
+          <Row key={s.label} {...s} />
+        ))}
+      </div>
+
+      {profile.classBalance.length > 0 ? (
+        <div className="mt-3">
+          <div className="nf-hud-label mb-1.5">Target “{csv.targetColumn}” balance</div>
+          <div className="space-y-1.5">
+            {profile.classBalance.map((b) => (
+              <div key={b.value} className="group/bar">
+                <div className="flex items-baseline justify-between gap-2 text-[10px]">
+                  <span className="truncate font-mono text-neutral-500 dark:text-zinc-400">{b.value}</span>
+                  <span className="shrink-0 font-mono text-[10px] text-neutral-400 dark:text-zinc-500" style={{ width: "3.5rem" }}>
+                    {b.count.toLocaleString()} · {fmt(b.pct, 0)}%
+                  </span>
+                </div>
+                <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-neutral-200/80 dark:bg-white/[0.07]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-sky-500 to-violet-500"
+                    style={{ width: `${Math.max(2, Math.min(100, b.pct))}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {profile.columns.length > 0 ? (
+        <div className="mt-3">
+          <div className="nf-hud-label mb-1.5">Feature profile</div>
+          <div className="divide-y divide-neutral-200/60 dark:divide-white/[0.05]">
+            {profile.columns.map((col) => (
+              <div key={col.name} className="py-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[10.5px] font-medium text-neutral-700 dark:text-zinc-300" title={col.name}>
+                    {col.name}
+                  </span>
+                  <DtypeBadge dtype={col.dtype} />
+                </div>
+                <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9.5px] text-neutral-400 dark:text-zinc-500">
+                  {col.dtype === "numeric" && col.numeric ? (
+                    <>
+                      <span>min {fmt(col.numeric.min)} · max {fmt(col.numeric.max)}</span>
+                      <span>μ {fmt(col.numeric.mean)} · σ {fmt(col.numeric.std)}</span>
+                      <span>median {fmt(col.numeric.median)} · zeros {col.numeric.zeros}</span>
+                      <span>missing {col.missing} ({fmt(col.missingPct)}%)</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{col.uniques} unique {col.uniques === 1 ? "value" : "values"}</span>
+                      <span>missing {col.missing} ({fmt(col.missingPct)}%)</span>
+                    </>
+                  )}
+                </div>
+                {col.top && col.top.length > 0 ? (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {col.top.map((t) => (
+                      <span key={t.value} className="rounded border border-neutral-200/70 bg-white/50 px-1 py-0.5 font-mono text-[8.5px] text-neutral-500 dark:border-white/[0.06] dark:bg-white/[0.02] dark:text-zinc-400" title={`${t.count.toLocaleString()} (${fmt(t.pct)}%)`}>
+                        {t.value} · {t.count}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {csv.columns.length > profile.columns.length ? (
+        <p className="nf-hud-label mt-2">+{csv.columns.length - profile.columns.length} more columns</p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Class distribution summary for an image node. */
+function ImageAnalysisCard({ images }: { images: ImageDataset }) {
+  const profile = useMemo(() => profileImages(images), [images]);
+  const maxCount = Math.max(1, ...profile.classBalance.map((b) => b.count));
+  return (
+    <div className="rounded-lg border border-neutral-200/80 bg-neutral-50/60 p-3 dark:border-white/[0.07] dark:bg-white/[0.02]">
+      <div className="nf-hud-label flex items-center gap-1.5">
+        <ChartBar className="h-3.5 w-3.5" /> Class balance
+      </div>
+      <div className="mt-2.5 space-y-1.5">
+        {profile.classBalance.map((b) => (
+          <div key={b.value}>
+            <div className="flex items-baseline justify-between gap-2 text-[10px]">
+              <span className="min-w-0 truncate font-mono text-neutral-500 dark:text-zinc-400">{b.value}</span>
+              <span className="shrink-0 font-mono text-[10px] text-neutral-400 dark:text-zinc-500">
+                {b.count.toLocaleString()} · {fmt(b.pct, 0)}%
+              </span>
+            </div>
+            <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-neutral-200/80 dark:bg-white/[0.07]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                style={{ width: `${Math.max(3, Math.min(100, (b.count / maxCount) * 100))}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="nf-hud-label mt-2.5">
+        {profile.nsamples.toLocaleString()} samples · {profile.width}×{profile.height}px · {profile.nclasses} classes
+      </p>
     </div>
   );
 }

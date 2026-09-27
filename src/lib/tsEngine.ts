@@ -108,9 +108,16 @@ interface Encoded {
   name: string;
 }
 
-/** Resolve + encode the dataset described by the graph's data node. */
-function buildDataset(nodes: { type: string; category: string; params?: Record<string, unknown>; dataset?: CsvDataset; imageDataset?: ImageDataset }[]): Encoded {
-  const dataNode = nodes.find((n) => n.category === "data");
+/** Resolve + encode the dataset described by the graph's data node.
+ *  Prefers the data source that is wired into the pipeline (has an outgoing
+ *  edge), so multiple data nodes can coexist on the canvas. */
+function buildDataset(
+  nodes: { id: string; type: string; category: string; params?: Record<string, unknown>; dataset?: CsvDataset; imageDataset?: ImageDataset }[],
+  edges?: { source: string; target: string }[],
+): Encoded {
+  const sourceIds = new Set((edges ?? []).map((e) => e.source));
+  const wiredData = nodes.filter((n) => n.category === "data" && sourceIds.has(n.id));
+  const dataNode = wiredData[0] ?? nodes.find((n) => n.category === "data");
   const dtype = dataNode?.type ?? "data:breast_cancer";
   const p = (dataNode?.params ?? {}) as Record<string, number>;
 
@@ -476,7 +483,7 @@ function executeInstant(graph: GraphPayload): InstantExecutionResponse {
     imageDataset?: ImageDataset;
   }[];
 
-  const enc = buildDataset(nodes);
+  const enc = buildDataset(nodes, graph.edges);
   const { X, y, featureNames, classNames, name } = enc;
   const nClasses = classNames.length;
 
@@ -488,7 +495,10 @@ function executeInstant(graph: GraphPayload): InstantExecutionResponse {
   if (hasScaler) steps.push({ name: "StandardScaler", detail: "zero mean / unit variance", kind: "preprocessing" });
   if (hasPca) steps.push({ name: "PCA", detail: "dimensionality reduction", kind: "preprocessing" });
 
-  const dataParams = (nodes.find((n) => n.category === "data")?.params ?? {}) as Record<string, number>;
+  const sourceIds = new Set((graph.edges ?? []).map((e) => e.source));
+  const wiredData = nodes.filter((n) => n.category === "data" && sourceIds.has(n.id));
+  const dataNode = wiredData[0] ?? nodes.find((n) => n.category === "data");
+  const dataParams = (dataNode?.params ?? {}) as Record<string, number>;
   const splitParams = (nodes.find((n) => n.type === "pre:split")?.params ?? {}) as Record<string, number>;
   const testSize = Number(dataParams.test_size ?? splitParams.test_size ?? 0.2);
   steps.push({ name: "Train/Test split", detail: `test_size=${testSize.toFixed(2)}`, kind: "preprocessing" });

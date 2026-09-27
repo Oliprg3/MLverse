@@ -205,21 +205,26 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
       return chainLinks.some(([from, to]) => from && to && from !== to && !pairs.has(`${from}->${to}`));
     })();
 
+  /** Choose the data source that actually feeds the model chain (prefers a
+   *  wired source; falls back to the first source that carries data). */
+  const primaryData =
+    dataNodes.find((d) => (outgoing.get(d.id) ?? []).length > 0) ??
+    dataNodes.find((d) => d.dataset || d.imageDataset) ??
+    dataNodes[0];
+
   if (dataNodes.length === 0) {
     diagnostics.push({ id: "no-data", level: "error", title: "No dataset", detail: "Add a data node: every pipeline starts with a data source." });
   } else if (dataNodes.length > 1) {
-    // Prefer deleting a data source that nothing consumes — never the wired one.
-    const removable =
-      dataNodes.find((d) => (outgoing.get(d.id) ?? []).length === 0 && d !== primaryData) ??
-      dataNodes[dataNodes.length - 1];
-    diagnostics.push({
-      id: "multi-data",
-      level: "warning",
-      nodeId: removable.id,
-      title: `${dataNodes.length} data sources`,
-      detail: "Only one dataset is used per run. Disconnect or delete the extra source.",
-      fix: { kind: "remove-node", nodeId: removable.id },
-    });
+    const wired = dataNodes.filter((d) => (outgoing.get(d.id) ?? []).length > 0);
+    if (wired.length > 1) {
+      diagnostics.push({
+        id: "multi-data-wired",
+        level: "warning",
+        nodeId: primaryData.id,
+        title: `${wired.length} wired data sources`,
+        detail: `“${primaryData.label}” feeds the model; connect the others into a preprocessing or merge step, or disconnect them.`,
+      });
+    }
   }
 
   if (modelNodes.length === 0) {
@@ -227,7 +232,6 @@ export function validatePipeline(nodes: GraphNodePayload[], edges: GraphEdgePayl
   }
 
   // ── Connectivity ───────────────────────────────────────────────────────────
-  const primaryData = dataNodes[0];
   for (const node of dataNodes) {
     if ((outgoing.get(node.id) ?? []).length === 0) {
       diagnostics.push({

@@ -106,7 +106,9 @@ def _py(v):
         return v
 
 def load_xy(g):
-    data = next((n for n in g["nodes"] if n["category"] == "data"), None)
+    source_ids = {e["source"] for e in g.get("edges", [])}
+    wired = [n for n in g["nodes"] if n["category"] == "data" and n.get("id") in source_ids]
+    data = wired[0] if wired else next((n for n in g["nodes"] if n["category"] == "data"), None)
     if data is None:
         raise ValueError("No dataset node is connected.")
     t = data.get("type", "")
@@ -146,7 +148,9 @@ def split_params(g):
         if n.get("type") == "pre:split":
             p = n.get("params") or {}
             return float(p.get("test_size", 0.2))
-    d = next((n for n in g["nodes"] if n["category"] == "data"), None)
+    source_ids = {e["source"] for e in g.get("edges", [])}
+    wired = [n for n in g["nodes"] if n["category"] == "data" and n.get("id") in source_ids]
+    d = wired[0] if wired else next((n for n in g["nodes"] if n["category"] == "data"), None)
     p = (d or {}).get("params") or {}
     return float(p.get("test_size", 0.2))
 

@@ -20,6 +20,13 @@ const hasDeepLearning = (g: GraphPayload) => g.nodes.some((n) => n.category === 
 
 const first = (g: GraphPayload, cat: string) => g.nodes.find((n) => n.category === cat);
 
+/** The data node that feeds the model chain (wired source wins, like the engines). */
+const primaryData = (g: GraphPayload) => {
+  const sourceIds = new Set((g.edges ?? []).map((e) => e.source));
+  const dataNodes = g.nodes.filter((n) => n.category === "data");
+  return dataNodes.find((d) => sourceIds.has(d.id)) ?? dataNodes.find((d) => d.dataset ?? d.imageDataset) ?? dataNodes[0];
+};
+
 /** Format a single param value as Python literal. */
 function pyVal(v: string | number): string {
   if (v === "none" || v === "None") return "None";
@@ -64,7 +71,7 @@ const MODEL_SPECS: Record<string, ModelSpec> = {
 };
 
 function dataCode(g: GraphPayload): string {
-  const data = first(g, "data");
+  const data = primaryData(g);
   const t = data?.type ?? "data:breast_cancer";
   if (t === "data:csv" || t === "data:db") {
     const target = data?.dataset?.targetColumn ?? "target";
