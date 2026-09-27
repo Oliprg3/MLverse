@@ -185,7 +185,7 @@ export function Header({
         <button
           type="button"
           onClick={onBuildAI}
-          className="group hidden h-9 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white/50 px-3 text-[13px] font-semibold text-neutral-800 backdrop-blur-md transition-all duration-300 hover:border-neutral-400 hover:bg-white active:scale-[0.97] dark:border-white/15 dark:bg-white/[0.02] dark:text-zinc-200 dark:hover:border-white/30 dark:hover:bg-white/[0.06] md:inline-flex"
+          className="group flex h-9 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white/50 px-2.5 text-[13px] font-semibold text-neutral-800 backdrop-blur-md transition-all duration-300 hover:border-neutral-400 hover:bg-white active:scale-[0.97] dark:border-white/15 dark:bg-white/[0.02] dark:text-zinc-200 dark:hover:border-white/30 dark:hover:bg-white/[0.06] md:px-3"
         >
           <Robot size={15} className="text-neutral-500 dark:text-zinc-400" />
           <span className="hidden lg:inline">AI Architect</span>

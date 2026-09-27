@@ -115,8 +115,8 @@ export function Dashboard() {
               <span className="text-sm font-semibold tracking-tight text-foreground">Datlify</span>
             </div>
           <nav className="flex items-center gap-1">
-            <TransitionLink href="/canvas" label="Opening canvas" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Canvas</TransitionLink>
-            <Link href="/build" className="hidden rounded-xl px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] sm:block">Build with AI</Link>
+            <TransitionLink href="/canvas" label="Opening canvas" className="hidden rounded-xl px-2 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] min-[380px]:block">Canvas</TransitionLink>
+            <Link href="/build" className="hidden rounded-xl px-2 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground hover:bg-foreground/[0.04] min-[380px]:block">Build with AI</Link>
             <button type="button" onClick={toggle} aria-label="Toggle theme" className="flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted transition-all hover:border-border-strong hover:text-foreground hover:bg-foreground/[0.04]">
               {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
