@@ -5,8 +5,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ZEN_URL = process.env.OPENCODE_ZEN_BASE_URL ?? "https://opencode.ai/zen/v1/chat/completions";
-const ZEN_MODEL = process.env.OPENCODE_ZEN_MODEL ?? "mimo-v2.5-free";
-const FREE_ZEN_MODELS = ["mimo-v2.5-free", "deepseek-v4-flash-free", "nemotron-3.5-lightning-free", "nemotron-3-ultra-free", "laguna-s-2.1-free"];
+const ZEN_MODEL = process.env.OPENCODE_ZEN_MODEL ?? "opencode/big-pickle";
+const FREE_ZEN_MODELS = ["opencode/big-pickle", "mimo-v2.5-free", "deepseek-v4-flash-free", "nemotron-3.5-lightning-free", "nemotron-3-ultra-free", "laguna-s-2.1-free"];
 
 type BlueprintNode = { type: string; reason: string };
 type AlgorithmSuggestion = { algorithm: string; type: string; score: number; reason: string };

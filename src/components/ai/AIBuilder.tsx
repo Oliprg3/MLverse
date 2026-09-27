@@ -385,17 +385,17 @@ export function AIBuilder() {
       <div className="flex min-h-0 flex-1 flex-col gap-0 lg:flex-row lg:p-4 lg:pt-3">
         {/* Chat column */}
         <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-neutral-200/80 bg-white/90 max-lg:max-h-[55vh] lg:w-[420px] lg:rounded-2xl lg:border lg:shadow-sm dark:border-white/[0.07] dark:bg-[#080c12]/80">
-          <div className="border-b border-neutral-200/80 bg-white/45 px-6 py-6 lg:rounded-t-2xl dark:border-white/[0.06] dark:bg-white/[0.02]">
+          <div className="border-b border-neutral-200/80 bg-white/45 px-5 py-4 lg:rounded-t-2xl lg:px-6 lg:py-6 dark:border-white/[0.06] dark:bg-white/[0.02]">
             <div className="flex items-center justify-between gap-3">
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Design session</div>
               <span className="rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Ready</span>
             </div>
-            <p className="mt-2 text-xs leading-6 text-muted">
+            <p className="mt-1.5 hidden text-xs leading-6 text-muted sm:block">
               Describe the ML problem you want to solve. I’ll map it into a canvas-ready plan when you ask.
             </p>
           </div>
 
-          <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div ref={scrollRef} className="scroll-thin min-h-[120px] flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:min-h-0">
             {messages.length === 0 ? (
               <div className="animate-builder-message rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <p className="flex items-center gap-2 text-xs font-bold"><ChatCenteredDots size={15} className="text-muted" /> Describe your ML task</p>
@@ -440,12 +440,12 @@ export function AIBuilder() {
             ) : null}
           </div>
 
-          <div className="border-t border-neutral-200/80 bg-white/45 p-5 dark:border-white/[0.06] dark:bg-white/[0.02]">
-            <div className="mb-3 flex items-center justify-between">
+          <div className="border-t border-neutral-200/80 bg-white/45 p-4 sm:p-5 dark:border-white/[0.06] dark:bg-white/[0.02]">
+            <div className="mb-3 hidden items-center justify-between sm:flex">
               <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2">Start with an example</span>
               <span className="text-[10px] text-muted-2">No setup required</span>
             </div>
-            <div className="mb-3 flex flex-wrap gap-1.5">
+            <div className="mb-3 hidden flex-wrap gap-1.5 sm:flex">
               {SUGGESTION_CHIPS.map((suggestion) => (
                 <button key={suggestion} type="button" disabled={loading} onClick={() => void send(suggestion)} className="rounded-full border border-neutral-200 bg-white/50 px-3 py-1.5 text-left text-[11px] font-medium text-neutral-600 transition-all hover:border-neutral-300 hover:bg-white hover:text-neutral-900 active:scale-[0.98] disabled:opacity-50 dark:border-white/[0.09] dark:bg-white/[0.02] dark:text-zinc-400 dark:hover:border-white/20 dark:hover:bg-white/[0.05] dark:hover:text-white">
                   {suggestion}
@@ -463,7 +463,7 @@ export function AIBuilder() {
                 className="w-full resize-none bg-transparent px-1 text-xs leading-6 outline-none placeholder:text-muted-2"
               />
               <div className="mt-2 flex items-center justify-between gap-3">
-                <span className="flex items-center gap-1.5 text-[10px] text-muted-2">
+                <span className="hidden items-center gap-1.5 text-[10px] text-muted-2 sm:flex">
                   <kbd className="rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd> send
                   <kbd className="ml-1 rounded-md border border-border bg-foreground/[0.04] px-1.5 py-0.5 font-mono text-[9px]">Shift+Enter</kbd> new line
                 </span>

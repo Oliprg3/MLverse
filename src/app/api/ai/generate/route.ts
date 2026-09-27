@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const ZEN_MODEL = process.env.OPENCODE_ZEN_MODEL ?? "mimo-v2.5-free";
+const ZEN_MODEL = process.env.OPENCODE_ZEN_MODEL ?? "opencode/big-pickle";
 const ZEN_URL = process.env.OPENCODE_ZEN_BASE_URL ?? "https://opencode.ai/zen/v1/chat/completions";
-const FREE_ZEN_MODELS = ["mimo-v2.5-free", "deepseek-v4-flash-free", "nemotron-3.5-lightning-free", "nemotron-3-ultra-free", "laguna-s-2.1-free"];
+const FREE_ZEN_MODELS = ["opencode/big-pickle", "mimo-v2.5-free", "deepseek-v4-flash-free", "nemotron-3.5-lightning-free", "nemotron-3-ultra-free", "laguna-s-2.1-free"];
 
 function stripMarkdownFence(value: string): string {
   return `${value.trim().replace(/^```(?:python)?\s*/i, "").replace(/\s*```$/i, "").trim()}\n`;

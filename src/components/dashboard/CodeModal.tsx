@@ -57,7 +57,7 @@ export function CodeModal({ open, onClose, code, graph, onChange, onRegenerate, 
   const [aiPrompt, setAiPrompt] = useState("Make the training loop clearer and keep live epoch metrics for this real dataset.");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiProvider, setAiProvider] = useState<"opencode" | "gemini">("opencode");
-  const [aiModel, setAiModel] = useState("mimo-v2.5-free");
+  const [aiModel, setAiModel] = useState("opencode/big-pickle");
   const [provider, setProvider] = useState<string | null>(null);
 
   // The Node.js service is generated on demand so it always reflects the graph.
@@ -178,6 +178,7 @@ export function CodeModal({ open, onClose, code, graph, onChange, onRegenerate, 
                 </select>
                 {aiProvider === "opencode" && (
                   <select aria-label="OpenCode Zen model" value={aiModel} onChange={(event) => setAiModel(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-xs text-foreground sm:flex-none">
+                    <option value="opencode/big-pickle">Big Pickle</option>
                     <option value="mimo-v2.5-free">MiMo V2.5 Free</option>
                     <option value="deepseek-v4-flash-free">DeepSeek V4 Flash Free</option>
                     <option value="nemotron-3.5-lightning-free">Nemotron 3.5 Lightning Free</option>
