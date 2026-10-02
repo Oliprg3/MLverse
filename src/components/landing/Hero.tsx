@@ -74,7 +74,7 @@ export function Hero() {
         <h1 className="max-w-5xl text-balance text-[42px] font-semibold leading-[1.04] tracking-[-0.03em] text-neutral-900 dark:text-white sm:text-6xl md:text-7xl lg:text-[84px]">
           {"Train AI models at the|speed of thought.".split("|").map((line, li) => (
             <span key={li} className="block overflow-hidden pb-1">
-              <span className={`nf-hero-line block ${li === 1 ? "text-neutral-400 dark:text-zinc-500" : ""}`}>
+              <span className={`nf-hero-line block ${li === 1 ? "text-muted-2" : ""}`}>
                 {li === 1 ? (
                   <>
                     speed of{" "}
@@ -128,7 +128,7 @@ export function Hero() {
               <div className="font-mono text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
                 <CountUp to={s.value} suffix={s.suffix} decimals={s.decimals ?? 0} />
               </div>
-              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-500">{s.label}</div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-2">{s.label}</div>
             </div>
           ))}
         </div>
@@ -136,7 +136,7 @@ export function Hero() {
 
       {/* Scroll cue */}
       <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2">
-        <div className="flex animate-bounce flex-col items-center gap-1 text-neutral-400 dark:text-zinc-600">
+        <div className="flex animate-bounce flex-col items-center gap-1 text-muted-2 dark:text-muted-3">
           <span className="font-mono text-[9px] uppercase tracking-[0.3em]">Scroll</span>
           <CaretDown size={14} />
         </div>
@@ -145,12 +145,12 @@ export function Hero() {
       {/* Side HUD decorations */}
       <div className="pointer-events-none absolute left-6 top-1/2 hidden -translate-y-1/2 select-none flex-col items-center gap-4 lg:flex" aria-hidden="true">
         <span className="h-16 w-px bg-gradient-to-b from-transparent via-neutral-300 to-transparent dark:via-white/15" />
-        <span className="rotate-90 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.35em] text-neutral-400 dark:text-zinc-600">
+        <span className="rotate-90 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.35em] text-muted-2 dark:text-muted-3">
           NF://core.engine.v3
         </span>
         <span className="h-16 w-px bg-gradient-to-b from-transparent via-neutral-300 to-transparent dark:via-white/15" />
       </div>
-      <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 select-none flex-col items-end gap-2 font-mono text-[9px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-600 lg:flex" aria-hidden="true">
+      <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 select-none flex-col items-end gap-2 font-mono text-[9px] uppercase tracking-[0.25em] text-muted-2 dark:text-muted-3 lg:flex" aria-hidden="true">
         {["CPU CLUSTER — ONLINE", "GPU MESH — IDLE", "SYNC — 12MS"].map((t) => (
           <span key={t}>{t}</span>
         ))}

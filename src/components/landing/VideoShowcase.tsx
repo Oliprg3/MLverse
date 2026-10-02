@@ -183,16 +183,16 @@ export function VideoShowcase() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.3em] text-neutral-400 dark:text-zinc-500">
+            <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-2">
               [ AI field guide ]
             </p>
             <h2 className="max-w-xl text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] text-neutral-900 dark:text-white sm:text-5xl">
               Watch intelligence
-              <span className="text-neutral-400 dark:text-zinc-500"> take shape.</span>
+              <span className="text-muted-2"> take shape.</span>
             </h2>
           </div>
           {!reduced ? (
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-neutral-400 dark:text-zinc-500">
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-2">
               Scroll to play <CaretDown size={12} />
             </div>
           ) : null}

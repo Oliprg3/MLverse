@@ -57,7 +57,7 @@ export function StatsBand() {
                 <Counter to={s.value} suffix={s.suffix} decimals={s.decimals} />
               </div>
               <div className="mt-3 flex items-center justify-center">
-                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-400 transition-colors duration-500 group-hover:text-neutral-600 dark:text-zinc-600 dark:group-hover:text-zinc-400">
+                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-2 transition-colors duration-500 group-hover:text-neutral-600 dark:text-muted-3 dark:group-hover:text-zinc-400">
                   {s.label}
                 </span>
               </div>

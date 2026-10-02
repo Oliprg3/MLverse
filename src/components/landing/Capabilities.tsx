@@ -118,7 +118,7 @@ function EngineIllustration() {
       <span className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2 transition-all duration-500 ${
         !gpu
           ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-          : "border-neutral-200 text-neutral-400 dark:border-white/10 dark:text-zinc-600"
+          : "border-neutral-200 text-muted-2 dark:border-white/10 dark:text-muted-3"
       }`}>
         CPU · instant
       </span>
@@ -126,7 +126,7 @@ function EngineIllustration() {
       <span className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2 transition-all duration-500 ${
         gpu
           ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-          : "border-neutral-200 text-neutral-400 dark:border-white/10 dark:text-zinc-600"
+          : "border-neutral-200 text-muted-2 dark:border-white/10 dark:text-muted-3"
       }`}>
         Local PyTorch
       </span>
@@ -156,7 +156,7 @@ function ChartIllustration() {
           className="stroke-neutral-300 dark:stroke-white/25"
         />
       </svg>
-      <div className="flex justify-between font-mono text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">
+      <div className="flex justify-between font-mono text-[9px] uppercase tracking-widest text-muted-2 dark:text-muted-3">
         <span>epoch loss</span>
         <span className="text-emerald-600 dark:text-emerald-400">+18.4% acc</span>
       </div>
@@ -176,11 +176,11 @@ function CleanIllustration() {
     <div className="flex h-full flex-col justify-center gap-1.5 font-mono text-[10px]">
       {rows.map(([k, v], i) => (
         <div key={k} className="flex items-center justify-between rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 dark:border-white/[0.07] dark:bg-white/[0.02]">
-          <span className="text-neutral-400 dark:text-zinc-500">{k}</span>
+          <span className="text-muted-2">{k}</span>
           <span className={v ? "text-neutral-700 dark:text-zinc-300" : "text-emerald-600 dark:text-emerald-300"}>{v}</span>
         </div>
       ))}
-      <div className="mt-0.5 flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-neutral-400 dark:text-zinc-600">
+      <div className="mt-0.5 flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-muted-2 dark:text-muted-3">
         <Broom size={10} className="text-neutral-700 dark:text-zinc-300" />
         auto-imputed 2 fields
       </div>
@@ -192,7 +192,7 @@ function CleanIllustration() {
 function CodeIllustration() {
   return (
     <div className="h-full overflow-hidden rounded-lg border border-neutral-900 bg-neutral-900 p-3 font-mono text-[10px] leading-relaxed dark:border-white/[0.08] dark:bg-black/60">
-      <pre className="whitespace-pre-wrap text-neutral-400">
+      <pre className="whitespace-pre-wrap text-muted-2">
         <span className="font-semibold text-neutral-100">import</span> xgboost <span className="font-semibold text-neutral-100">as</span> xgb{"\n"}
         <span className="font-semibold text-neutral-100">from</span> sklearn.model_selection <span className="font-semibold text-neutral-100">import</span> split{"\n"}
         {"\n"}
@@ -232,7 +232,7 @@ function Card({ icon: Icon, title, copy, children, className = "", index }: Card
           </span>
         </div>
         <h3 className="text-[17px] font-semibold tracking-tight text-neutral-900 dark:text-white">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-500 dark:text-zinc-500">{copy}</p>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-500 dark:text-muted-2">{copy}</p>
         {children ? (
           <div className="mt-6 min-h-[104px] rounded-xl border border-neutral-100 bg-neutral-50/60 p-3 dark:border-white/[0.05] dark:bg-black/30">{children}</div>
         ) : null}
@@ -252,7 +252,7 @@ export function Capabilities() {
           <>
             Everything a data team needs.
             <br />
-            <span className="text-neutral-400 dark:text-zinc-500">Nothing it doesn&apos;t.</span>
+            <span className="text-muted-2">Nothing it doesn&apos;t.</span>
           </>
         }
         copy="A complete machine-learning workbench in the browser — from raw CSV to production endpoint, without writing a single line unless you want to."

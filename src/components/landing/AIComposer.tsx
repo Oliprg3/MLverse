@@ -52,7 +52,7 @@ const OPENING = "Predict which customers will churn next quarter";
 function SummaryCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-t border-neutral-200 pt-2.5 dark:border-white/[0.07]">
-      <p className="font-mono text-[8.5px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-600">{label}</p>
+      <p className="font-mono text-[8.5px] uppercase tracking-[0.2em] text-muted-2 dark:text-muted-3">{label}</p>
       <p className="mt-1 truncate font-mono text-[11.5px] text-neutral-900 dark:text-white" title={value}>
         {value}
       </p>
@@ -178,7 +178,7 @@ export function AIComposer() {
           title={
             <>
               Describe the outcome.{" "}
-              <span className="text-neutral-400 dark:text-zinc-500">Get the graph.</span>
+              <span className="text-muted-2">Get the graph.</span>
             </>
           }
           copy="Say what you want to predict in plain language and a pipeline assembles itself — source, cleaning, encoding, split, estimator, evaluation, endpoint. The panel shows the derivation as it happens, including the runner-up it rejected."
@@ -194,11 +194,11 @@ export function AIComposer() {
             <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_60px_120px_-60px_rgba(0,0,0,0.3)] dark:border-white/10 dark:bg-[#070709] dark:shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9)]">
               {/* Title bar */}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02] sm:px-5">
-                <span className="flex items-center gap-2 font-mono text-[11px] text-neutral-400 dark:text-zinc-500">
+                <span className="flex items-center gap-2 font-mono text-[11px] text-muted-2">
                   <Sparkle size={12} className={busy ? "animate-pulse text-neutral-900 dark:text-white" : ""} />
                   prompt<span className="text-neutral-300 dark:text-zinc-700"> → </span>pipeline
                 </span>
-                <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-600">
+                <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-muted-2 dark:text-muted-3">
                   {busy ? "composing…" : "resolved locally · 0 requests"}
                 </span>
               </div>
@@ -226,7 +226,7 @@ export function AIComposer() {
                         }
                       }}
                       placeholder="e.g. forecast weekly demand per warehouse"
-                      className="w-full resize-none bg-transparent px-3.5 py-3 pr-12 text-[13.5px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 dark:text-zinc-100 dark:placeholder:text-zinc-600"
+                      className="w-full resize-none bg-transparent px-3.5 py-3 pr-12 text-[13.5px] leading-relaxed text-neutral-900 outline-none placeholder:text-muted-2 dark:text-zinc-100 dark:placeholder:text-zinc-600"
                     />
                     <button
                       type="button"
@@ -247,7 +247,7 @@ export function AIComposer() {
                           setDraft(s);
                           compose(s);
                         }}
-                        className="max-w-full truncate border border-neutral-200 px-2.5 py-1 text-left font-mono text-[9.5px] text-neutral-400 transition-colors duration-200 hover:border-neutral-400 hover:text-neutral-800 dark:border-white/10 dark:text-zinc-600 dark:hover:border-white/25 dark:hover:text-zinc-200"
+                        className="max-w-full truncate border border-neutral-200 px-2.5 py-1 text-left font-mono text-[9.5px] text-muted-2 transition-colors duration-200 hover:border-neutral-400 hover:text-neutral-800 dark:border-white/10 dark:text-muted-3 dark:hover:border-white/25 dark:hover:text-zinc-200"
                       >
                         {s}
                       </button>
@@ -261,7 +261,7 @@ export function AIComposer() {
                         Derivation
                       </h3>
                       {plan ? (
-                        <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400 dark:text-zinc-600">
+                        <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2 dark:text-muted-3">
                           keyword scorer · deterministic
                         </span>
                       ) : null}
@@ -292,7 +292,7 @@ export function AIComposer() {
                           ) : null}
                         </ol>
                       ) : (
-                        <p className="font-mono text-[11px] text-neutral-400 dark:text-zinc-600">
+                        <p className="font-mono text-[11px] text-muted-2 dark:text-muted-3">
                           waiting for an objective…
                         </p>
                       )}
@@ -303,7 +303,7 @@ export function AIComposer() {
                       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
                         <div className="min-w-[170px] flex-1">
                           <div className="mb-1.5 flex items-baseline justify-between font-mono text-[9.5px] uppercase tracking-[0.16em]">
-                            <span className="text-neutral-400 dark:text-zinc-600">routing confidence</span>
+                            <span className="text-muted-2 dark:text-muted-3">routing confidence</span>
                             <span className="tabular-nums text-neutral-900 dark:text-white">
                               {(plan.confidence * 100).toFixed(0)}%
                             </span>
@@ -326,7 +326,7 @@ export function AIComposer() {
                               </span>
                             ))
                           ) : (
-                            <span className="font-mono text-[9.5px] text-neutral-400 dark:text-zinc-600">
+                            <span className="font-mono text-[9.5px] text-muted-2 dark:text-muted-3">
                               no terms matched
                             </span>
                           )}
@@ -342,7 +342,7 @@ export function AIComposer() {
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500 dark:text-zinc-400">
                       Composed graph
                     </h3>
-                    <span className="font-mono text-[9.5px] tabular-nums text-neutral-400 dark:text-zinc-600">
+                    <span className="font-mono text-[9.5px] tabular-nums text-muted-2 dark:text-muted-3">
                       {stepCount}/{plan?.steps.length ?? 0}
                     </span>
                   </div>
@@ -383,7 +383,7 @@ export function AIComposer() {
                               <span className="block truncate text-[12.5px] font-medium text-neutral-900 dark:text-white">
                                 {step.label}
                               </span>
-                              <span className="block truncate font-mono text-[9.5px] text-neutral-400 dark:text-zinc-600">
+                              <span className="block truncate font-mono text-[9.5px] text-muted-2 dark:text-muted-3">
                                 {step.detail}
                               </span>
                             </span>
@@ -405,7 +405,7 @@ export function AIComposer() {
                     <SummaryCell key={cell.label} label={cell.label} value={cell.value} />
                   ))}
                 </div>
-                <p className="mt-5 text-[11.5px] leading-relaxed text-neutral-400 dark:text-zinc-500">
+                <p className="mt-5 text-[11.5px] leading-relaxed text-muted-2">
                   This demo routes with weighted keyword scoring so it can run entirely in your browser — the real
                   builder inside Datlify calls a model and reads your actual schema. The shape of the output is the
                   same: a graph you can open, rewire and run.

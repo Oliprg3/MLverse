@@ -44,7 +44,7 @@ export function Testimonials() {
             <>
               Less setup.
               <br />
-              <span className="text-neutral-400 dark:text-zinc-500">More signal.</span>
+              <span className="text-muted-2">More signal.</span>
             </>
           }
           copy="Datlify gives you a clear surface for exploring data and building models — without pretending the hard parts do not matter."
@@ -94,7 +94,7 @@ export function Testimonials() {
                         <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900 dark:text-white">{principle.title}</h3>
                         <ArrowUpRight size={15} className="shrink-0 text-neutral-300 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 dark:text-zinc-700" />
                       </div>
-                      <p className="mt-2 text-[13px] leading-5 text-neutral-500 dark:text-zinc-500">{principle.copy}</p>
+                      <p className="mt-2 text-[13px] leading-5 text-neutral-500 dark:text-muted-2">{principle.copy}</p>
                     </div>
                   </div>
                 </Reveal>

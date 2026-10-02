@@ -57,7 +57,7 @@ export function Footer() {
 
           {COLS.map((col) => (
             <nav key={col.title} aria-label={col.title}>
-              <h4 className="font-mono text-[10px] uppercase tracking-[0.28em] text-neutral-400 dark:text-zinc-500">{col.title}</h4>
+              <h4 className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-2">{col.title}</h4>
               <ul className="mt-5 space-y-3">
                 {col.links.map((l) => (
                   <li key={l.label}>
@@ -72,9 +72,9 @@ export function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-neutral-200 pt-8 dark:border-white/[0.06] sm:flex-row">
-          <p className="font-mono text-[11px] text-neutral-400 dark:text-zinc-700">© 2026 Datlify Labs. Built for the post-notebook era.</p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-700">
-            NF://core.engine.v3 · <span className="text-neutral-500 dark:text-zinc-500">est. 2024</span>
+          <p className="font-mono text-[11px] text-muted-2 dark:text-zinc-700">© 2026 Datlify Labs. Built for the post-notebook era.</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-2 dark:text-zinc-700">
+            NF://core.engine.v3 · <span className="text-neutral-500 dark:text-muted-2">est. 2024</span>
           </p>
         </div>
       </div>

@@ -69,7 +69,7 @@ export function Pricing() {
           title={
             <>
               Start free. Scale
-              <span className="text-neutral-400 dark:text-zinc-500"> when it ships.</span>
+              <span className="text-muted-2"> when it ships.</span>
             </>
           }
           copy="No credit card for the free tier. No per-seat math games. Upgrade the moment your first model hits production."
@@ -95,9 +95,9 @@ export function Pricing() {
                   <span className="text-5xl font-semibold tracking-tight text-neutral-900 transition-colors duration-500 group-hover:text-black dark:text-white sm:text-[56px] sm:leading-none">
                     {tier.price}
                   </span>
-                  <span className="font-mono text-xs text-neutral-400 dark:text-zinc-600">/ {tier.period}</span>
+                  <span className="font-mono text-xs text-muted-2 dark:text-muted-3">/ {tier.period}</span>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-neutral-500 dark:text-zinc-500">{tier.copy}</p>
+                <p className="mt-3 text-sm leading-relaxed text-neutral-500 dark:text-muted-2">{tier.copy}</p>
                 <ul className="mt-7 flex-1 space-y-3 border-t border-neutral-100 pt-7 dark:border-white/[0.06]">
                   {tier.features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm text-neutral-700 dark:text-zinc-300">

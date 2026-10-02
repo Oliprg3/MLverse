@@ -17,7 +17,7 @@ export function SectionHead({ index, kicker, title, copy, align = "center" }: Se
         <div className={`mb-4 flex items-center gap-3 ${centered ? "justify-center" : ""}`}>
           <span className="font-mono text-xs text-neutral-900 dark:text-white">{index}</span>
           <span className="h-px w-8 bg-neutral-300 dark:bg-white/30" />
-          <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-neutral-400 dark:text-zinc-500">{kicker}</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-2">{kicker}</span>
         </div>
       </Reveal>
       <Reveal delay={100}>

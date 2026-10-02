@@ -13,7 +13,7 @@ export function FinalCTA() {
 
       <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-8">
         <Reveal>
-          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.3em] text-neutral-400 dark:text-zinc-500">
+          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-2">
             [ Initialize ]
           </p>
         </Reveal>
@@ -21,7 +21,7 @@ export function FinalCTA() {
           <h2 className="text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-neutral-900 dark:text-white sm:text-6xl md:text-7xl">
             Your first model is
             <br />
-            <span className="text-neutral-400 underline decoration-neutral-300 decoration-[3px] underline-offset-8 dark:text-zinc-500 dark:decoration-white/40">
+            <span className="text-muted-2 underline decoration-neutral-300 decoration-[3px] underline-offset-8 dark:text-muted-2 dark:decoration-white/40">
               94 seconds away.
             </span>
           </h2>
@@ -52,7 +52,7 @@ export function FinalCTA() {
         </Reveal>
         <Reveal delay={400}>
           <div className="mt-8 flex items-center justify-center">
-            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 dark:text-zinc-600">
+            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-2 dark:text-muted-3">
               free forever tier · no credit card · runs in your browser
             </p>
           </div>

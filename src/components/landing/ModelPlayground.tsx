@@ -94,7 +94,7 @@ function Gauge({ p, threshold }: { p: number; threshold: number }) {
         <div className="font-mono text-[26px] font-semibold leading-none tabular-nums text-neutral-900 dark:text-white">
           {pct(p)}
         </div>
-        <div className="mt-1 font-mono text-[8.5px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-600">
+        <div className="mt-1 font-mono text-[8.5px] uppercase tracking-[0.2em] text-muted-2 dark:text-muted-3">
           churn risk
         </div>
       </div>
@@ -128,7 +128,7 @@ function FeatureControl({
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <span className="text-[12px] font-medium text-neutral-700 dark:text-zinc-300">
           {f.label}
-          <span className="ml-2 font-mono text-[9.5px] font-normal text-neutral-400 dark:text-zinc-600">{f.hint}</span>
+          <span className="ml-2 font-mono text-[9.5px] font-normal text-muted-2 dark:text-muted-3">{f.hint}</span>
         </span>
         <span className="shrink-0 font-mono text-[11px] tabular-nums text-neutral-900 dark:text-white">
           {display}
@@ -157,7 +157,7 @@ function FeatureControl({
               className={`flex-1 rounded-md px-2 py-1.5 font-mono text-[10.5px] transition-colors duration-200 ${
                 value === i
                   ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                  : "text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-800 dark:text-zinc-500 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200"
+                  : "text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-800 dark:text-muted-2 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200"
               }`}
             >
               {opt}
@@ -278,7 +278,7 @@ export function ModelPlayground() {
           title={
             <>
               Move a slider.{" "}
-              <span className="text-neutral-400 dark:text-zinc-500">Watch the model think.</span>
+              <span className="text-muted-2">Watch the model think.</span>
             </>
           }
           copy="A live logistic regression on five features. Every bar is the exact term of the logit it contributes, the boundary is solved rather than sketched, and the metrics below are recomputed over a 420-row holdout each time you move the threshold."
@@ -294,10 +294,10 @@ export function ModelPlayground() {
             <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_60px_120px_-60px_rgba(0,0,0,0.3)] dark:border-white/10 dark:bg-[#070709] dark:shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9)]">
               {/* Title bar */}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02] sm:px-5">
-                <span className="font-mono text-[11px] text-neutral-400 dark:text-zinc-500">
+                <span className="font-mono text-[11px] text-muted-2">
                   churn_classifier<span className="text-neutral-300 dark:text-zinc-700">.pkl</span>
                 </span>
-                <div className="flex items-center gap-4 font-mono text-[9.5px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-600">
+                <div className="flex items-center gap-4 font-mono text-[9.5px] uppercase tracking-[0.2em] text-muted-2 dark:text-muted-3">
                   <span>logistic regression</span>
                   <span className="hidden sm:inline">5 features</span>
                   <span className="text-neutral-700 dark:text-zinc-300">auc {auc ? auc.toFixed(3) : "—"}</span>
@@ -309,7 +309,7 @@ export function ModelPlayground() {
                 {/* Controls */}
                 <div className="border-b border-neutral-200 p-5 sm:p-6 lg:border-b-0 lg:border-r dark:border-white/[0.07]">
                   <div className="mb-4 flex items-center gap-2">
-                    <Sparkle size={12} className="text-neutral-400 dark:text-zinc-500" />
+                    <Sparkle size={12} className="text-muted-2" />
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500 dark:text-zinc-400">
                       One customer
                     </h3>
@@ -327,7 +327,7 @@ export function ModelPlayground() {
                           className={`border px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.14em] transition-all duration-300 ${
                             active
                               ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-                              : "border-neutral-200 text-neutral-400 hover:border-neutral-400 hover:text-neutral-700 dark:border-white/10 dark:text-zinc-600 dark:hover:border-white/25 dark:hover:text-zinc-300"
+                              : "border-neutral-200 text-muted-2 hover:border-neutral-400 hover:text-neutral-700 dark:border-white/10 dark:text-muted-3 dark:hover:border-white/25 dark:hover:text-zinc-300"
                           }`}
                         >
                           {preset.label}
@@ -365,7 +365,7 @@ export function ModelPlayground() {
                       {live.p >= threshold ? "flag · churn" : "hold · retain"}
                     </span>
 
-                    <div className="w-full space-y-1 border-t border-neutral-200 pt-4 font-mono text-[10px] leading-relaxed text-neutral-400 dark:border-white/[0.07] dark:text-zinc-600">
+                    <div className="w-full space-y-1 border-t border-neutral-200 pt-4 font-mono text-[10px] leading-relaxed text-muted-2 dark:border-white/[0.07] dark:text-muted-3">
                       <p className="flex justify-between">
                         <span>intercept</span>
                         <span className="tabular-nums text-neutral-600 dark:text-zinc-400">{signed(CHURN_INTERCEPT)}</span>
@@ -393,11 +393,11 @@ export function ModelPlayground() {
                       <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500 dark:text-zinc-400">
                         Logit contributions
                       </h3>
-                      <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400 dark:text-zinc-600">
+                      <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2 dark:text-muted-3">
                         ranked by |wz|
                       </span>
                     </div>
-                    <p className="mb-4 font-mono text-[9.5px] text-neutral-400 dark:text-zinc-600">
+                    <p className="mb-4 font-mono text-[9.5px] text-muted-2 dark:text-muted-3">
                       ← lowers risk <span className="mx-1 opacity-40">|</span> raises risk →
                     </p>
 
@@ -434,7 +434,7 @@ export function ModelPlayground() {
                       })}
                     </div>
 
-                    <p className="mt-4 border-t border-neutral-200 pt-4 text-[11.5px] leading-relaxed text-neutral-400 dark:border-white/[0.07] dark:text-zinc-500">
+                    <p className="mt-4 border-t border-neutral-200 pt-4 text-[11.5px] leading-relaxed text-muted-2 dark:border-white/[0.07] dark:text-muted-2">
                       Solid bars push the logit up, outlined bars pull it down. They sum to{" "}
                       <span className="font-mono text-neutral-700 dark:text-zinc-300">{signed(live.logit - CHURN_INTERCEPT)}</span>
                       , which is the whole model minus its intercept — no attribution heuristic involved.
@@ -450,7 +450,7 @@ export function ModelPlayground() {
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500 dark:text-zinc-400">
                       Decision boundary
                     </h3>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400 dark:text-zinc-600">
+                    <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2 dark:text-muted-3">
                       420 holdout rows
                     </span>
                   </div>
@@ -523,7 +523,7 @@ export function ModelPlayground() {
                     <text x={4} y={SY1} fontSize="8" fontFamily="monospace" className="fill-neutral-400 dark:fill-zinc-600">${S_MIN}</text>
                   </svg>
 
-                  <p className="mt-2 text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">
+                  <p className="mt-2 text-[11px] leading-relaxed text-muted-2">
                     Solid dots churned, outlined dots stayed. The dashed line is solved for p = {threshold.toFixed(2)} at
                     the contract, autopay and ticket values you have set — change those and the whole boundary moves.
                   </p>
@@ -564,7 +564,7 @@ export function ModelPlayground() {
                     <text x={4} y={RP + 4} fontSize="8" fontFamily="monospace" className="fill-neutral-400 dark:fill-zinc-600">TPR</text>
                   </svg>
 
-                  <p className="mt-2 text-[11px] leading-relaxed text-neutral-400 dark:text-zinc-500">
+                  <p className="mt-2 text-[11px] leading-relaxed text-muted-2">
                     Swept over 101 thresholds, integrated by trapezoid. The marker is your current operating point —
                     {m ? ` TPR ${m.tpr.toFixed(2)} at FPR ${m.fpr.toFixed(2)}.` : " drag the threshold below."}
                   </p>
@@ -595,7 +595,7 @@ export function ModelPlayground() {
                 <div className="mt-6 grid gap-7 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
                   {/* Confusion matrix */}
                   <div>
-                    <p className="mb-2.5 font-mono text-[9px] uppercase tracking-[0.18em] text-neutral-400 dark:text-zinc-600">
+                    <p className="mb-2.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-2 dark:text-muted-3">
                       confusion matrix
                     </p>
                     <div className="grid grid-cols-2 gap-1">
@@ -612,7 +612,7 @@ export function ModelPlayground() {
                           className={`flex h-[58px] flex-col items-center justify-center rounded font-mono transition-colors duration-300 ${
                             cell.good
                               ? "bg-neutral-900 text-white dark:bg-white/90 dark:text-neutral-900"
-                              : "bg-neutral-200/70 text-neutral-500 dark:bg-white/[0.05] dark:text-zinc-500"
+                              : "bg-neutral-200/70 text-neutral-500 dark:bg-white/[0.05] dark:text-muted-2"
                           }`}
                         >
                           <span className="text-[15px] font-semibold tabular-nums">{cell.v}</span>
@@ -620,7 +620,7 @@ export function ModelPlayground() {
                         </div>
                       ))}
                     </div>
-                    <p className="mt-2.5 font-mono text-[9px] leading-relaxed text-neutral-400 dark:text-zinc-600">
+                    <p className="mt-2.5 font-mono text-[9px] leading-relaxed text-muted-2 dark:text-muted-3">
                       rows = actual · cols = predicted
                     </p>
                   </div>
@@ -637,7 +637,7 @@ export function ModelPlayground() {
                         ] as const
                       ).map((metric) => (
                         <div key={metric.k}>
-                          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-neutral-400 dark:text-zinc-600">
+                          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-2 dark:text-muted-3">
                             {metric.k}
                           </p>
                           <p

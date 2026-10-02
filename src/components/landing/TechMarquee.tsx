@@ -23,7 +23,7 @@ export function TechMarquee() {
         <div className="nf-marquee flex w-max items-center gap-14 pr-14">
           {items.map((name, i) => (
             <span key={`${name}-${i}`} className="flex items-center gap-14">
-              <span className="whitespace-nowrap font-mono text-sm font-medium uppercase tracking-[0.22em] text-neutral-400 transition-colors duration-300 hover:text-neutral-900 dark:text-zinc-600 dark:hover:text-zinc-200">
+              <span className="whitespace-nowrap font-mono text-sm font-medium uppercase tracking-[0.22em] text-muted-2 transition-colors duration-300 hover:text-neutral-900 dark:text-muted-3 dark:hover:text-zinc-200">
                 {name}
               </span>
             </span>

@@ -109,7 +109,7 @@ function ColumnRow({
           {isTarget ? <Target size={11} className="shrink-0 text-neutral-900 dark:text-white" /> : null}
         </span>
         {column.nullPct > 0 ? (
-          <span className="mt-0.5 flex items-center gap-1 font-mono text-[9px] text-neutral-400 dark:text-zinc-600">
+          <span className="mt-0.5 flex items-center gap-1 font-mono text-[9px] text-muted-2 dark:text-muted-3">
             <Warning size={9} />
             {column.nullPct.toFixed(1)}% null
           </span>
@@ -118,7 +118,7 @@ function ColumnRow({
 
       <span
         className={`w-16 shrink-0 transition-opacity duration-200 ${
-          active ? "text-neutral-900 dark:text-white" : "text-neutral-300 group-hover:text-neutral-400 dark:text-white/20 dark:group-hover:text-white/35"
+          active ? "text-neutral-900 dark:text-white" : "text-neutral-300 group-hover:text-muted-2 dark:text-white/20 dark:group-hover:text-white/35"
         }`}
       >
         <Sparkbars counts={column.histogram.counts} max={column.histogram.max} />
@@ -132,7 +132,7 @@ function ColumnRow({
 function StatCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-t border-neutral-200 pt-2 dark:border-white/[0.07]">
-      <dt className="font-mono text-[9px] uppercase tracking-[0.18em] text-neutral-400 dark:text-zinc-600">{label}</dt>
+      <dt className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-2 dark:text-muted-3">{label}</dt>
       <dd className="mt-1 font-mono text-[12.5px] tabular-nums text-neutral-900 dark:text-zinc-100">{value}</dd>
     </div>
   );
@@ -182,7 +182,7 @@ function NumericDetail({ column }: { column: ProfiledColumn }) {
         </div>
       </div>
 
-      <div className="mt-2 flex items-center justify-between border-t border-neutral-200 pt-2 font-mono text-[9.5px] tabular-nums text-neutral-400 dark:border-white/[0.07] dark:text-zinc-600">
+      <div className="mt-2 flex items-center justify-between border-t border-neutral-200 pt-2 font-mono text-[9.5px] tabular-nums text-muted-2 dark:border-white/[0.07] dark:text-muted-3">
         <span>{fmtNum(stats.min, unit)}</span>
         <span className="uppercase tracking-[0.18em]">{n} bins</span>
         <span>{fmtNum(stats.max, unit)}</span>
@@ -199,7 +199,7 @@ function NumericDetail({ column }: { column: ProfiledColumn }) {
         <StatCell label="outliers" value={`${stats.outliers} · ${((stats.outliers / Math.max(1, stats.n)) * 100).toFixed(1)}%`} />
       </dl>
 
-      <p className="mt-4 text-[11.5px] leading-relaxed text-neutral-400 dark:text-zinc-500">
+      <p className="mt-4 text-[11.5px] leading-relaxed text-muted-2">
         {stats.outliers > 0
           ? `${stats.outliers} value${stats.outliers === 1 ? "" : "s"} fall outside the 1.5 × IQR fence — flagged, not dropped.`
           : "No values fall outside the 1.5 × IQR fence."}{" "}
@@ -227,7 +227,7 @@ function CategoricalDetail({ column, rows }: { column: ProfiledColumn; rows: num
             <li key={level}>
               <div className="mb-1.5 flex items-baseline justify-between gap-3">
                 <span className="truncate font-mono text-[11.5px] text-neutral-700 dark:text-zinc-300">{level}</span>
-                <span className="shrink-0 font-mono text-[10.5px] tabular-nums text-neutral-400 dark:text-zinc-500">
+                <span className="shrink-0 font-mono text-[10.5px] tabular-nums text-muted-2">
                   {count.toLocaleString("en-US")}
                   <span className="text-neutral-300 dark:text-zinc-700"> · </span>
                   {((count / rows) * 100).toFixed(1)}%
@@ -253,7 +253,7 @@ function CategoricalDetail({ column, rows }: { column: ProfiledColumn; rows: num
         <StatCell label="null" value={`${column.nullPct.toFixed(1)}%`} />
       </dl>
 
-      <p className="mt-4 text-[11.5px] leading-relaxed text-neutral-400 dark:text-zinc-500">
+      <p className="mt-4 text-[11.5px] leading-relaxed text-muted-2">
         Encoded as ordinal indices 0–{levels.length - 1} for the correlation matrix, which is why its
         coefficients are attenuated relative to the numeric columns.
       </p>
@@ -287,7 +287,7 @@ function CorrelationGrid({
             <span
               key={c.name}
               className={`flex-1 pb-1.5 text-center font-mono text-[9px] transition-colors ${
-                hover?.col === i ? "text-neutral-900 dark:text-white" : "text-neutral-400 dark:text-zinc-600"
+                hover?.col === i ? "text-neutral-900 dark:text-white" : "text-muted-2 dark:text-muted-3"
               }`}
             >
               {i + 1}
@@ -299,7 +299,7 @@ function CorrelationGrid({
           <div key={rowCol.name} className="flex items-center">
             <span
               className={`w-[124px] shrink-0 truncate pr-3 text-right font-mono text-[10px] transition-colors ${
-                hover?.row === row ? "text-neutral-900 dark:text-white" : "text-neutral-400 dark:text-zinc-600"
+                hover?.row === row ? "text-neutral-900 dark:text-white" : "text-muted-2 dark:text-muted-3"
               }`}
             >
               <span className="mr-1.5 opacity-50">{row + 1}</span>
@@ -346,13 +346,13 @@ function CorrelationGrid({
 
         {/* Legend */}
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-neutral-200 pt-3 pl-[124px] dark:border-white/[0.07]">
-          <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400 dark:text-zinc-600">
+          <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2 dark:text-muted-3">
             <span className="h-2.5 w-2.5 rounded-[2px] bg-neutral-900 dark:bg-white" /> positive
           </span>
-          <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400 dark:text-zinc-600">
+          <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2 dark:text-muted-3">
             <span className="h-2.5 w-2.5 rounded-[2px] border border-neutral-900 dark:border-white" /> negative
           </span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400 dark:text-zinc-600">
+          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-2 dark:text-muted-3">
             area ∝ |r| · {n}×{n} pearson
           </span>
         </div>
@@ -421,7 +421,7 @@ export function DataProfiler() {
           title={
             <>
               Understand the data{" "}
-              <span className="text-neutral-400 dark:text-zinc-500">before you model it.</span>
+              <span className="text-muted-2">before you model it.</span>
             </>
           }
           copy="Drop in a file and Datlify profiles every column: distributions, missingness, outlier fences and the full correlation structure. Pick a column, hover the matrix — these numbers are computed in your browser, right now."
@@ -438,7 +438,7 @@ export function DataProfiler() {
               {/* Dataset tabs */}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-white/[0.07] dark:bg-white/[0.02] sm:px-5">
                 <div className="flex items-center gap-1">
-                  <Table size={13} className="mr-2 shrink-0 text-neutral-400 dark:text-zinc-500" />
+                  <Table size={13} className="mr-2 shrink-0 text-muted-2" />
                   {PROFILE_SPECS.map((s, i) => (
                     <button
                       key={s.id}
@@ -451,14 +451,14 @@ export function DataProfiler() {
                       className={`rounded-md px-2.5 py-1 font-mono text-[10.5px] transition-colors duration-200 ${
                         i === specIdx
                           ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                          : "text-neutral-500 hover:bg-neutral-200/70 hover:text-neutral-800 dark:text-zinc-500 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200"
+                          : "text-neutral-500 hover:bg-neutral-200/70 hover:text-neutral-800 dark:text-muted-2 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200"
                       }`}
                     >
                       {s.file}
                     </button>
                   ))}
                 </div>
-                <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-600">
+                <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-muted-2 dark:text-muted-3">
                   {profile ? `profiled in ${current?.ms.toFixed(1)} ms` : "profiling…"}
                 </span>
               </div>
@@ -473,7 +473,7 @@ export function DataProfiler() {
                   { label: "task", value: profile ? profile.task : "—" },
                 ].map((cell) => (
                   <div key={cell.label} className="bg-white px-4 py-3 dark:bg-[#070709]">
-                    <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-neutral-400 dark:text-zinc-600">{cell.label}</p>
+                    <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-2 dark:text-muted-3">{cell.label}</p>
                     <p className="mt-1 truncate font-mono text-[12.5px] tabular-nums text-neutral-900 dark:text-zinc-100">{cell.value}</p>
                   </div>
                 ))}
@@ -500,7 +500,7 @@ export function DataProfiler() {
                     <>
                       <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                         <h3 className="font-mono text-[15px] text-neutral-900 dark:text-white">{column.name}</h3>
-                        <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-neutral-400 dark:text-zinc-600">
+                        <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-muted-2 dark:text-muted-3">
                           {column.role === "target" ? "target · " : ""}
                           {column.type === "num" ? "numeric" : "categorical"}
                           {column.unit ? ` · ${column.unit}` : ""}
@@ -525,7 +525,7 @@ export function DataProfiler() {
                     <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500 dark:text-zinc-400">
                       Correlation matrix
                     </h3>
-                    <span className="font-mono text-[10px] tabular-nums text-neutral-400 dark:text-zinc-600">
+                    <span className="font-mono text-[10px] tabular-nums text-muted-2 dark:text-muted-3">
                       {profile && hover && hoveredR !== null ? (
                         <>
                           <span className="text-neutral-700 dark:text-zinc-300">
@@ -554,7 +554,7 @@ export function DataProfiler() {
                   <h3 className="mb-1 font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500 dark:text-zinc-400">
                     Strongest signal
                   </h3>
-                  <p className="mb-5 font-mono text-[10px] text-neutral-400 dark:text-zinc-600">
+                  <p className="mb-5 font-mono text-[10px] text-muted-2 dark:text-muted-3">
                     vs. <span className="text-neutral-700 dark:text-zinc-300">{profile?.target ?? "—"}</span>
                   </p>
 
@@ -589,7 +589,7 @@ export function DataProfiler() {
                       : null}
                   </ul>
 
-                  <p className="mt-6 border-t border-neutral-200 pt-4 text-[11.5px] leading-relaxed text-neutral-400 dark:border-white/[0.07] dark:text-zinc-500">
+                  <p className="mt-6 border-t border-neutral-200 pt-4 text-[11.5px] leading-relaxed text-muted-2 dark:border-white/[0.07] dark:text-muted-2">
                     Ranked by |r| over pairwise-complete rows. Datlify surfaces these before you pick a model, so
                     leakage and dead columns show up in seconds instead of after a training run.
                   </p>

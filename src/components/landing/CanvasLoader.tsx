@@ -8,10 +8,10 @@ export function CanvasLoader({ label }: { label: string }) {
     <div className="flex flex-col items-center gap-6" role="status" aria-live="polite">
       <div className="relative h-28 w-28">
         {/* Flickering binary bits */}
-        <span className="nf-bit absolute -left-6 top-1 font-mono text-[10px] text-neutral-400 dark:text-zinc-500" style={{ animationDelay: "0ms" }}>01</span>
-        <span className="nf-bit absolute -right-7 top-7 font-mono text-[10px] text-neutral-400 dark:text-zinc-500" style={{ animationDelay: "380ms" }}>10</span>
-        <span className="nf-bit absolute -left-5 bottom-6 font-mono text-[10px] text-neutral-400 dark:text-zinc-500" style={{ animationDelay: "760ms" }}>1</span>
-        <span className="nf-bit absolute -right-5 -bottom-2 font-mono text-[10px] text-neutral-400 dark:text-zinc-500" style={{ animationDelay: "1120ms" }}>0</span>
+        <span className="nf-bit absolute -left-6 top-1 font-mono text-[10px] text-muted-2" style={{ animationDelay: "0ms" }}>01</span>
+        <span className="nf-bit absolute -right-7 top-7 font-mono text-[10px] text-muted-2" style={{ animationDelay: "380ms" }}>10</span>
+        <span className="nf-bit absolute -left-5 bottom-6 font-mono text-[10px] text-muted-2" style={{ animationDelay: "760ms" }}>1</span>
+        <span className="nf-bit absolute -right-5 -bottom-2 font-mono text-[10px] text-muted-2" style={{ animationDelay: "1120ms" }}>0</span>
 
         {/* Square frame + orbiting stroke */}
         <svg viewBox="0 0 100 100" fill="none" aria-hidden className="absolute inset-0 h-full w-full">

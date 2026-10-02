@@ -39,7 +39,7 @@ export function WorkflowSteps() {
           <>
             From spreadsheet to production
             <br />
-            <span className="text-neutral-400 dark:text-zinc-500">before your coffee cools.</span>
+            <span className="text-muted-2">before your coffee cools.</span>
           </>
         }
       />
@@ -65,10 +65,10 @@ export function WorkflowSteps() {
                 <div className="relative z-10 flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="mb-1 flex items-center gap-3">
-                      <span className="font-mono text-xs text-neutral-400 transition-colors duration-500 group-hover:text-neutral-900 dark:text-zinc-600 dark:group-hover:text-white">{s.num}</span>
+                      <span className="font-mono text-xs text-muted-2 transition-colors duration-500 group-hover:text-neutral-900 dark:text-muted-3 dark:group-hover:text-white">{s.num}</span>
                       <h3 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">{s.title}</h3>
                     </div>
-                    <p className="max-w-lg text-sm leading-relaxed text-neutral-500 dark:text-zinc-500">{s.copy}</p>
+                    <p className="max-w-lg text-sm leading-relaxed text-neutral-500 dark:text-muted-2">{s.copy}</p>
                   </div>
                   <span className="w-fit shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500 transition-colors duration-500 group-hover:text-neutral-800 dark:text-zinc-400 dark:group-hover:text-zinc-200">
                     {s.tag}

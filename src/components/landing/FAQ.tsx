@@ -46,7 +46,7 @@ export function FAQ() {
             <>
               Questions,
               <br />
-              <span className="text-neutral-400 dark:text-zinc-500">answered straight.</span>
+              <span className="text-muted-2">answered straight.</span>
             </>
           }
         />
@@ -78,7 +78,7 @@ export function FAQ() {
                     <Plus
                       size={17}
                       weight="bold"
-                      className={`shrink-0 transition-transform duration-500 ${isOpen ? "rotate-45 text-neutral-900 dark:text-white" : "text-neutral-400 dark:text-zinc-600"}`}
+                      className={`shrink-0 transition-transform duration-500 ${isOpen ? "rotate-45 text-neutral-900 dark:text-white" : "text-muted-2 dark:text-muted-3"}`}
                     />
                   </button>
                   <div className={`grid transition-all duration-500 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
