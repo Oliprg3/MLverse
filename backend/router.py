@@ -104,20 +104,40 @@ def _ensure_torch(emit: Any = None) -> bool:
         return True
 
     _say = emit if callable(emit) else (lambda e: None)
-    _say({"type": "step", "message": "PyTorch is not installed — attempting an automatic install (pip install torch). This can take a few minutes…"})
-    try:
-        # Capture pip output so it can't corrupt the NDJSON stream on stdout.
-        completed = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet", "torch"],
-            timeout=420,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except Exception as exc:
-        _say({"type": "step", "message": f"Automatic PyTorch install could not start: {exc}."})
-        return False
-    if completed.returncode != 0:
-        _say({"type": "step", "message": "Automatic PyTorch install failed — handing off to a Colab notebook instead."})
+
+    # Prefer the CPU-only wheel index. The default PyPI ``torch`` wheel on Linux
+    # bundles ~2.5GB of nvidia-* CUDA libraries, which usually blows the disk
+    # budget or the timeout on a CPU host and then falls back to Colab even
+    # though a perfectly good ~200MB CPU build exists.
+    cpu_index = "https://download.pytorch.org/whl/cpu"
+    attempts: List[List[str]] = [
+        [sys.executable, "-m", "pip", "install", "--quiet", "torch", "--index-url", cpu_index],
+        [sys.executable, "-m", "pip", "install", "--quiet", "torch"],
+    ]
+
+    for idx, cmd in enumerate(attempts):
+        flavour = "CPU build" if idx == 0 else "default build"
+        _say({"type": "step", "message": f"PyTorch is not installed — attempting an automatic install ({flavour}). This can take a few minutes…"})
+        try:
+            # Capture pip output so it can't corrupt the NDJSON stream on stdout.
+            completed = subprocess.run(
+                cmd,
+                timeout=420,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception as exc:
+            _say({"type": "step", "message": f"Automatic PyTorch install ({flavour}) could not start: {exc}."})
+            if idx == 0:
+                _say({"type": "step", "message": "Retrying with the default PyPI torch wheel…"})
+            continue
+        if completed.returncode == 0:
+            break
+        _say({"type": "step", "message": f"Automatic PyTorch install ({flavour}) failed."})
+        if idx == 0:
+            _say({"type": "step", "message": "Retrying with the default PyPI torch wheel…"})
+    else:
+        _say({"type": "step", "message": "PyTorch could not be installed automatically — handing off to a Colab notebook instead."})
         return False
 
     # Torch is now importable; (re)load the deep-learning engine in this process.

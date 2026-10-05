@@ -37,12 +37,30 @@ function probePythonEngine(): Promise<EngineProbe> {
     };
     let child;
     try {
-      // Third token of stdout: "ok|no-torch|torch" marks whether torch imports.
-      child = spawn(
-        bin,
-        ["-c", "import sys, sklearn, plotly, nbformat, networkx\ntry:\n import torch\n has='torch'\nexcept Exception:\n has='no-torch'\nprint(sys.version.split()[0], has)"],
-        { cwd: process.cwd(), env: process.env, stdio: ["ignore", "pipe", "pipe"], timeout: 20_000 },
-      );
+      // Each dependency is probed independently so one missing package (e.g.
+      // nbformat) cannot mask a working PyTorch install — DL training needs
+      // numpy+sklearn+torch, not the notebook/plot extras.
+      const script = [
+        "import sys",
+        "mods=['sklearn','plotly','nbformat','networkx','numpy']",
+        "ok=[]",
+        "for m in mods:",
+        "    try:",
+        "        __import__(m); ok.append(m)",
+        "    except Exception:",
+        "        pass",
+        "try:",
+        "    import torch; ok.append('torch')",
+        "except Exception:",
+        "    pass",
+        "print(sys.version.split()[0]); print(' '.join(ok))",
+      ].join("\n");
+      child = spawn(bin, ["-c", script], {
+        cwd: process.cwd(),
+        env: process.env,
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 20_000,
+      });
     } catch {
       finish({ available: false, version: null, reason: `${bin} runtime not found on this machine`, torch: false });
       return;
@@ -51,9 +69,27 @@ function probePythonEngine(): Promise<EngineProbe> {
     child.stderr?.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
     child.on("error", () => finish({ available: false, version: null, reason: `${bin} runtime not found on this machine`, torch: false }));
     child.on("close", (code) => {
-      if (code === 0) {
-        const [version, has] = stdout.trim().split(/\s+/);
-        finish({ available: true, version: version || null, reason: null, torch: has === "torch" });
+      const lines = stdout.trim().split(/\r?\n/);
+      const version = lines[0]?.trim() || null;
+      const found = new Set((lines[1] ?? "").split(/\s+/).filter(Boolean));
+      const hasTorch = found.has("torch");
+      // "Available" means the modules the *execution* path needs. The notebook
+      // extras (plotly/nbformat) are not needed to train, so they must not gate
+      // the run — otherwise a missing nbformat silently downgrades DL graphs to
+      // a Colab hand-off even on a machine with a perfectly good PyTorch.
+      const core = ["sklearn", "networkx", "numpy"].filter((m) => found.has(m));
+      const missingCore = ["sklearn", "networkx", "numpy"].filter((m) => !found.has(m));
+      if (code === 0 && missingCore.length === 0) {
+        finish({ available: true, version, reason: null, torch: hasTorch });
+        return;
+      }
+      if (code === 0 && missingCore.length > 0) {
+        finish({
+          available: false,
+          version,
+          reason: `missing Python package${missingCore.length > 1 ? "s" : ""} "${missingCore.join('", "')}"`,
+          torch: hasTorch,
+        });
         return;
       }
       const missing = stderr.match(/No module named ['"]([\w.]+)['"]/);
@@ -61,7 +97,7 @@ function probePythonEngine(): Promise<EngineProbe> {
         available: false,
         version: null,
         reason: missing ? `missing Python package "${missing[1]}"` : "required Python packages are not installed",
-        torch: false,
+        torch: hasTorch,
       });
     });
   });
@@ -99,6 +135,21 @@ export async function POST(req: NextRequest) {
         await send({
           type: "step",
           message: `Server check: Python ${probe.version ?? ""} + scikit-learn found on this deployment — routing to the native engine…`.replace(/\s+/g, " "),
+        });
+        const ok = await pipePython(graph, (line: string) =>
+          controller.enqueue(encoder.encode(`${line}\n`)),
+        );
+        if (ok) {
+          controller.close();
+          return;
+        }
+      } else if (probe?.torch && hasDeepLearning(graph)) {
+        // Torch is importable but a core module is missing: the Python engine
+        // will still be spawned so its own diagnostics (and auto-install) can
+        // report the real cause instead of us guessing from the probe.
+        await send({
+          type: "step",
+          message: `Server check: PyTorch detected on this deployment, but the ML stack is incomplete (${probe.reason}) — attempting the native engine anyway…`.replace(/\s+/g, " "),
         });
         const ok = await pipePython(graph, (line: string) =>
           controller.enqueue(encoder.encode(`${line}\n`)),
@@ -198,12 +249,26 @@ function pipePython(graph: GraphPayload, pushLine: (line: string) => void): Prom
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const hasDeepLearning = (graph: GraphPayload) =>
+  graph.nodes.some((node) => node?.category === "deep_learning");
+
 /** Never manufacture metrics when the real Python engine is unavailable. */
 async function streamTs(graph: GraphPayload, send: (obj: unknown) => void, probe?: EngineProbe) {
   // Deep-learning graphs without a native torch engine hand off to a ready-made
   // Colab notebook instead of dying — the frontend already renders that view.
-  if (graph.nodes.some((node) => node.category === "deep_learning")) {
-    await send({ type: "step", message: "This deployment has no PyTorch — generating a ready-to-run Colab notebook instead…" });
+  if (hasDeepLearning(graph)) {
+    // Be precise about *why* in-app training is unavailable — "no PyTorch" is
+    // wrong and unhelpful when the real blocker is a missing sklearn/networkx
+    // or an interpreter that isn't there at all.
+    const cause = !probe
+      ? "the Python engine was skipped"
+      : !probe.available && !probe.torch
+        ? `this deployment cannot run the Python engine (${probe.reason})`
+        : "PyTorch could not be installed on this deployment";
+    await send({
+      type: "step",
+      message: `In-app deep-learning training is unavailable because ${cause} — generating a ready-to-run Colab notebook instead. Install backend/requirements.txt (including torch) on the server to train in-app.`,
+    });
     const result = executeGraph(graph);
     await sleep(120);
     await send({ type: "result", data: result });
