@@ -219,7 +219,7 @@ def dispatch(payload: Dict[str, Any], emit: Any = None) -> Dict[str, Any]:
             if (payload.get("meta") or {}).get("export_notebook"):
                 _emit({"type": "step", "message": "Generating Jupyter notebook export…"})
                 _, meta = notebook_builder.build_notebook(ordered_nodes)
-                response: Dict[str, Any] = {"route": "colab", "status": "success", "engine": ENGINE_VERSION}
+                response: Dict[str, Any] = {"route": "colab", "runtime": "colab_notebook", "status": "success", "engine": ENGINE_VERSION}
                 response.update(meta)
                 result = _jsonable(response)
                 _emit({ "type": "result", "data": result})
@@ -231,7 +231,7 @@ def dispatch(payload: Dict[str, Any], emit: Any = None) -> Dict[str, Any]:
                 "message": "PyTorch could not be installed automatically — generating a ready-to-run Colab notebook instead.",
             })
             _, meta = notebook_builder.build_notebook(ordered_nodes)
-            response = {"route": "colab", "status": "success", "engine": ENGINE_VERSION}
+            response = {"route": "colab", "runtime": "colab_notebook", "status": "success", "engine": ENGINE_VERSION}
             response.update(meta)
             result = _jsonable(response)
             _emit({"type": "result", "data": result})

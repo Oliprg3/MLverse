@@ -27,11 +27,26 @@ import { cn, formatPercent } from "@/lib/utils";
 import type {
   ColabExecutionResponse,
   ExecutionResponse,
+  ExecutionRuntime,
   InstantExecutionResponse,
   MetricSet,
   PipelineStep,
   PredictionSet,
 } from "@/lib/types";
+
+/** Which runtime produced a response. Prefers the explicit `runtime` field and
+ *  falls back to framework sniffing so older cached responses still render
+ *  correctly. `route` alone is NOT enough: a PyTorch model trained in-app also
+ *  comes back as route="instant". */
+function runtimeOf(res: ExecutionResponse | null): ExecutionRuntime {
+  if (res?.runtime) return res.runtime;
+  if (res && res.route === "colab") return "colab_notebook";
+  if (res && "model" in res && res.model?.framework === "PyTorch") return "pytorch_local";
+  return "sklearn_cpu";
+}
+
+const isNotebookHandoff = (res: ExecutionResponse | null) =>
+  res !== null && (res.route === "colab" || runtimeOf(res) === "colab_notebook");
 
 interface ResultsDrawerProps {
   open: boolean;
@@ -497,7 +512,8 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
     if (!response || response.status !== "success") return null;
     if (response.route === "instant") {
       const r = response as InstantExecutionResponse;
-      return `${r.model.name} on ${r.dataset.name}, ${(r.timing.total_seconds ?? 0).toFixed(2)}s`;
+      const where = runtimeOf(r) === "pytorch_local" ? "trained in-app on local PyTorch" : "trained in-app on CPU";
+      return `${r.model.name} · ${where} · ${(r.timing.total_seconds ?? 0).toFixed(2)}s`;
     }
     const r = response as ColabExecutionResponse;
     return `${r.notebook.filename}, ${r.notebook.cells} cells`;
@@ -514,7 +530,19 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
               <div className="flex items-center gap-2">
                 {isError ? <XCircle size={15} weight="fill" className="text-rose-400" /> : loading ? <CircleNotch size={16} className="animate-spin text-muted-2" /> : <CheckCircle size={16} weight="fill" className="text-emerald-400" />}
                 <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                  {loading ? (route === "colab" ? "Preparing notebook export…" : "Training model…") : isError ? "Execution error" : route === "colab" ? "Notebook Export Ready" : "Training Results & Dashboards"}
+                  {loading
+                    ? isNotebookHandoff(response)
+                      ? "Preparing notebook export…"
+                      : route === "colab"
+                        ? "Training neural network in-app…"
+                        : "Training model…"
+                    : isError
+                      ? "Execution error"
+                      : isNotebookHandoff(response)
+                        ? "Notebook Export Ready"
+                        : runtimeOf(response) === "pytorch_local"
+                          ? "Neural Network Trained In-App"
+                          : "Training Results & Dashboards"}
                 </h3>
               </div>
               {successMeta ? <p className="font-mono text-[11px] text-muted">{successMeta}</p> : null}
@@ -533,7 +561,7 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
               {response.engine ? <p className="mt-2 text-[11px] text-muted">Engine: {response.engine}</p> : null}
             </div>
           ) : response ? (
-            response.route === "colab" ? (
+            isNotebookHandoff(response) ? (
               <ColabView res={response as ColabExecutionResponse} onViewCode={onViewCode} onOpenColab={onOpenColab} code={code} />
             ) : (
               <InstantView res={response as InstantExecutionResponse} onViewCode={onViewCode} />

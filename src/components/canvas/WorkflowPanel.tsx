@@ -81,7 +81,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
 
       <div className="border-b border-neutral-200/80 px-5 py-5 dark:border-white/[0.06]">
         <p className="nf-hud-label">execution</p>
-        <div className="mt-3 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Runtime</span><span className="font-medium text-neutral-700 dark:text-zinc-300">{route === "colab" ? (engine?.torch ? "Local PyTorch" : "Colab GPU") : "Instant CPU"}</span></div>
+        <div className="mt-3 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Runtime</span><span className="font-medium text-neutral-700 dark:text-zinc-300">{route === "colab" ? (engine?.torch ? "Local PyTorch" : "In-app PyTorch (auto-install)") : "Instant CPU"}</span></div>
         <div className="mt-2 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Trigger</span><span className="font-medium text-neutral-700 dark:text-zinc-300">Manual</span></div>
         <div className="mt-2 flex items-center justify-between text-[11px]"><span className="text-neutral-400 dark:text-zinc-500">Persistence</span><span className="font-medium text-neutral-700 dark:text-zinc-300">Local project</span></div>
         <div className="mt-4 border-t border-neutral-200/80 pt-3 dark:border-white/[0.06]">

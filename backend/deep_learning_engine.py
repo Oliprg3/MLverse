@@ -624,6 +624,7 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any) -> Exec
     device_note = "GPU" if device.type == "cuda" else "CPU"
     return ExecutionResult(
         route="instant",
+        runtime="pytorch_local",
         status="success",
         engine=f"PyTorch {torch.__version__} · local {device_note} · plotly",
         pipeline={"steps": steps_desc},

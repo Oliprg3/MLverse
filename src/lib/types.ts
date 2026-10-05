@@ -230,9 +230,16 @@ export interface SkippedChart {
   reason: string;
 }
 
-/** Response shape when the graph contains only basic ML nodes. */
+/** Where a model actually ran. `route` only records whether the *graph* was a
+ *  deep-learning one, so a PyTorch model trained in-app and a scikit-learn run
+ *  are both route="instant". This is what tells them apart in the UI. */
+export type ExecutionRuntime = "sklearn_cpu" | "pytorch_local" | "colab_notebook";
+
+/** Response shape when the graph contains only basic ML nodes, or when a
+ *  deep-learning graph trained in-app on the local PyTorch engine. */
 export interface InstantExecutionResponse {
   route: Extract<ExecutionRoute, "instant">;
+  runtime?: ExecutionRuntime;
   status: "success" | "error";
   engine: string;
   pipeline: { steps: PipelineStep[] };
@@ -251,9 +258,10 @@ export interface InstantExecutionResponse {
   error?: string;
 }
 
-/** Response shape when advanced AI / deep-learning nodes are present. */
+/** Response shape when PyTorch was unavailable and a notebook was handed off. */
 export interface ColabExecutionResponse {
   route: Extract<ExecutionRoute, "colab">;
+  runtime?: ExecutionRuntime;
   status: "success" | "error";
   engine: string;
   notebook: {

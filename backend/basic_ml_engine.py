@@ -597,6 +597,11 @@ class ExecutionResult:
     route: str = "instant"
     status: str = "success"
     engine: str = "scikit-learn + plotly"
+    # Where the model actually ran. "route" only says whether the graph was a
+    # deep-learning one, so the UI cannot otherwise tell an in-app PyTorch train
+    # apart from a scikit-learn run (both are route="instant") or from a
+    # notebook hand-off (route="colab").
+    runtime: str = "sklearn_cpu"
     pipeline: Dict[str, Any] = field(default_factory=lambda: {"steps": []})
     dataset: Dict[str, Any] = field(default_factory=dict)
     model: Dict[str, Any] = field(default_factory=dict)
@@ -612,6 +617,7 @@ class ExecutionResult:
             "route": self.route,
             "status": self.status,
             "engine": self.engine,
+            "runtime": self.runtime,
             "pipeline": self.pipeline,
             "dataset": self.dataset,
             "model": self.model,

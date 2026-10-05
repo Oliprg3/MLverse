@@ -669,6 +669,7 @@ function buildColabNotebook(graph: GraphPayload): ColabExecutionResponse {
   const filename = `ai_canvas_colab_${Date.now()}.ipynb`;
   return {
     route: "colab",
+    runtime: "colab_notebook",
     status: "success",
     engine: "ts-fallback",
     notebook: { filename, nbformat: 4, cells: cells.length, size_bytes: payload.length, title: "AI Canvas — Colab Training Notebook" },
