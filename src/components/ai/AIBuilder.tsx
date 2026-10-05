@@ -29,17 +29,21 @@ type BuilderMessage = {
   role: "user" | "assistant";
   content: string;
   blueprint?: Blueprint;
+  provider?: string;
+  model?: string;
 };
 
-const SESSION_KEY = "neuralforge:aibuilder:v2";
+const SESSION_KEY = "neuralforge:aibuilder:v3";
 
-/** Agent phases shown while a request is in flight. */
-const AGENT_STEPS = [
-  { label: "Reading canvas context", hint: "saved nodes, params, dataset" },
-  { label: "Selecting node types", hint: "data → preprocessing → model → viz" },
-  { label: "Ranking algorithms", hint: "match score + rationale" },
-  { label: "Assembling blueprint", hint: "validating against the palette" },
-];
+/** Stream event shapes emitted by /api/ai/chat. */
+type TraceStep = { label: string; detail?: string };
+type ChatStreamEvent =
+  | { type: "trace"; steps: TraceStep[] }
+  | { type: "delta"; text: string }
+  | { type: "blueprint"; blueprint: Blueprint; suggestions: AlgorithmSuggestion[] }
+  | { type: "casual"; text: string }
+  | { type: "error"; message: string }
+  | { type: "done"; provider: string; model: string };
 
 const SUGGESTION_CHIPS = [
   "Predict customer churn",
@@ -61,20 +65,62 @@ function toGraphSummary(project: SavedProject | null) {
   };
 }
 
-/** Materialize a blueprint into real canvas nodes + chained edges. */
-function blueprintToCanvas(blueprint: Blueprint): { nodes: Node<MLNodeData>[]; edges: Edge[] } | null {
+/** Column-aware layout so the proposed pipeline reads left-to-right by stage
+ *  instead of a diagonal staircase. */
+const STAGE_COLUMN: Record<string, number> = {
+  data: 0,
+  pre: 1,
+  feature: 1,
+  dl: 2,
+  classic_ml: 2,
+  eval: 3,
+  viz: 3,
+};
+
+function stageOf(type: string): number {
+  const item = getPaletteItem(type);
+  if (!item) return 1;
+  const direct = STAGE_COLUMN[item.category];
+  if (direct !== undefined) return direct;
+  return type.split(":")[0] in STAGE_COLUMN ? STAGE_COLUMN[type.split(":")[0]] : 1;
+}
+
+function layoutNodes(entries: BlueprintNode[], originX = 80, originY = 140) {
+  const perColumn = new Map<number, number>();
+  return entries.map((entry, index) => {
+    const column = stageOf(entry.type);
+    const row = perColumn.get(column) ?? 0;
+    perColumn.set(column, row + 1);
+    return {
+      entry,
+      column,
+      position: { x: originX + column * 280, y: originY + row * 150 },
+      index,
+    };
+  });
+}
+
+/** Materialize a blueprint into canvas nodes, offset clear of any existing work.
+ *  Returns null only when nothing in the blueprint maps to the palette. */
+function blueprintToCanvas(
+  blueprint: Blueprint,
+  offset = 0,
+): { nodes: Node<MLNodeData>[]; edges: Edge[] } | null {
+  const placed = layoutNodes(blueprint.nodes);
+  const stamp = Date.now();
   const nodes: Node<MLNodeData>[] = [];
   const edges: Edge[] = [];
-  const stamp = Date.now();
+  // id of the most recent node placed in each stage column
+  const lastInColumn = new Map<number, string>();
 
-  blueprint.nodes.forEach((entry, index) => {
+  placed.forEach(({ entry, column, position }, order) => {
     const item = getPaletteItem(entry.type);
     if (!item) return;
-    const id = `${entry.type}-ai-${stamp}-${index}`;
+    const id = `${entry.type}-ai-${stamp}-${order}`;
     nodes.push({
       id,
       type: entry.type === "data:db" ? "dbSource" : "custom",
-      position: { x: 80 + index * 260, y: 140 + (index % 2) * 40 },
+      position: { x: position.x + offset, y: position.y },
       data: {
         type: item.type,
         label: item.label,
@@ -85,20 +131,58 @@ function blueprintToCanvas(blueprint: Blueprint): { nodes: Node<MLNodeData>[]; e
         params: item.params ? item.params.map((p) => ({ ...p })) : undefined,
       },
     });
-    if (index > 0 && nodes.length > 1) {
-      const source = nodes[nodes.length - 2];
+    // Wire from the most recent node in an earlier stage, so the pipeline reads
+    // left-to-right across stage columns instead of a straight chain.
+    let sourceId: string | undefined;
+    let sourceColumn = -1;
+    for (const [col, candidate] of lastInColumn) {
+      if (col < column && col > sourceColumn) {
+        sourceColumn = col;
+        sourceId = candidate;
+      }
+    }
+    if (sourceId) {
       edges.push({
-        id: `e-${source.id}-${id}`,
-        source: source.id,
+        id: `e-${sourceId}-${id}`,
+        source: sourceId,
         target: id,
         type: "smoothstep",
         style: { strokeWidth: 1.75 },
         markerEnd: { type: MarkerType.ArrowClosed, color: "var(--muted-2)", width: 14, height: 14 },
       });
     }
+    lastInColumn.set(column, id);
   });
 
   return nodes.length ? { nodes, edges } : null;
+}
+
+type ApplyDiff = {
+  added: number;
+  edgesAdded: number;
+  existingKept: number;
+  duplicates: number;
+  sideBySide: boolean;
+};
+
+/** Compare a blueprint against what is already on the canvas so the user can see
+ *  the consequence before anything is written. */
+function planApply(blueprint: Blueprint, project: SavedProject | null): ApplyDiff {
+  const built = blueprintToCanvas(blueprint);
+  const existingTypes = new Set((project?.nodes ?? []).map((n) => (n.data as MLNodeData).type));
+  const existing = project?.nodes.length ?? 0;
+  const added = built?.nodes.length ?? 0;
+  const duplicates = built
+    ? built.nodes.filter((n) => existingTypes.has((n.data as MLNodeData).type)).length
+    : 0;
+  return {
+    added,
+    edgesAdded: built?.edges.length ?? 0,
+    existingKept: existing,
+    duplicates,
+    // Offset the new graph so it lands beside existing work rather than on top.
+    sideBySide: existing > 0,
+  };
 }
 
 /* ── Sub-components ──────────────────────────────────────────────────────── */
@@ -190,16 +274,17 @@ export function AIBuilder() {
   const [messages, setMessages] = useState<BuilderMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
-  const [agentStep, setAgentStep] = useState(0);
+  const [trace, setTrace] = useState<TraceStep[]>([]);
+  const [activeTrace, setActiveTrace] = useState(0);
   const [notice, setNotice] = useState("");
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [blueprintLabel, setBlueprintLabel] = useState("");
-  const [typedText, setTypedText] = useState<string | null>(null);
+  const [streamed, setStreamed] = useState("");
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const typeTimerRef = useRef<number | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Load the saved project (context only — the architect also works from scratch).
   useEffect(() => {
@@ -232,20 +317,20 @@ export function AIBuilder() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, loading, typedText]);
+  }, [messages, loading, streamed, trace]);
 
-  // Simulated agent activity while the request is in flight.
-  useEffect(() => {
-    if (!loading) return;
-    setAgentStep(0);
-    const timer = window.setInterval(() => {
-      setAgentStep((step) => Math.min(step + 1, AGENT_STEPS.length - 1));
-    }, 850);
-    return () => window.clearInterval(timer);
-  }, [loading]);
+  // Abort any in-flight stream when the component unmounts.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const graphSummary = useMemo(() => toGraphSummary(project), [project]);
   const hasModel = graphSummary.nodes.some((node) => node.category === "classic_ml" || node.category === "deep_learning");
+  const diff = useMemo<ApplyDiff>(
+    () =>
+      blueprint
+        ? planApply(blueprint, project)
+        : { added: 0, edgesAdded: 0, existingKept: project?.nodes.length ?? 0, duplicates: 0, sideBySide: (project?.nodes.length ?? 0) > 0 },
+    [blueprint, project],
+  );
 
   const isCasualMessage = (value: string) => /^(hi|hello|hey|hiya|yo|good morning|good afternoon|good evening|thanks|thank you|help|what can you do)\s*[!.?]*$/i.test(value.trim());
   const casualReply = (value: string) => {
@@ -255,82 +340,136 @@ export function AIBuilder() {
     return "Hi — I’m the Datlify Model Architect. Tell me what you want to predict, classify, group, or forecast, and I’ll map it into a pipeline.";
   };
 
-  /** Reveal the reply progressively so responses feel streamed. */
-  const typewrite = useCallback((full: string) => {
-    if (typeTimerRef.current) window.clearInterval(typeTimerRef.current);
-    let shown = 0;
-    setTypedText(full.slice(0, 0));
-    typeTimerRef.current = window.setInterval(() => {
-      shown += Math.max(2, Math.round(full.length / 48));
-      if (shown >= full.length) {
-        window.clearInterval(typeTimerRef.current!);
-        typeTimerRef.current = null;
-        setTypedText(null);
-        setMessages((current) => current.map((m, i) => (i === current.length - 1 && m.role === "assistant" ? { ...m, content: full } : m)));
-      } else {
-        setTypedText(full.slice(0, shown));
-      }
-    }, 18);
-  }, []);
-
-  useEffect(() => () => { if (typeTimerRef.current) window.clearInterval(typeTimerRef.current); }, []);
-
+  /** Consume the NDJSON stream: text appears as the model emits it and the
+   *  trace reflects work the server actually reported, not a timer. */
   const send = async (suggestion?: string) => {
     const message = (suggestion ?? draft).trim();
     if (!message || loading) return;
-    const next = [...messages, { role: "user" as const, content: message }];
-    setMessages(next);
+    const history = [...messages, { role: "user" as const, content: message }];
+    setMessages(history);
     setDraft("");
     setApplied(false);
-    if (isCasualMessage(message)) {
-      setMessages([...next, { role: "assistant" as const, content: casualReply(message) }]);
-      setNotice("Ready for your ML brief");
-      return;
-    }
+    setStreamed("");
+    setTrace([]);
+    setActiveTrace(0);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
-    setNotice("Designing your pipeline…");
+    setNotice("Working…");
+
+    const commit = (content: string, extra?: Partial<BuilderMessage>) => {
+      setMessages((current) => [
+        ...current,
+        { role: "assistant" as const, content, ...extra },
+      ]);
+      setStreamed("");
+    };
+
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history: next, graph: graphSummary }),
+        signal: controller.signal,
+        body: JSON.stringify({ message, history, graph: graphSummary }),
       });
-      const result = (await response.json()) as { reply?: string; blueprint?: Blueprint; error?: string; casual?: boolean };
-      if (!response.ok) throw new Error(result.error ?? "The AI architect could not respond.");
-      const reply = result.reply ?? "I designed a pipeline for you.";
-      if (result.casual) {
-        setMessages((current) => [...current, { role: "assistant", content: reply }]);
-        setNotice("Ready for your ML brief");
-        return;
+      if (!response.ok || !response.body) {
+        const detail = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(detail?.error ?? `The AI architect returned ${response.status}.`);
       }
-      if (result.blueprint && Array.isArray(result.blueprint.nodes) && result.blueprint.nodes.length > 0) {
-        setBlueprint(result.blueprint);
-        setBlueprintLabel(message.length > 42 ? `${message.slice(0, 42)}…` : message);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let pending = "";
+      let provider = "local";
+      let model = "";
+      let sawPlan = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buffer.indexOf("\n")) >= 0) {
+          const line = buffer.slice(0, nl).trim();
+          buffer = buffer.slice(nl + 1);
+          if (!line) continue;
+
+          let event: ChatStreamEvent;
+          try {
+            event = JSON.parse(line) as ChatStreamEvent;
+          } catch {
+            continue; // partial frame — wait for more bytes
+          }
+
+          if (event.type === "trace") {
+            setTrace(event.steps);
+            setActiveTrace((step) => Math.min(step + 1, event.steps.length - 1));
+          } else if (event.type === "delta") {
+            pending += event.text;
+            setStreamed(pending);
+          } else if (event.type === "casual") {
+            commit(event.text);
+            setNotice("Ready for your ML brief");
+          } else if (event.type === "blueprint") {
+            sawPlan = true;
+            if (event.blueprint?.nodes?.length) {
+              setBlueprint(event.blueprint);
+              setBlueprintLabel(message.length > 42 ? `${message.slice(0, 42)}…` : message);
+            }
+          } else if (event.type === "error") {
+            throw new Error(event.message);
+          } else if (event.type === "done") {
+            provider = event.provider;
+            model = event.model;
+          }
+        }
       }
-      setMessages((current) => [...current, { role: "assistant", content: "", ...(result.blueprint ? { blueprint: result.blueprint } : {}) }]);
-      typewrite(reply);
-      setNotice(result.blueprint ? `Blueprint ready — ${result.blueprint.nodes.length} nodes proposed` : "Response received");
+
+      if (pending.trim()) {
+        commit(pending.trim(), sawPlan && blueprint ? { blueprint } : undefined);
+      } else if (!sawPlan) {
+        commit("I couldn't produce a pipeline for that. Try describing the target you want to predict.");
+        setNotice("No plan returned");
+      }
+      setNotice(
+        sawPlan
+          ? provider === "opencode-zen"
+            ? `Blueprint ready — ${model}`
+            : "Blueprint ready — local heuristic planner"
+          : "Response received",
+      );
     } catch (error) {
-      setMessages((current) => [...current, { role: "assistant", content: error instanceof Error ? error.message : "The AI architect failed." }]);
+      if ((error as Error)?.name === "AbortError") return;
+      const text = error instanceof Error ? error.message : "The AI architect failed.";
+      commit(text);
       setNotice("The request could not be completed");
     } finally {
+      abortRef.current = null;
       setLoading(false);
     }
   };
 
-  /** Materialize the blueprint into real canvas nodes and jump to the canvas. */
+  /** Add the blueprint to the canvas without destroying existing work. */
   const applyToCanvas = () => {
     if (!blueprint || applying) return;
-    const canvas = blueprintToCanvas(blueprint);
-    if (!canvas) {
+    const diff = planApply(blueprint, project);
+    const built = blueprintToCanvas(blueprint, diff.sideBySide ? 1400 : 0);
+    if (!built) {
       setNotice("The blueprint contains no valid palette nodes");
       return;
     }
     setApplying(true);
     try {
-      saveProject(canvas.nodes, canvas.edges, "AI Architect Blueprint");
+      if (diff.sideBySide && project) {
+        // Keep the user's existing pipeline and place the new one beside it.
+        saveProject([...project.nodes, ...built.nodes], [...project.edges, ...built.edges], "Datlify Pipeline");
+      } else {
+        saveProject(built.nodes, built.edges, "AI Architect Blueprint");
+      }
       setApplied(true);
-      setNotice("Blueprint applied — opening the canvas…");
+      setNotice(diff.sideBySide ? `Added ${built.nodes.length} nodes beside your pipeline` : `Created ${built.nodes.length} nodes`);
       window.setTimeout(() => router.push("/canvas?load=1"), 650);
     } catch {
       setApplying(false);
@@ -406,32 +545,37 @@ export function AIBuilder() {
                 </p>
               </div>
             ) : null}
-            {messages.map((message, index) => {
-              const isLastAssistantTyping = typedText !== null && index === messages.length - 1 && message.role === "assistant";
-              const text = isLastAssistantTyping ? typedText : message.content;
-              return (
-                <div key={`${message.role}-${index}`} className={`animate-builder-message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[90%] whitespace-pre-wrap px-4 py-3 text-xs leading-6 shadow-sm ${message.role === "user" ? "rounded-2xl rounded-br-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900" : "rounded-2xl rounded-bl-lg border border-border bg-card text-foreground-2"}`}>
-                    {text}
-                    {isLastAssistantTyping ? <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-full bg-current align-middle opacity-60" /> : null}
-                    {message.blueprint && !isLastAssistantTyping ? (
-                      <span className="mt-2 block font-mono text-[9px] font-medium text-muted-2">{message.blueprint.nodes.length} nodes proposed in blueprint</span>
-                    ) : null}
-                  </div>
+            {messages.map((message, index) => (
+              <div key={`${message.role}-${index}`} className={`animate-builder-message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[90%] whitespace-pre-wrap px-4 py-3 text-xs leading-6 shadow-sm ${message.role === "user" ? "rounded-2xl rounded-br-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900" : "rounded-2xl rounded-bl-lg border border-border bg-card text-foreground-2"}`}>
+                  {message.content}
+                  {message.blueprint && !message.content ? (
+                    <span className="mt-2 block font-mono text-[9px] font-medium text-muted-2">{message.blueprint.nodes.length} nodes proposed in blueprint</span>
+                  ) : null}
                 </div>
-              );
-            })}
+              </div>
+            ))}
+            {/* Live stream: text as the model emits it, not a fake typewriter. */}
             {loading ? (
+              <div className="animate-builder-message flex justify-start">
+                <div className="max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-bl-lg border border-border bg-card px-4 py-3 text-xs leading-6 text-foreground-2 shadow-sm">
+                  {streamed || <span className="text-muted">Thinking…</span>}
+                  {streamed ? <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-full bg-current align-middle opacity-60" /> : null}
+                </div>
+              </div>
+            ) : null}
+            {/* Real trace: steps the server reported, in the order it reported them. */}
+            {loading && trace.length > 0 ? (
               <div className="animate-builder-message space-y-2 rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
-                {AGENT_STEPS.map((step, index) => {
-                  const done = index < agentStep;
-                  const active = index === agentStep;
+                {trace.map((step, index) => {
+                  const done = index < activeTrace;
+                  const active = index === activeTrace;
                   return (
-                    <div key={step.label} className={`flex items-start gap-2.5 text-[11px] transition-colors duration-300 ${done ? "text-muted" : active ? "text-foreground" : "text-muted-2 opacity-50"}`}>
+                    <div key={`${step.label}-${index}`} className={`flex items-start gap-2.5 text-[11px] transition-colors duration-300 ${done ? "text-muted" : active ? "text-foreground" : "text-muted-2 opacity-50"}`}>
                       {done ? <Check size={13} weight="bold" className="mt-0.5 shrink-0 text-emerald-500" /> : active ? <CircleNotch size={13} className="mt-0.5 shrink-0 animate-spin text-foreground" /> : <span className="mt-1 h-2 w-2 shrink-0 rounded-[3px] border border-border-strong" />}
                       <span className="min-w-0">
                         <span className="font-semibold">{step.label}</span>
-                        {active ? <span className="ml-1.5 font-mono text-[9px] text-muted-2">{step.hint}</span> : null}
+                        {step.detail ? <span className="ml-1.5 font-mono text-[9px] text-muted-2">{step.detail}</span> : null}
                       </span>
                     </div>
                   );
@@ -528,8 +672,15 @@ export function AIBuilder() {
                     <div className="min-w-0">
                       <p className="text-xs font-bold">Ready when you are</p>
                       <p className="mt-1 text-[11px] leading-5 text-muted">
-                        Applying creates {blueprint.nodes.length} real canvas nodes with chained connections, saved as "AI Architect Blueprint".
+                        {diff.sideBySide
+                          ? `Adds ${diff.added} nodes and ${diff.edgesAdded} connections beside your ${diff.existingKept} existing nodes — nothing is overwritten.`
+                          : `Creates ${diff.added} nodes with ${diff.edgesAdded} chained connections.`}
                       </p>
+                      {diff.duplicates > 0 ? (
+                        <p className="mt-1 font-mono text-[10px] text-muted-2">
+                          {diff.duplicates} node{diff.duplicates > 1 ? "s" : ""} of a type you already have — still added, just flagged.
+                        </p>
+                      ) : null}
                     </div>
                     <button
                       type="button"
@@ -538,7 +689,7 @@ export function AIBuilder() {
                       className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-neutral-900 px-5 text-xs font-bold text-white transition-all hover:bg-neutral-700 disabled:pointer-events-none disabled:opacity-40 active:scale-[0.98] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
                     >
                       {applying || applied ? <Check size={14} weight="bold" /> : <Sparkle size={14} weight="fill" />}
-                      {applying ? "Applying…" : applied ? "Applied — opening canvas" : "Apply to canvas"}
+                      {applying ? "Applying…" : applied ? "Applied — opening canvas" : diff.sideBySide ? "Add to canvas" : "Create on canvas"}
                     </button>
                   </div>
                 </div>

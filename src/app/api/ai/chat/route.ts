@@ -1,4 +1,3 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { NODE_PALETTE } from "@/lib/canvasConfig";
 
 export const runtime = "nodejs";
@@ -6,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 const ZEN_URL = process.env.OPENCODE_ZEN_BASE_URL ?? "https://opencode.ai/zen/v1/chat/completions";
 const ZEN_MODEL = process.env.OPENCODE_ZEN_MODEL ?? "opencode/big-pickle";
-const FREE_ZEN_MODELS = ["opencode/big-pickle", "mimo-v2.5-free", "deepseek-v4-flash-free", "nemotron-3.5-lightning-free", "nemotron-3-ultra-free", "laguna-s-2.1-free"];
+const FREE_ZEN_MODELS = ["opencode/big-pickle", "mimo-v2.5-free", "deepseek-v4-flash-free", "nemotron-3.5-lightning-free", "nemotron-3-ultra-free"];
 
 type BlueprintNode = { type: string; reason: string };
 type AlgorithmSuggestion = { algorithm: string; type: string; score: number; reason: string };
@@ -23,7 +22,6 @@ const MODEL_TYPES = new Set(
   NODE_PALETTE.filter((item) => item.category === "classic_ml" || item.category === "deep_learning").map((item) => item.type),
 );
 
-/** Compact palette catalog embedded in the system prompt. */
 const CATALOG = NODE_PALETTE.map((item) => `${item.type} — ${item.label} [${item.category}]`).join("\n");
 
 /* ── Local heuristic fallback (no API key / all models failed) ──────────── */
@@ -187,8 +185,6 @@ function cleanBlueprint(value: unknown, prompt: string): Blueprint {
   };
 }
 
-/* ── Route handler ──────────────────────────────────────────────────────── */
-
 function isCasualMessage(prompt: string): boolean {
   return /^(hi|hello|hey|hiya|yo|good morning|good afternoon|good evening|thanks|thank you|help|what can you do)\s*[!.?]*$/i.test(prompt.trim());
 }
@@ -200,35 +196,121 @@ function casualReply(prompt: string): string {
   return "Hi — I’m the Datlify Model Architect. Tell me what you want to predict, classify, group, or forecast, and I’ll map it into a pipeline.";
 }
 
-export async function POST(request: NextRequest) {
-  let body: { message?: string; history?: ChatMessage[]; graph?: GraphSummary };
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return NextResponse.json({ error: "Invalid chat request" }, { status: 400 });
-  }
-  const prompt = body.message?.trim();
-  if (!prompt) return NextResponse.json({ error: "A message is required." }, { status: 400 });
-  if (isCasualMessage(prompt)) {
-    return NextResponse.json({ reply: casualReply(prompt), provider: "local", casual: true });
-  }
+/* ── Streaming NDJSON plumbing ──────────────────────────────────────────── */
 
-  const local = localPlan(prompt);
-  const apiKey = process.env.OPENCODE_ZEN_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({
-      reply: `${local.reply} (Local heuristic mode — set OPENCODE_ZEN_API_KEY for full AI design.)`,
-      blueprint: local.blueprint,
-      provider: "local",
-    });
+const encoder = new TextEncoder();
+
+type TraceStep = { label: string; detail?: string };
+type StreamEvent =
+  | { type: "trace"; steps: TraceStep[] }
+  | { type: "delta"; text: string }
+  | { type: "blueprint"; blueprint: Blueprint; suggestions: AlgorithmSuggestion[] }
+  | { type: "casual"; text: string }
+  | { type: "error"; message: string }
+  | { type: "done"; provider: string; model: string };
+
+/** Locate where the JSON plan begins. A bare `{` is not a safe anchor because
+ *  prose legitimately contains braces ("set {depth} to 6"), so we require the
+ *  brace to actually open an object — `{ "key":`. Returns -1 when there is no
+ *  plan in the text. */
+function planAnchor(raw: string): number {
+  for (let i = raw.indexOf("{"); i !== -1; i = raw.indexOf("{", i + 1)) {
+    if (/^\{\s*"[^"]+"\s*:/.test(raw.slice(i, i + 80))) return i;
   }
+  return -1;
+}
 
-  const graphContext =
-    body.graph && body.graph.nodes.length > 0
-      ? `The user's current canvas pipeline is: ${body.graph.nodes.map((node) => node.type).join(" -> ") || "(empty)"}. Design around or extend it.`
-      : "The canvas is currently empty — design a complete pipeline from a data source.";
+/** Return the balanced JSON object starting at `start`, ignoring any trailing
+ *  fences or prose the model appends. String-aware so braces inside string
+ *  values do not throw off the depth count. */
+function balancedObject(text: string, start: number): string {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return text.slice(start);
+}
 
-  const instruction = `You are the Datlify Model Architect, an expert ML engineer that designs node pipelines for a visual ML canvas and recommends algorithms.
+/** Split the model's reply from its JSON plan without buffering the whole body.
+ *  Prose before the plan anchor streams as deltas; the JSON tail is held back so
+ *  it can be validated before it ever reaches the client. */
+function splitReplyAndJson(raw: string): { prose: string; json: string } {
+  const trimmed = raw.replace(/^```(?:json)?\s*/i, "").trim();
+  const start = planAnchor(trimmed);
+  if (start === -1) return { prose: trimmed.replace(/\s*```$/i, "").trim(), json: "" };
+  return {
+    prose: trimmed.slice(0, start).trim(),
+    json: balancedObject(trimmed, start),
+  };
+}
+
+function extractDelta(payload: unknown): string {
+  const chunk = payload as {
+    choices?: Array<{ delta?: { content?: string }; message?: { content?: string } }>;
+  };
+  return chunk?.choices?.[0]?.delta?.content ?? chunk?.choices?.[0]?.message?.content ?? "";
+}
+
+/** OpenCode Zen speaks OpenAI-compatible SSE; parse it line by line. */
+async function* readSse(body: ReadableStream<Uint8Array>): AsyncGenerator<string> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, nl).trim();
+      buffer = buffer.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      try {
+        const text = extractDelta(JSON.parse(data));
+        if (text) yield text;
+      } catch {
+        /* keep-alive or malformed frame — ignore */
+      }
+    }
+  }
+}
+
+function buildInstruction(prompt: string, graph: GraphSummary | undefined, history: ChatMessage[]): string {
+  const nodeCount = graph?.nodes.length ?? 0;
+  const graphContext = !graph || nodeCount === 0
+    ? "The canvas is currently EMPTY. Design a complete pipeline from a data source."
+    : [
+        `The canvas currently has ${nodeCount} node(s) and ${graph?.edges.length ?? 0} edge(s):`,
+        ...graph!.nodes.map((n) => `  - ${n.type} (${n.label}) [${n.category}]`),
+        ...(graph!.edges.length
+          ? [`  connected as: ${graph!.edges.map((e) => `${e.source} -> ${e.target}`).join(", ")}`]
+          : []),
+        "Design AROUND this: extend it, replace the model, or redesign it — and say which you chose and why.",
+      ].join("\n");
+
+  return `You are the Datlify Model Architect, an expert ML engineer that designs node pipelines for a visual ML canvas.
 
 Available node types (type — label [category]):
 ${CATALOG}
@@ -238,61 +320,205 @@ Rules:
 - Include exactly one data node first and at least one model node (classic_ml or deep_learning).
 - Suggest 3-5 algorithms ranked by fit. Each suggestion's "type" MUST be a classic_ml or deep_learning node type from the list.
 - "score" is a 0-1 match confidence for the user's task. "reason" explains the fit in one sentence.
-- "reply" is a short conversational response (2-4 sentences) explaining the design decisions.
+- If the canvas already has nodes, explain in your prose how your proposal relates to them (extend / replace / redesign).
 - Never invent node types outside the list.
 
-Return ONLY valid JSON, no markdown, exactly matching:
+OUTPUT FORMAT — follow exactly, this is parsed by a machine:
+Write 2-4 sentences of reasoning as plain prose FIRST (no headings, no bullet lists, no markdown).
+Then output a single JSON object and nothing after it:
 {"reply":"string","blueprint":{"nodes":[{"type":"string","reason":"string"}],"suggestions":[{"algorithm":"string","type":"string","score":0.0,"reason":"string"}]}}
+The "reply" field must restate your prose in 2-4 sentences.
+
+${graphContext}
 
 User request: ${prompt}
-${graphContext}
-Conversation: ${JSON.stringify((body.history ?? []).slice(-8))}`;
+Conversation: ${JSON.stringify(history.slice(-8))}`;
+}
 
-  const configuredModel = process.env.OPENCODE_ZEN_MODEL?.trim() || ZEN_MODEL;
-  const models = [configuredModel, ...FREE_ZEN_MODELS].filter((candidate, index, list) => list.indexOf(candidate) === index);
-  let lastError = "OpenCode Zen did not return a response.";
-
-  for (const selectedModel of models) {
-    try {
-      const response = await fetch(ZEN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: selectedModel,
-          temperature: 0.2,
-          max_tokens: 1600,
-          messages: [
-            { role: "system", content: instruction },
-            { role: "user", content: prompt },
-          ],
-        }),
-      });
-      const diagnostic = response.ok ? "" : (await response.text()).replace(/\s+/g, " ").slice(0, 180);
-      if (!response.ok) {
-        lastError = `${selectedModel} failed (${response.status})${diagnostic ? `: ${diagnostic}` : ""}`;
-        continue;
-      }
-      const json = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-      const text = json.choices?.[0]?.message?.content?.trim() ?? "";
-      const parsed = JSON.parse(text.replace(/^```json\s*/i, "").replace(/\s*```$/i, "")) as {
-        reply?: string;
-        blueprint?: unknown;
-      };
-      return NextResponse.json({
-        reply: typeof parsed.reply === "string" && parsed.reply.trim() ? parsed.reply.trim().slice(0, 1200) : local.reply,
-        blueprint: cleanBlueprint(parsed.blueprint, prompt),
-        provider: "opencode-zen",
-        model: selectedModel,
-      });
-    } catch (error) {
-      lastError = error instanceof Error ? `${selectedModel}: ${error.message}` : `${selectedModel} failed`;
-    }
+export async function POST(request: Request) {
+  let body: { message?: string; history?: ChatMessage[]; graph?: GraphSummary };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid chat request" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
-  return NextResponse.json({
-    reply: `${local.reply} (Applied a local heuristic after the AI models were unreachable. ${lastError})`,
-    blueprint: local.blueprint,
-    provider: "local-fallback",
-    model: configuredModel,
+  const prompt = body.message?.trim();
+  if (!prompt) {
+    return new Response(JSON.stringify({ error: "A message is required." }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const history = body.history ?? [];
+  const local = localPlan(prompt);
+  const apiKey = process.env.OPENCODE_ZEN_API_KEY;
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (event: StreamEvent) => {
+        try {
+          controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+        } catch {
+          /* client disconnected */
+        }
+      };
+
+      try {
+        if (isCasualMessage(prompt)) {
+          send({ type: "casual", text: casualReply(prompt) });
+          send({ type: "done", provider: "local", model: "casual" });
+          controller.close();
+          return;
+        }
+
+        if (!apiKey) {
+          send({ type: "trace", steps: [{ label: "No OPENCODE_ZEN_API_KEY set", detail: "using built-in heuristic planner" }] });
+          send({ type: "delta", text: local.reply });
+          send({ type: "blueprint", blueprint: local.blueprint, suggestions: local.blueprint.suggestions });
+          send({ type: "done", provider: "local", model: "heuristic" });
+          controller.close();
+          return;
+        }
+
+        // Real trace: these reflect work actually about to happen, in order.
+        send({
+          type: "trace",
+          steps: [
+            { label: "Read canvas context", detail: `${body.graph?.nodes.length ?? 0} nodes, ${body.graph?.edges.length ?? 0} edges` },
+            { label: "Selecting node types", detail: `${NODE_PALETTE.length} palette types available` },
+            { label: "Streaming model response", detail: `${apiKey ? "opencode-zen" : "local"}` },
+            { label: "Validating blueprint", detail: "checking every type against the palette" },
+          ],
+        });
+
+        const instruction = buildInstruction(prompt, body.graph, history);
+        const configuredModel = process.env.OPENCODE_ZEN_MODEL?.trim() || ZEN_MODEL;
+        const models = [configuredModel, ...FREE_ZEN_MODELS].filter((c, i, list) => list.indexOf(c) === i);
+
+        let raw = "";
+        let usedModel: string | null = null;
+        let lastError = "";
+
+        for (const selectedModel of models) {
+          raw = "";
+          usedModel = selectedModel;
+          try {
+            const upstream = await fetch(ZEN_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+                Accept: "text/event-stream",
+              },
+              body: JSON.stringify({
+                model: selectedModel,
+                temperature: 0.2,
+                max_tokens: 1600,
+                stream: true,
+                messages: [
+                  { role: "system", content: instruction },
+                  { role: "user", content: prompt },
+                ],
+              }),
+            });
+
+            if (!upstream.ok || !upstream.body) {
+              const diagnostic = upstream.ok ? "no response body" : (await upstream.text()).replace(/\s+/g, " ").slice(0, 180);
+              lastError = `${selectedModel} failed (${upstream.status})${diagnostic ? `: ${diagnostic}` : ""}`;
+              continue;
+            }
+
+            // Forward prose the instant it is unambiguous, holding back only from the
+            // most recent `{` onwards — that brace might turn out to open the
+            // plan, and we must never flash raw JSON at the user. Every
+            // character is forwarded exactly once: no replay, no duplication.
+            let planFound = false;
+            let flushed = 0;
+            const flushProse = (upTo: number) => {
+              if (upTo > flushed) {
+                send({ type: "delta", text: raw.slice(flushed, upTo) });
+                flushed = upTo;
+              }
+            };
+            for await (const token of readSse(upstream.body)) {
+              raw += token;
+              // Keep draining the stream after the plan starts — the JSON tail is
+              // still arriving and we need all of it to parse. Only the *sending*
+              // of prose stops.
+              if (planFound) continue;
+              const start = planAnchor(raw);
+              if (start !== -1) {
+                // Everything before the plan is prose — flush the tail we were
+                // holding back, otherwise text after a brace in the prose is lost.
+                flushProse(start);
+                planFound = true;
+                continue;
+              }
+              const lastBrace = raw.lastIndexOf("{");
+              flushProse(lastBrace === -1 ? raw.length : lastBrace);
+            }
+            if (!planFound) flushProse(raw.length);
+
+            const { prose, json } = splitReplyAndJson(raw);
+            if (!json) {
+              lastError = `${selectedModel} returned no plan block`;
+              continue;
+            }
+
+            let parsed: { reply?: string; blueprint?: unknown };
+            try {
+              parsed = JSON.parse(json) as typeof parsed;
+            } catch {
+              lastError = `${selectedModel} returned unparseable JSON`;
+              continue;
+            }
+
+            const blueprint = cleanBlueprint(parsed.blueprint, prompt);
+            const reply =
+              typeof parsed.reply === "string" && parsed.reply.trim()
+                ? parsed.reply.trim().slice(0, 1200)
+                : prose || local.reply;
+            // The streamed prose already carried the message; only the plan is new.
+            send({ type: "blueprint", blueprint, suggestions: blueprint.suggestions });
+            send({ type: "done", provider: "opencode-zen", model: selectedModel });
+            controller.close();
+            return;
+          } catch (error) {
+            lastError = error instanceof Error ? `${selectedModel}: ${error.message}` : `${selectedModel} failed`;
+          }
+        }
+
+        // Every model failed — fall back rather than leaving the client hanging.
+        send({ type: "trace", steps: [{ label: "All models unreachable", detail: lastError.slice(0, 120) || "unknown error" }] });
+        send({ type: "delta", text: local.reply });
+        send({ type: "blueprint", blueprint: local.blueprint, suggestions: local.blueprint.suggestions });
+        send({ type: "done", provider: "local-fallback", model: usedModel ?? configuredModelSafe() });
+        controller.close();
+      } catch (error) {
+        send({ type: "error", message: error instanceof Error ? error.message : "The AI architect failed." });
+        try {
+          controller.close();
+        } catch {
+          /* already closed */
+        }
+      }
+    },
   });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
+
+function configuredModelSafe(): string {
+  return process.env.OPENCODE_ZEN_MODEL?.trim() || ZEN_MODEL;
 }
