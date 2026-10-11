@@ -397,7 +397,7 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any) -> Exec
     else:
         dataset = None
     emit({"type": "step", "message": f"Loading dataset ({data_type})…"})
-    X, y, feature_names, target_names, dataset_name = load_dataset(data_type, params_of(data_type), dataset)
+    X, y, feature_names, target_names, dataset_name, _task = load_dataset(data_type, params_of(data_type), dataset)
     X = np.asarray(X, dtype=np.float32)
     y = np.asarray(y, dtype=np.int64)
     if np.isnan(X).any():

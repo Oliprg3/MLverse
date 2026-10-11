@@ -70,20 +70,19 @@ const PLANS: Record<string, TaskPlan> = {
     },
   },
   regression: {
-    reply: "Here is a regression-oriented blueprint. The palette is classification-first, so I kept a regularized linear core and added polynomial features to capture non-linear relationships.",
+    reply: "This is a continuous target, so I picked models that predict numbers rather than classes and dropped the classification charts — ROC curves and confusion matrices need class labels, which a forecast target does not have. You will get R², RMSE, MAE, a predicted-vs-actual plot and a residual plot instead; if the residuals curve or fan out, the model is underfitting and the relationship is probably non-linear.",
     blueprint: {
       nodes: [
-        { type: "data:synthetic", reason: "Configurable generated data — swap in your CSV once the structure looks right." },
-        { type: "pre:scaler", reason: "Standardization keeps the regularized linear model stable." },
-        { type: "pre:polynomial", reason: "Interaction terms let a linear model express non-linear effects." },
-        { type: "ml:ridge", reason: "L2-regularized linear model — the classic choice for continuous targets with collinearity." },
-        { type: "viz:metrics", reason: "Accuracy-style metrics plus per-class breakdown for quick sanity checks." },
+        { type: "data:csv", reason: "Your observations with a continuous target column (price, demand, revenue, temperature). Pick the CSV that holds it." },
+        { type: "pre:scaler", reason: "Standardization keeps the linear and distance-based regressors well conditioned." },
+        { type: "ml:boosting", reason: "Gradient boosting on a continuous target — strong default on tabular data and handles non-linearity without feature engineering." },
+        { type: "viz:charts", reason: "Adds predicted-vs-actual and residual diagnostics, which is where regression problems actually show up." },
       ],
       suggestions: [
-        { algorithm: "Ridge Classifier", type: "ml:ridge", score: 0.85, reason: "Regularized linear fit that stays stable with many correlated features." },
-        { algorithm: "Random Forest", type: "ml:random_forest", score: 0.82, reason: "Captures non-linearities without feature engineering; low tuning burden." },
-        { algorithm: "Gradient Boosting", type: "ml:gradient_boosting", score: 0.8, reason: "Best accuracy on structured data when training time is acceptable." },
-        { algorithm: "Neural Net (MLP)", type: "ml:mlp_sklearn", score: 0.7, reason: "Flexible non-linear fit once features are scaled and data is plentiful." },
+        { algorithm: "Gradient Boosting Regressor", type: "ml:boosting", score: 0.9, reason: "Best accuracy on structured tabular data when training time is acceptable." },
+        { algorithm: "Random Forest Regressor", type: "ml:forest", score: 0.84, reason: "Robust, needs little tuning, resists overfitting on mixed-scale features." },
+        { algorithm: "Ridge Regression", type: "ml:ridge", score: 0.76, reason: "Regularized linear baseline — interpretable coefficients and stable with collinear features." },
+        { algorithm: "Neural Net (MLP) Regressor", type: "ml:mlp_sklearn", score: 0.65, reason: "Flexible non-linear fit once features are scaled and data is plentiful." },
       ],
     },
   },
@@ -329,6 +328,7 @@ ${CATALOG}
 Rules:
 - Propose a connected pipeline of 3-8 nodes using ONLY the listed types, ordered data -> preprocessing -> model -> visualization.
 - Include exactly one data node first and at least one model node (classic_ml or deep_learning).
+- REGRESSION IS SUPPORTED. When the user wants to predict a continuous quantity (price, revenue, demand, temperature, a count that is really a quantity), the SAME model node types resolve to their regressor equivalents — ml:boosting becomes Gradient Boosting Regressor, ml:forest becomes Random Forest Regressor, ml:ridge becomes Ridge Regression. Do NOT propose confusion matrices, ROC curves or PR curves for these; they require class labels. Use viz:charts for the regression diagnostics instead.
 - EXCEPTION: if the user only wants to understand/explore/audit their data (e.g. "analyse my data", "what's in this CSV", "check for missing values", "profile it", "which columns correlate"), propose a data node plus a "viz:eda" Data Profile node and NO model node. Profiling fits nothing.
 - You may also add a "viz:eda" Data Profile node alongside a model when the user wants both insights and a trained model.
 - Suggest 3-5 algorithms ranked by fit. Each suggestion's "type" MUST be a classic_ml or deep_learning node type from the list. Omit "suggestions" entirely for a profile-only plan.

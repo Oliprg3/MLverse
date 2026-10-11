@@ -75,6 +75,16 @@ const METRIC_META: { key: keyof MetricSet; label: string }[] = [
   { key: "average_precision", label: "Avg. Precision" },
 ];
 
+/** A continuous target has no classes, so accuracy/ROC/F1 are meaningless —
+ *  showing six zeros for a regression run reads as a broken model. */
+const REGRESSION_META: { key: keyof MetricSet; label: string; format?: "number" }[] = [
+  { key: "r2", label: "R² Score" },
+  { key: "rmse", label: "RMSE", format: "number" },
+  { key: "mae", label: "MAE", format: "number" },
+  { key: "mape", label: "MAPE %", format: "number" },
+  { key: "explained_variance", label: "Explained Var." },
+];
+
 function downloadBlob(filename: string, content: string, mime: string) {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -311,6 +321,8 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
   // The backend fits no model when the graph has no model node — it returns the
   // profile with a sentinel model name and empty metrics.
   const profileOnly = res.model?.name === "No model trained" || Object.keys(res.metrics ?? {}).length === 0;
+  const regression = res.model?.task === "regression" || res.dataset?.target_type === "continuous";
+  const metricMeta = regression ? REGRESSION_META : METRIC_META;
   const report = () => {
     const payload = {
       model: res.model,
@@ -358,19 +370,28 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
           <ModelExportBar res={res} />
 
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-            {METRIC_META.map((m) => (
-              <MetricCard key={m.key} label={m.label} value={res.metrics[m.key] ?? 0} />
+            {metricMeta.map((m) => (
+              <MetricCard key={m.key} label={m.label} value={(res.metrics[m.key] as number) ?? 0} />
             ))}
           </div>
 
-          <EvaluationAnalytics predictions={res.predictions} />
+          {!regression ? <EvaluationAnalytics predictions={res.predictions} /> : null}
         </>
       )}
 
       {profileOnly ? null : (
         <>
           {(() => {
-        const requested = sortChartKeys(res.charts_requested?.length ? res.charts_requested : Object.keys(res.charts));
+        // Only show figures the engine actually produced, and drop charts that
+        // cannot apply to this task (ROC/PR/confusion are meaningless without
+        // class labels).
+        const present = new Set(Object.keys(res.charts ?? {}));
+        const classificationOnly = new Set(["confusion_matrix", "roc_curve", "pr_curve", "per_class_metrics", "threshold_curve"]);
+        const requested = sortChartKeys(
+          (res.charts_requested?.length ? res.charts_requested : Object.keys(res.charts))
+            .filter((key) => present.has(key))
+            .filter((key) => !(regression && classificationOnly.has(key))),
+        );
         return requested.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {requested.map((key) => {

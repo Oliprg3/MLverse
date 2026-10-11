@@ -41,15 +41,20 @@ warnings.filterwarnings("ignore")
 from sklearn.datasets import load_breast_cancer, load_iris, load_wine, make_classification
 from sklearn.ensemble import (
     AdaBoostClassifier,
+    AdaBoostRegressor,
     ExtraTreesClassifier,
+    ExtraTreesRegressor,
     GradientBoostingClassifier,
+    GradientBoostingRegressor,
     HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
     RandomForestClassifier,
+    RandomForestRegressor,
 )
-from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
+from sklearn.linear_model import ElasticNet, LinearRegression, LogisticRegression, Ridge, RidgeClassifier, SGDClassifier, SGDRegressor
 from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -58,8 +63,11 @@ from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     f1_score,
+    mean_absolute_error,
+    mean_squared_error,
     precision_score,
     precision_recall_curve,
+    r2_score,
     recall_score,
     roc_auc_score,
     roc_curve,
@@ -67,7 +75,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, OrdinalEncoder, StandardScaler, label_binarize
-from sklearn.svm import SVC
+from sklearn.svm import SVC, SVR
 from sklearn.impute import SimpleImputer
 from sklearn.decomposition import PCA
 
@@ -375,8 +383,12 @@ def csv_column_kinds(
     return missing, numeric, modal, values_by_col
 
 
-def load_csv_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
-    """Parse a user-uploaded CSV (text + chosen target column) into X, y arrays."""
+def load_csv_dataset(dataset: Dict[str, Any] | None, params: Dict[str, Any] | None = None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
+    """Parse a user-uploaded CSV (text + chosen target column) into X, y arrays.
+
+    ``params['task']`` may be "auto" (default), "classification" or "regression"
+    and decides how the target column is interpreted.
+    """
     rows, _fieldnames, target, feat_cols = _read_csv_rows(dataset)
 
     n = len(rows)
@@ -404,19 +416,54 @@ def load_csv_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.nda
     X = np.column_stack(cols_enc) if cols_enc else np.zeros((n, 0))
 
     y_raw = [str(r.get(target, "")).strip() for r in rows]
+
+    # ── Target kind: classification or regression ──────────────────────────
+    # A numeric column with many distinct values is a continuous target
+    # (price, demand, revenue), not a 500-class label. Treating it as a
+    # classification target made "predict house price" impossible. `task` lets the
+    # user state the intent explicitly; "auto" infers it.
+    task = str((params.get("task") if params else "") or "auto").strip().lower()
+    numeric_values: List[float] = []
+    target_numeric = True
+    for v in y_raw:
+        if v == "":
+            target_numeric = False
+            break
+        try:
+            numeric_values.append(float(v))
+        except ValueError:
+            target_numeric = False
+            break
+
+    distinct = len({v for v in y_raw if v != ""})
+    requested = str((params.get("task") if params else "") or "auto").strip().lower()
+    if requested == "regression" or (requested == "auto" and target_numeric and distinct > 30):
+        y = np.asarray(numeric_values, dtype=float)
+        classes = []
+        if float(np.nanstd(y)) == 0.0:
+            raise ValueError(f"Target column '{target}' is constant — there is nothing to predict.")
+        # A target of 0..N-1 in order is an identifier, not a measurement. Fitting
+        # a regressor to it produces a meaningless R² of ~1.0 and looks great.
+        unique_sorted = np.unique(y)
+        if unique_sorted.size > 30 and np.allclose(unique_sorted, np.arange(unique_sorted.size)):
+            raise ValueError(
+                f"Target column '{target}' looks like an identifier (0…{unique_sorted.size - 1} in order), "
+                "not a measurable quantity. Choose the column you actually want to predict."
+            )
+        return X, y, feat_cols, [], name, "regression"
+
     le = LabelEncoder()
     y = le.fit_transform(y_raw)
     classes = list(le.classes_)
     if len(classes) < 2:
         raise ValueError(f"Target column '{target}' must contain at least 2 unique classes.")
     if len(classes) > 30:
+        # Not continuous, but still far too many to classify (e.g. an ID column).
         raise ValueError(
-            f"Target column '{target}' has {len(classes)} unique values. "
-            "Use a categorical target with at most 30 classes."
+            f"Target column '{target}' has {len(classes)} distinct non-numeric values. "
+            "Pick a categorical column, or set this node's Task to Regression if it is a numeric quantity."
         )
-
-    name = dataset.get("filename", "Custom CSV")
-    return X, y, feat_cols, [str(c) for c in classes], name
+    return X, y, feat_cols, [str(c) for c in classes], name, "classification"
 
 
 def load_image_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
@@ -437,13 +484,34 @@ def load_image_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.n
     return X, y, [f"px_{i}" for i in range(n_features)], class_names, dataset.get("name", "Image Dataset")
 
 
+def resolve_task(y: np.ndarray, requested: str = "auto", was_label_encoded: bool = False) -> str:
+    """Single source of truth for classification vs regression.
+
+    Deciding this in two places is how an explicitly-forced regression target
+    (integer prices) or an integer ID column ends up routed the wrong way, so the
+    loader decides once and hands the answer to the executor.
+    """
+    if requested == "regression":
+        return "regression"
+    if requested == "classification":
+        return "classification"
+    if was_label_encoded:
+        return "classification"
+    values = np.asarray(y)
+    if values.dtype.kind != "f":
+        return "classification"
+    # Integer-valued floats: still continuous if they were not a small label set.
+    return "regression" if len(np.unique(values)) > 30 else "classification"
+
+
 def load_dataset(
     data_type: str, params: Dict[str, Any], dataset: Dict[str, Any] | None = None
-) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
+) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str, str]:
     if data_type in ("data:csv", "data:db"):
-        return load_csv_dataset(dataset)
+        return load_csv_dataset(dataset, params)
     if data_type == "data:images":
-        return load_image_dataset(dataset)
+        X, y, feats, classes, name = load_image_dataset(dataset)
+        return X, y, feats, classes, name, "classification"
     if data_type == "data:wine":
         data = load_wine()
         name = "Wine Quality"
@@ -474,9 +542,9 @@ def load_dataset(
         )
         feature_names = [f"feature_{i:02d}" for i in range(n_features)]
         target_names = [str(i) for i in range(n_classes)]
-        return X, y, feature_names, target_names, "Synthetic Classification"
+        return X, y, feature_names, target_names, "Synthetic Classification", "classification"
 
-    return data.data, data.target, list(data.feature_names), [str(c) for c in data.target_names], name
+    return data.data, data.target, list(data.feature_names), [str(c) for c in data.target_names], name, "classification"
 
 
 # ── Model factory ────────────────────────────────────────────────────────────
@@ -709,6 +777,185 @@ def build_data_profile(
     }
 
 
+def _finish_regression(
+    pipeline: Any,
+    model_type: str,
+    model_name: str,
+    framework: str,
+    version: str,
+    task: str,
+    X_test: np.ndarray,
+    y_test: np.ndarray,
+    y_pred: np.ndarray,
+    feature_names: List[str],
+    steps_desc: List[Dict[str, str]],
+    train_seconds: float,
+    start: float,
+    emit: Any,
+    has_dim_reduction: bool,
+) -> Dict[str, Any]:
+    """Score and chart a continuous-target run.
+
+    ROC/PR/confusion matrices are meaningless without class labels, so a
+    regression run gets R²/RMSE/MAE plus a residual plot and a predicted-vs-actual
+    plot instead.
+    """
+    emit({"type": "step", "message": "Computing regression metrics…"})
+    rmse = float(np.sqrt(mean_squared_error(y_test, y_pred)))
+    metrics = {
+        "r2": float(r2_score(y_test, y_pred)),
+        "rmse": rmse,
+        "mae": float(mean_absolute_error(y_test, y_pred)),
+        # mape is only meaningful when the target avoids zero
+        "mape": float(np.mean(np.abs((y_test - y_pred) / np.where(y_test == 0, np.nan, y_test))) * 100.0)
+        if not np.any(y_test == 0) else None,
+        "explained_variance": None,
+    }
+    try:
+        from sklearn.metrics import explained_variance_score
+
+        metrics["explained_variance"] = float(explained_variance_score(y_test, y_pred))
+    except Exception:
+        pass
+    metrics = {k: v for k, v in metrics.items() if v is not None}
+    for key, value in metrics.items():
+        emit({"type": "metric", "name": key, "value": float(value)})
+
+    emit({"type": "step", "message": "Generating regression charts…"})
+    importances = _compute_importance(pipeline, X_test, y_test, feature_names, has_dim_reduction, task)
+    fi_names = (
+        feature_names
+        if len(feature_names) == len(importances)
+        else [f"feature_{i}" for i in range(len(importances))]
+    )
+    charts = {
+        "regression_predictions": _regression_predictions_figure(y_test, y_pred),
+        "regression_residuals": _regression_residuals_figure(y_test, y_pred),
+        "feature_importance": feature_importance_figure(importances, fi_names),
+    }
+
+    cap = 500
+    predictions = {
+        "y_true": y_test[:cap].tolist(),
+        "y_pred": y_pred[:cap].tolist(),
+        "classes": [],
+        "n_test": int(len(y_test)),
+        "residuals": (y_test[:cap] - y_pred[:cap]).tolist(),
+    }
+
+    pickle_payload = base64.b64encode(pickle.dumps(pipeline, protocol=pickle.HIGHEST_PROTOCOL)).decode("ascii")
+    try:
+        import joblib
+
+        buffer = io.BytesIO()
+        joblib.dump(pipeline, buffer)
+        joblib_payload = base64.b64encode(buffer.getvalue()).decode("ascii")
+    except Exception:
+        joblib_payload = None
+
+    total = time.perf_counter() - start
+    return ExecutionResult(
+        route="instant",
+        runtime="sklearn_cpu",
+        status="success",
+        engine=f"{framework} ({version}) · plotly",
+        pipeline={"steps": steps_desc},
+        dataset={
+            "name": "",
+            "n_samples": int(len(y_test)),
+            "n_features": int(X_test.shape[1]),
+            "n_classes": 0,
+            "target_type": "continuous",
+        },
+        model={
+            "name": model_name,
+            "framework": framework,
+            "library_version": version,
+            "task": task,
+            "artifacts": {
+                "pickle": {
+                    "format": "pickle",
+                    "filename": f"datlify_{model_type.replace(':', '_')}.pkl",
+                    "mime": "application/octet-stream",
+                    "base64": pickle_payload,
+                },
+                "joblib": {
+                    "format": "joblib",
+                    "filename": f"datlify_{model_type.replace(':', '_')}.joblib",
+                    "mime": "application/octet-stream",
+                    "base64": joblib_payload,
+                } if joblib_payload else None,
+            },
+        },
+        metrics=metrics,
+        charts=charts,
+        predictions=predictions,
+        timing={"total_seconds": total, "training_seconds": train_seconds},
+        message=f"{model_name} trained in {train_seconds:.2f}s on CPU.",
+    ).to_dict()
+
+
+def _regression_scatter(x: List[float], y: List[float], title: str, xlabel: str, ylabel: str, reference: float | None = None) -> Dict[str, Any]:
+    """Scatter used by the regression diagnostics, built on the shared layout
+    helpers so it inherits the same theme as every other figure."""
+    traces: List[Dict[str, Any]] = [{
+        "type": "scatter",
+        "mode": "markers",
+        "name": "samples",
+        "x": x,
+        "y": y,
+        "marker": {"size": 8, "opacity": 0.7, "color": PALETTE[0], "line": {"width": 0}},
+        "hovertemplate": f"{xlabel}: %{{x:.4g}}<br>{ylabel}: %{{y:.4g}}<extra></extra>",
+    }]
+    overrides: Dict[str, Any] = {"xaxis": _axis(xlabel), "yaxis": _axis(ylabel)}
+    if reference is not None:
+        # A model whose points hug this line is predicting well.
+        span_x = (max(x) - min(x)) or 1.0
+        span_y = (max(y) - min(y)) or 1.0
+        lo_x, hi_x = min(x), max(x)
+        if reference == 0:
+            # horizontal reference: residuals must straddle zero
+            traces.append({
+                "type": "scatter", "mode": "lines", "name": "ideal",
+                "x": [lo_x, hi_x], "y": [0, 0],
+                "line": {"color": "#f87171", "width": 1.5, "dash": "dash"},
+                "hoverinfo": "skip",
+            })
+        else:
+            traces.append({
+                "type": "scatter", "mode": "lines", "name": "ideal (y = x)",
+                "x": [lo_x, hi_x], "y": [min(lo_x, lo_x + span_y), min(lo_x, lo_x + span_y)],
+                "line": {"color": "#94a3b8", "width": 1.5, "dash": "dash"},
+                "hoverinfo": "skip",
+            })
+        overrides["hovermode"] = "closest"
+    return {
+        "data": traces,
+        "layout": _base_layout(title, height=420, **overrides),
+    }
+
+
+def _regression_predictions_figure(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, Any]:
+    x = [float(v) for v in y_true]
+    y = [float(v) for v in y_pred]
+    fig = _regression_scatter(x, y, "Predicted vs actual", "actual", "predicted", reference=1)
+    # Rebuild the reference line as a true y=x diagonal in data space.
+    lo = min(min(x), min(y))
+    hi = max(max(x), max(y))
+    fig["data"][1] = {
+        "type": "scatter", "mode": "lines", "name": "ideal (y = x)",
+        "x": [lo, hi], "y": [lo, hi],
+        "line": {"color": "#94a3b8", "width": 1.5, "dash": "dash"},
+        "hoverinfo": "skip",
+    }
+    return fig
+
+
+def _regression_residuals_figure(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, Any]:
+    resid = [float(a) - float(b) for a, b in zip(y_true, y_pred)]
+    return _regression_scatter([float(v) for v in y_pred], resid, "Residuals vs predicted", "predicted", "residual (actual − predicted)", reference=0)
+
+
 def _is_indexable(seq: Any, value: Any) -> bool:
     try:
         int(value)
@@ -717,13 +964,18 @@ def _is_indexable(seq: Any, value: Any) -> bool:
         return False
 
 
-def make_model(model_type: str, params: Dict[str, Any]) -> Tuple[Any, str, str, str]:
+def make_model(model_type: str, params: Dict[str, Any], task: str = "classification") -> Tuple[Any, str, str, str]:
     """Return (estimator, display_name, framework, library_version).
 
-    Implements the full scikit-learn classifier suite plus XGBoost / LightGBM.
-    Every hyperparameter exposed in the canvas node is honored here.
+    Implements the full scikit-learn classifier suite plus XGBoost / LightGBM,
+    and a matching regressor suite for continuous targets. Every hyperparameter
+    exposed in the canvas node is honored here. ``task`` decides which family a
+    dual-use node type resolves to — "ml:forest" means random forest for a class
+    target and random forest regressor for a numeric one.
     """
     rs = 42
+    if task == "regression":
+        return make_regressor(model_type, params, rs)
 
     if model_type == "ml:logistic":
         penalty = _opt(params, "penalty", "l2")
@@ -874,6 +1126,66 @@ def make_model(model_type: str, params: Dict[str, Any]) -> Tuple[Any, str, str, 
     return RandomForestClassifier(n_estimators=300, random_state=rs, n_jobs=-1), "Random Forest", "scikit-learn", SKLEARN_VERSION
 
 
+# ── Regressor factory ────────────────────────────────────────────────────────
+
+def make_regressor(model_type: str, params: Dict[str, Any], rs: int = 42) -> Tuple[Any, str, str, str]:
+    """Return a regressor for a continuous target.
+
+    Node types that exist in both families (ml:forest, ml:linear_tree, …) are
+    resolved here by task, so one palette entry serves both worlds instead of
+    duplicating every model.
+    """
+    t = model_type
+
+    if t in ("ml:linear", "ml:ridge"):
+        return Ridge(alpha=_num(params, "alpha", 1.0), random_state=rs), "Ridge Regression", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:linear_tree", "ml:elastic_net"):
+        return ElasticNet(alpha=_num(params, "alpha", 0.1), l1_ratio=_num(params, "l1_ratio", 0.5), random_state=rs, max_iter=5000), "Elastic Net", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:forest", "ml:random_forest"):
+        return RandomForestRegressor(n_estimators=int(_num(params, "n_estimators", 300)), max_depth=_opt(params, "max_depth", "") or None, random_state=rs, n_jobs=-1), "Random Forest Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:extra_trees",):
+        return ExtraTreesRegressor(n_estimators=int(_num(params, "n_estimators", 300)), random_state=rs, n_jobs=-1), "Extra Trees Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:boosting", "ml:gradient_boosting"):
+        return GradientBoostingRegressor(n_estimators=int(_num(params, "n_estimators", 200)), learning_rate=_num(params, "learning_rate", 0.05), max_depth=_opt(params, "max_depth", "") or None, random_state=rs), "Gradient Boosting Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:hist_gradient_boosting",):
+        return HistGradientBoostingRegressor(max_iter=int(_num(params, "max_iter", 300)), learning_rate=_num(params, "learning_rate", 0.06), random_state=rs), "Hist Gradient Boosting Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:svm",):
+        kernel = _opt(params, "kernel", "rbf")
+        return SVR(kernel=kernel, C=_num(params, "C", 1.0), epsilon=_num(params, "epsilon", 0.1)), "Support Vector Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:knn",):
+        k = int(_num(params, "n_neighbors", 5))
+        weights = _opt(params, "weights", "uniform")
+        return KNeighborsRegressor(n_neighbors=max(1, k), weights=weights), "K-Nearest Neighbors Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:mlp_sklearn",):
+        return MLPRegressor(
+            hidden_layer_sizes=(128, 64),
+            alpha=_num(params, "alpha", 0.0001),
+            max_iter=int(_num(params, "max_iter", 1000)),
+            random_state=rs,
+        ), "Neural Net (MLP) Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:sgd",):
+        return SGDRegressor(loss=_opt(params, "loss", "squared_error"), alpha=_num(params, "alpha", 0.0001), max_iter=int(_num(params, "max_iter", 1000)), random_state=rs), "SGD Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:adaboost",):
+        return AdaBoostRegressor(n_estimators=int(_num(params, "n_estimators", 100)), learning_rate=_num(params, "learning_rate", 1.0), random_state=rs), "AdaBoost Regressor", "scikit-learn", SKLEARN_VERSION
+    if t in ("ml:xgboost",):
+        try:
+            import xgboost as xgb
+
+            return XGBRegressor(n_estimators=int(_num(params, "n_estimators", 300)), max_depth=int(_num(params, "max_depth", 6)), learning_rate=_num(params, "learning_rate", 0.1), random_state=rs, verbosity=0, tree_method="hist", n_jobs=-1), "XGBoost Regressor", "xgboost", xgb.__version__
+        except Exception:
+            return GradientBoostingRegressor(random_state=rs), "Gradient Boosting Regressor", "scikit-learn (xgboost unavailable)", SKLEARN_VERSION
+    if t in ("ml:lightgbm",):
+        try:
+            import lightgbm as lgb
+
+            return LGBMRegressor(n_estimators=int(_num(params, "n_estimators", 300)), max_depth=int(_num(params, "max_depth", -1)), learning_rate=_num(params, "learning_rate", 0.05), random_state=rs, verbose=-1, n_jobs=-1), "LightGBM Regressor", "lightgbm", lgb.__version__
+        except Exception:
+            return GradientBoostingRegressor(random_state=rs), "Gradient Boosting Regressor", "scikit-learn (lightgbm unavailable)", SKLEARN_VERSION
+
+    # sensible default
+    return RandomForestRegressor(n_estimators=300, random_state=rs, n_jobs=-1), "Random Forest Regressor", "scikit-learn", SKLEARN_VERSION
+
+
 @dataclass
 class ExecutionResult:
     route: str = "instant"
@@ -946,8 +1258,8 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
     else:
         dataset = None
     emit({"type": "step", "message": f"Loading dataset ({data_type})…"})
-    X, y, feature_names, target_names, dataset_name = load_dataset(data_type, params_of(data_type), dataset)
-    emit({"type": "step", "message": f"Loaded {dataset_name} — {X.shape[0]} samples · {X.shape[1]} features · {len(set(y.tolist()))} classes"})
+    X, y, feature_names, target_names, dataset_name, task = load_dataset(data_type, params_of(data_type), dataset)
+    emit({"type": "step", "message": f"Loaded {dataset_name} — {X.shape[0]} samples · {X.shape[1]} features · {'continuous target' if task == 'regression' else str(len(set(y.tolist()))) + ' classes'}"})
 
     steps_desc: List[Dict[str, str]] = [{"name": "Load dataset", "detail": dataset_name, "kind": "data"}]
 
@@ -1054,10 +1366,15 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
     emit({"type": "step", "message": f"Train: {X_train.shape[0]} rows · Test: {X_test.shape[0]} rows"})
     steps_desc.append({"name": "Train/Test split", "detail": f"test_size={test_size:.2f}", "kind": "preprocessing"})
 
+    # ── Task resolved by the loader ────────────────────────────────────────────
+# load_dataset decides this once (see resolve_task) and hands it over. Deriving
+# it again from y here is what previously sent integer prices to classifiers.
+emit({"type": "step", "message": f"Task: {task}"})
+
     # 4. model
     model_node = next((n for n in nodes if n.get("category") == "classic_ml"), None)
     model_type = model_node["type"] if model_node else "ml:random_forest"
-    estimator, model_name, framework, version = make_model(model_type, params_of(model_type))
+    estimator, model_name, framework, version = make_model(model_type, params_of(model_type), task)
     steps.append(("model", estimator))
     steps_desc.append({"name": f"Train {model_name}", "detail": framework, "kind": "model"})
     emit({"type": "step", "message": f"Training {model_name} ({framework}) on {X_train.shape[0]} rows…"})
@@ -1071,6 +1388,14 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
     emit({"type": "step", "message": "Predicting on the test set…"})
     # 5. predictions + probability scores
     y_pred = pipeline.predict(X_test)
+
+    if task == "regression":
+        return _finish_regression(
+            pipeline, model_type, model_name, framework, version, task,
+            X_test, y_test, y_pred, feature_names, steps_desc, train_seconds,
+            start, emit, has_dim_reduction,
+        )
+
     y_score = None
     try:
         y_score = pipeline.predict_proba(X_test)
@@ -1125,7 +1450,7 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
 
     # 7. charts
     emit({"type": "step", "message": "Generating Plotly charts & predictions…"})
-    importances = _compute_importance(pipeline, X_test, y_test, feature_names, has_dim_reduction)
+    importances = _compute_importance(pipeline, X_test, y_test, feature_names, has_dim_reduction, task)
     fi_names = (
         feature_names
         if len(feature_names) == len(importances)
@@ -1199,7 +1524,8 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
 
 
 def _compute_importance(
-    pipeline: Pipeline, X_test: np.ndarray, y_test: np.ndarray, feature_names: List[str], has_dim_reduction: bool
+    pipeline: Pipeline, X_test: np.ndarray, y_test: np.ndarray, feature_names: List[str], has_dim_reduction: bool,
+    task: str = "classification",
 ) -> np.ndarray:
     final = pipeline.named_steps["model"]
     n_feat = X_test.shape[1]
@@ -1219,7 +1545,7 @@ def _compute_importance(
     # Fallback: permutation importance on the full pipeline (works with PCA too).
     if permutation_importance is not None:
         try:
-            r = permutation_importance(pipeline, X_test, y_test, n_repeats=4, random_state=42, scoring="accuracy", n_jobs=-1)
+            r = permutation_importance(pipeline, X_test, y_test, n_repeats=4, random_state=42, scoring=("r2" if task == "regression" else "accuracy"), n_jobs=-1)
             return _normalize(np.asarray(r.importances_mean, dtype=float), n_feat, feature_names)
         except Exception:
             pass

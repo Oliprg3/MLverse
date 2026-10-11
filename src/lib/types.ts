@@ -20,6 +20,9 @@ export type ChartGroup = "core" | "scatter" | "knn" | "diagnostics";
  * asked for.
  */
 export type ChartKey =
+  // regression diagnostics
+  | "regression_predictions"
+  | "regression_residuals"
   // core evaluation
   | "confusion_matrix"
   | "roc_curve"
@@ -180,17 +183,26 @@ export interface ModelInfo {
   name: string;
   framework: string;
   library_version?: string;
+  /** "regression" when the target was continuous — selects the metric set. */
+  task?: "classification" | "regression";
   params?: Record<string, unknown>;
   export_formats?: Array<ModelArtifact["format"]>;
 }
 
 export interface MetricSet {
+  /** Classification metrics — absent on a regression run. */
   accuracy: number;
   precision: number;
   recall: number;
   f1: number;
   roc_auc: number;
   average_precision: number;
+  /** Regression metrics — absent on a classification run. */
+  r2?: number;
+  rmse?: number;
+  mae?: number;
+  mape?: number;
+  explained_variance?: number;
   log_loss?: number;
   balanced_accuracy?: number;
   mcc?: number;

@@ -55,6 +55,10 @@ export const CHART_CATALOG: ChartSpec[] = [
   { key: "per_class_metrics", label: "Per-class Metrics", short: "Per-class metrics", subtitle: "Precision / recall / F1 side by side for every class", group: "core" },
   { key: "threshold_curve", label: "Threshold Sweep", short: "Threshold sweep", subtitle: "Precision, recall and F1 as the decision threshold moves", group: "core", requires: "binary target" },
 
+  /* ── Regression diagnostics ─────────────────────────────────────────── */
+  { key: "regression_predictions", label: "Predicted vs Actual", short: "Predicted vs actual", subtitle: "Each point is a test sample; the dashed line is a perfect prediction", group: "core", span: 2, requires: "regression target" },
+  { key: "regression_residuals", label: "Residual Plot", short: "Residuals", subtitle: "Error against the prediction — a curve or funnel means the model is misfitting", group: "core", span: 2, requires: "regression target" },
+
   /* ── Scatter & geometry ─────────────────────────────────────────────── */
   { key: "scatter_2d", label: "2D Scatter", short: "2D scatter", subtitle: "Test samples in 2D, misclassified points marked with ✕", group: "scatter", selectable: true },
   { key: "scatter_3d", label: "3D Scatter", short: "3D scatter (rotatable)", subtitle: "Drag to orbit, three components coloured by true class", group: "scatter", height: 420, requires: "≥3 features", selectable: true },

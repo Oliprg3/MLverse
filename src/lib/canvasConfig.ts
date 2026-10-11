@@ -37,7 +37,9 @@ export const NODE_PALETTE: PaletteItem[] = [
   ] },
 
   // ── Data ─────────────────────────────────────────────────────────────────
-  { type: "data:csv", label: "Custom CSV", description: "Upload your own dataset with auto target detection", category: "data", icon: "FileSpreadsheet", accent: CATEGORIES.data.accent },
+  { type: "data:csv", label: "Custom CSV", description: "Upload your own dataset with auto target detection", category: "data", icon: "FileSpreadsheet", accent: CATEGORIES.data.accent, params: [
+    { key: "task", label: "Task", value: "auto", options: ["auto", "classification", "regression"], hint: "Auto treats a numeric column with many distinct values as a continuous target and everything else as classes." },
+  ] },
   { type: "data:db", label: "Cloud Database", description: "Query PostgreSQL, Supabase, Neon or MySQL with SQL", category: "data", icon: "CloudDatabase", accent: CATEGORIES.data.accent },
   { type: "data:images", label: "Image Dataset", description: "Upload images grouped by class folders", category: "data", icon: "Images", accent: CATEGORIES.data.accent },
   { type: "data:breast_cancer", label: "Breast Cancer", description: "569 samples, 30 numeric features, binary", category: "data", icon: "Database", accent: CATEGORIES.data.accent, params: [TEST_SIZE(0.2)] },
