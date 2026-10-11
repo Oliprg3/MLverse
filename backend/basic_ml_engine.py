@@ -392,6 +392,7 @@ def load_csv_dataset(dataset: Dict[str, Any] | None, params: Dict[str, Any] | No
     and decides how the target column is interpreted.
     """
     rows, _fieldnames, target, feat_cols = _read_csv_rows(dataset)
+    name = str(dataset.get("filename") or "Custom CSV")
 
     n = len(rows)
     cols_enc: List[np.ndarray] = []
@@ -606,7 +607,19 @@ def build_data_profile(
     # ── Per-column descriptive statistics ────────────────────────────────────
     columns: List[Dict[str, Any]] = []
     missing_counts = np.isnan(X).sum(axis=0) if X.dtype.kind in "fc" else np.zeros(cols, dtype=int)
-    total_missing = int(missing_counts.sum())
+    # The headline count must agree with the per-column counts. Summing
+    # np.isnan(X) reports zero for every CSV, because the loader has already
+    # turned blanks into ordinal codes — so the summary and the data-quality
+    # findings would claim "no missing values" while the table below listed
+    # columns with gaps. Prefer the raw per-column counts whenever we have them.
+    if raw_missing:
+        total_missing = int(sum(int(v) for v in raw_missing.values()))
+        # Keep missing_counts aligned with the names build_data_profile uses.
+        for i, col_name in enumerate(names[:cols]):
+            if col_name in raw_missing:
+                missing_counts[i] = int(raw_missing[col_name])
+    else:
+        total_missing = int(missing_counts.sum())
     constant_columns: List[str] = []
 
     for i in range(cols):

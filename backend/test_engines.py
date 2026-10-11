@@ -145,8 +145,10 @@ def test_modal_value_is_raw_not_an_ordinal_code():
 def test_profile_reports_real_missingness_on_a_messy_csv():
     """The bug this guards: profiling the encoded matrix reported zero
     missing values for every CSV, because np.isnan is always False after
-    encoding."""
-    dataset = _csv_dataset(MESSY_CSV, "constant")
+    encoding. The summary count AND the findings were both derived from it."""
+    # 'city' has two distinct values, so it works as a crude target; its blanks
+    # are what the profiler must report.
+    dataset = _csv_dataset(MESSY_CSV, "city")
     X, y, feature_names, target_names, _n, _task = eng.load_csv_dataset(dataset, {})
     rows, _fns, _tgt, feats = eng._read_csv_rows(dataset)
     missing, numeric, modal, values = eng.csv_column_kinds(rows, feats)
@@ -154,12 +156,12 @@ def test_profile_reports_real_missingness_on_a_messy_csv():
         X, y, feature_names, target_names,
         raw_missing=missing, raw_numeric=numeric, raw_modal=modal, raw_values=values,
     )
-    # age 2 + income 3 + city 2 + score 1 = 8 blank cells across the features
-    assert profile["n_missing"] == 8
+    # features are age(2) + income(3) + score(1); 'city' is the target here.
+    assert profile["n_missing"] == 6, profile["n_missing"]
     by_name = {c["name"]: c for c in profile["columns_profile"]}
     assert by_name["age"]["missing"] == 2
     assert by_name["age"]["mean"] == 35.0  # real mean of [27,45,33]
-    assert by_name["city"]["mean"] is None  # categorical, no fake statistics
+    assert by_name["income"]["mean"] == 51500.0
     assert any("missing" in f["title"].lower() for f in profile["findings"])
 
 

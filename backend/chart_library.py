@@ -178,4 +178,3 @@ class ChartContext:
     feature_names: List[str]
     importances: np.ndarray
     params: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    /  # noqa: E999  (placeholder removed below)
