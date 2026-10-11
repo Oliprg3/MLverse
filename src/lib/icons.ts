@@ -33,6 +33,8 @@ import {
   Stack,
   StackSimple,
   Stethoscope,
+  CirclesFour,
+  CirclesThreePlus,
   Table,
   TrendUp,
   WaveSine,
@@ -82,6 +84,8 @@ const REGISTRY: Record<string, IconComponent> = {
   Activity: Pulse,
   ScatterChart: ChartScatter,
   Stethoscope: Stethoscope,
+  CirclesFour: CirclesFour,
+  CirclesThreePlus: CirclesThreePlus,
   MagnifyingGlass: MagnifyingGlass,
 };
 

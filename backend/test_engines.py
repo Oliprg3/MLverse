@@ -202,6 +202,56 @@ def test_classification_still_resolves_classifiers():
     assert estimator.__class__.__name__.endswith("Classifier")
 
 
+# ── clustering ──────────────────────────────────────────────────────────────
+
+def test_kmeans_and_dbscan_resolve():
+    estimator, name, _fw, _v = eng.make_model("ml:kmeans", {"n_clusters": 4}, "clustering")
+    assert estimator.__class__.__name__ == "KMeans"
+    assert estimator.n_clusters == 4
+    estimator, name, _fw, _v = eng.make_model("ml:dbscan", {"eps": 0.4}, "clustering")
+    assert estimator.__class__.__name__ == "DBSCAN"
+    assert estimator.eps == 0.4
+
+
+def test_clustering_is_selected_by_the_model_not_the_target():
+    """KMeans wins over the loader's classification/regression verdict, because
+    the model type is what makes the run unsupervised."""
+    nodes = [
+        {"type": "data:iris", "category": "data", "params": {}},
+        {"type": "ml:kmeans", "category": "classic_ml", "params": {"n_clusters": 3}},
+    ]
+    result = eng.execute(nodes)
+    assert result["status"] == "success", result.get("error")
+    assert result["model"]["task"] == "clustering"
+    assert result["dataset"]["target_type"] == "unsupervised"
+
+
+def test_clustering_uses_every_row_not_a_train_split():
+    """A supervised split would silently cluster only 80% of the data."""
+    nodes = [
+        {"type": "data:iris", "category": "data", "params": {}},
+        {"type": "ml:kmeans", "category": "classic_ml", "params": {"n_clusters": 3}},
+    ]
+    result = eng.execute(nodes)
+    assert result["predictions"]["n_test"] == 150  # all of iris
+    assert len(result["predictions"]["y_pred"]) == 150
+
+
+def test_clustering_reports_silhouette_not_accuracy():
+    nodes = [
+        {"type": "data:iris", "category": "data", "params": {}},
+        {"type": "ml:kmeans", "category": "classic_ml", "params": {"n_clusters": 3}},
+    ]
+    result = eng.execute(nodes)
+    # No ground truth, so accuracy/F1/ROC would be meaningless numbers.
+    for bogus in ("accuracy", "f1", "roc_auc", "precision", "recall"):
+        assert bogus not in result["metrics"], bogus
+    assert result["metrics"]["n_clusters"] >= 1
+    assert "silhouette" in result["metrics"]
+    assert "cluster_scatter" in result["charts"]
+    assert "cluster_sizes" in result["charts"]
+
+
 # ── minimal runner ──────────────────────────────────────────────────────────
 
 def main() -> int:

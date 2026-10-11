@@ -20,6 +20,10 @@ export type ChartGroup = "core" | "scatter" | "knn" | "diagnostics";
  * asked for.
  */
 export type ChartKey =
+  // clustering
+  | "cluster_scatter"
+  | "cluster_sizes"
+  | "k_selection"
   // regression diagnostics
   | "regression_predictions"
   | "regression_residuals"
@@ -184,12 +188,16 @@ export interface ModelInfo {
   framework: string;
   library_version?: string;
   /** "regression" when the target was continuous — selects the metric set. */
-  task?: "classification" | "regression";
+  task?: "classification" | "regression" | "clustering";
   params?: Record<string, unknown>;
   export_formats?: Array<ModelArtifact["format"]>;
 }
 
+/** Clustering metrics — present only on an unsupervised run. */
 export interface MetricSet {
+  n_clusters?: number;
+  silhouette?: number;
+  inertia?: number;
   /** Classification metrics — absent on a regression run. */
   accuracy: number;
   precision: number;

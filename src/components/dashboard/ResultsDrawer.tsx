@@ -87,6 +87,13 @@ const REGRESSION_META: { key: keyof MetricSet; label: string; format?: "number" 
   { key: "explained_variance", label: "Explained Var." },
 ];
 
+/** Clustering has no ground truth, so silhouette/inertia are the honest scores. */
+const CLUSTERING_META: { key: keyof MetricSet; label: string; format?: "number" }[] = [
+  { key: "n_clusters", label: "Clusters found" },
+  { key: "silhouette", label: "Silhouette" },
+  { key: "inertia", label: "Inertia", format: "number" },
+];
+
 function downloadBlob(filename: string, content: string, mime: string) {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -386,7 +393,8 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
   // profile with a sentinel model name and empty metrics.
   const profileOnly = res.model?.name === "No model trained" || Object.keys(res.metrics ?? {}).length === 0;
   const regression = res.model?.task === "regression" || res.dataset?.target_type === "continuous";
-  const metricMeta = regression ? REGRESSION_META : METRIC_META;
+  const clustering = res.model?.task === "clustering" || res.dataset?.target_type === "unsupervised";
+  const metricMeta = clustering ? CLUSTERING_META : regression ? REGRESSION_META : METRIC_META;
   const report = () => {
     const payload = {
       model: res.model,
@@ -454,7 +462,8 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
         const requested = sortChartKeys(
           (res.charts_requested?.length ? res.charts_requested : Object.keys(res.charts))
             .filter((key) => present.has(key))
-            .filter((key) => !(regression && classificationOnly.has(key))),
+            .filter((key) => !(regression && classificationOnly.has(key)))
+            .filter((key) => !(clustering && classificationOnly.has(key))),
         );
         return requested.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">

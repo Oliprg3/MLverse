@@ -58,6 +58,7 @@ from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.cluster import DBSCAN, KMeans
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
@@ -71,6 +72,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
     roc_curve,
+    silhouette_score,
 )
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -895,6 +897,172 @@ def _finish_regression(
     ).to_dict()
 
 
+def _finish_clustering(
+    pipeline: Any,
+    model_type: str,
+    model_name: str,
+    framework: str,
+    version: str,
+    X_test: np.ndarray,
+    feature_names: List[str],
+    steps_desc: List[Dict[str, str]],
+    train_seconds: float,
+    start: float,
+    emit: Any,
+) -> Dict[str, Any]:
+    """Score and chart an unsupervised run.
+
+    Clustering has no ground truth, so there is no accuracy to report: the
+    meaningful numbers are silhouette (higher is better) and inertia, plus the
+    discovered cluster sizes. Reporting an accuracy here would be meaningless.
+    """
+    emit({"type": "step", "message": "Scoring clusters…"})
+    labels = pipeline.predict(X_test)
+    unique = [int(c) for c in np.unique(labels)]
+    k = len(unique)
+
+    metrics: Dict[str, float] = {"n_clusters": float(k)}
+    try:
+        # Silhouette needs at least 2 clusters and at least as many samples as
+        # clusters; skip rather than emit a bogus number.
+        if k > 1 and len(X_test) > k:
+            metrics["silhouette"] = float(silhouette_score(X_test, labels))
+        else:
+            emit({"type": "step", "message": f"Only {k} cluster(s) found — silhouette needs at least 2"})
+    except Exception:
+        pass
+    if hasattr(pipeline, "inertia_"):
+        metrics["inertia"] = float(pipeline.inertia_)
+    for key, value in metrics.items():
+        emit({"type": "metric", "name": key, "value": float(value)})
+
+    counts = {c: int((labels == c).sum()) for c in unique}
+    emit({"type": "step", "message": "Found " + ", ".join(f"{n} samples in cluster {c}" for c, n in sorted(counts.items()))})
+
+    # Project to 2D for a readable cluster map when the data is higher-dimensional.
+    plot_xy, projection = _reduce_for_plot(X_test, feature_names)
+
+    emit({"type": "step", "message": "Generating cluster charts…"})
+    charts = {
+        "cluster_scatter": _cluster_scatter_figure(plot_xy, labels, projection),
+        "cluster_sizes": _cluster_sizes_figure(counts, k),
+    }
+    if hasattr(pipeline, "inertia_") and k > 1:
+        charts["k_selection"] = _k_selection_figure(X_test, k)
+
+    cap = 500
+    predictions = {
+        "y_true": [],
+        "y_pred": labels[:cap].tolist(),
+        "classes": [f"cluster {c}" for c in unique],
+        "n_test": int(len(X_test)),
+        "cluster_ids": unique,
+    }
+
+    return ExecutionResult(
+        route="instant",
+        runtime="sklearn_cpu",
+        status="success",
+        engine=f"{framework} ({version}) · plotly",
+        pipeline={"steps": steps_desc},
+        dataset={
+            "name": "",
+            "n_samples": int(len(X_test)),
+            "n_features": int(X_test.shape[1]),
+            "n_classes": k,
+            "target_type": "unsupervised",
+        },
+        model={"name": model_name, "framework": framework, "library_version": version, "task": "clustering"},
+        metrics=metrics,
+        charts=charts,
+        predictions=predictions,
+        timing={"total_seconds": time.perf_counter() - start, "training_seconds": train_seconds},
+        message=f"{model_name} found {k} clusters in {train_seconds:.2f}s.",
+    ).to_dict()
+
+
+def _reduce_for_plot(X: np.ndarray, feature_names: List[str]) -> Any:
+    """Return (xy, projection label) — PCA to 2D when there are >2 features."""
+    if X.shape[1] <= 2:
+        return X, "features"
+    try:
+        reduced = PCA(n_components=2, random_state=42).fit_transform(X.astype(float))
+        return reduced, "PCA projection"
+    except Exception:
+        return X[:, :2], "features"
+
+
+def _cluster_scatter_figure(XY: np.ndarray, labels: np.ndarray, projection: str) -> Dict[str, Any]:
+    """Scatter coloured by cluster — the chart that answers 'did clustering find
+    anything real'."""
+    traces = []
+    for cluster in sorted({int(c) for c in np.unique(labels)}):
+        mask = labels == cluster
+        traces.append({
+            "type": "scatter",
+            "mode": "markers",
+            "name": f"cluster {cluster}",
+            "x": XY[mask, 0].tolist(),
+            "y": XY[mask, 1].tolist(),
+            "marker": {"size": 9, "opacity": 0.75, "color": PALETTE[cluster % len(PALETTE)], "line": {"width": 0}},
+            "hovertemplate": f"cluster {cluster}<br>%{{x:.4g}}, %{{y:.4g}}<extra></extra>",
+        })
+    return {
+        "data": traces,
+        "layout": _base_layout(
+            "Clusters",
+            xaxis=_axis("component 1" if projection.startswith("PCA") else f"{feature_safe(0)}"),
+            yaxis=_axis("component 2" if projection.startswith("PCA") else f"{feature_safe(1)}"),
+            height=440,
+        ),
+    }
+
+
+def feature_safe(index: int) -> str:
+    return f"feature {index}"
+
+
+def _cluster_sizes_figure(counts: Dict[int, int], k: int) -> Dict[str, Any]:
+    labels = [f"cluster {c}" for c in sorted(counts)]
+    values = [counts[c] for c in sorted(counts)]
+    colors = [PALETTE[c % len(PALETTE)] for c in sorted(counts)]
+    return {
+        "data": [{
+            "type": "bar",
+            "x": labels,
+            "y": values,
+            "marker": {"color": colors, "line": {"width": 0}},
+            "hovertemplate": "%{x}: %{y} samples<extra></extra>",
+        }],
+        "layout": _base_layout("Cluster sizes", xaxis=_axis("cluster"), yaxis=_axis("samples"), height=360, bargap=0.35),
+    }
+
+
+def _k_selection_figure(X: np.ndarray, k: int) -> Dict[str, Any]:
+    """Inertia across k — the elbow plot that justifies the chosen k."""
+    ks = list(range(2, min(k + 3, 11)))
+    inertias = []
+    for candidate in ks:
+        try:
+            model = KMeans(n_clusters=candidate, n_init=10, random_state=42).fit(X)
+            inertias.append(float(model.inertia_))
+        except Exception:
+            inertias.append(None)
+    return {
+        "data": [{
+            "type": "scatter",
+            "mode": "lines+markers",
+            "x": ks,
+            "y": inertias,
+            "marker": {"size": 9, "color": PALETTE[0]},
+            "line": {"color": PALETTE[0], "width": 2},
+            "name": "inertia",
+            "hovertemplate": "k=%{x}<br>inertia %{y:.4g}<extra></extra>",
+        }],
+        "layout": _base_layout("Choosing k — elbow", xaxis=_axis("number of clusters (k)"), yaxis=_axis("inertia"), height=360),
+    }
+
+
 def _regression_scatter(x: List[float], y: List[float], title: str, xlabel: str, ylabel: str, reference: float | None = None) -> Dict[str, Any]:
     """Scatter used by the regression diagnostics, built on the shared layout
     helpers so it inherits the same theme as every other figure."""
@@ -1121,6 +1289,12 @@ def make_model(model_type: str, params: Dict[str, Any], task: str = "classificat
 
     if model_type == "ml:qda":
         return QuadraticDiscriminantAnalysis(reg_param=_num(params, "reg_param", 0.0)), "Quadratic Discriminant Analysis", "scikit-learn", SKLEARN_VERSION
+
+    if model_type == "ml:kmeans":
+        return KMeans(n_clusters=max(2, int(_num(params, "n_clusters", 3))), n_init=10, random_state=rs), "K-Means", "scikit-learn", SKLEARN_VERSION
+
+    if model_type == "ml:dbscan":
+        return DBSCAN(eps=_num(params, "eps", 0.5), min_samples=int(_num(params, "min_samples", 5))), "DBSCAN", "scikit-learn", SKLEARN_VERSION
 
     # sensible default
     return RandomForestClassifier(n_estimators=300, random_state=rs, n_jobs=-1), "Random Forest", "scikit-learn", SKLEARN_VERSION
@@ -1356,24 +1530,33 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
         has_dim_reduction = True
         steps_desc.append({"name": "PCA", "detail": f"n_components={comps_val}", "kind": "preprocessing"})
 
+    # ── Task: resolved by the loader, then overridden for clustering ─────────
+    # load_dataset decides classification/regression once (see resolve_task).
+    # Clustering is chosen by the MODEL, not the target, so it must be resolved
+    # before the split — otherwise KMeans silently trains on 80% of the rows.
+    model_node = next((n for n in nodes if n.get("category") == "classic_ml"), None)
+    model_type = model_node["type"] if model_node else "ml:random_forest"
+    if model_type in ("ml:kmeans", "ml:dbscan"):
+        task = "clustering"
+    emit({"type": "step", "message": f"Task: {task}"})
+
     # 3. train/test split
     test_size = float(params_of(data_type).get("test_size", 0.2)) or float(params_of("pre:split").get("test_size", 0.2))
     test_size = float(np.clip(test_size, 0.1, 0.5))
-    emit({"type": "step", "message": f"Splitting train / test (test_size={test_size:.2f})"})
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=42, stratify=y if len(np.unique(y)) > 1 else None
-    )
-    emit({"type": "step", "message": f"Train: {X_train.shape[0]} rows · Test: {X_test.shape[0]} rows"})
-    steps_desc.append({"name": "Train/Test split", "detail": f"test_size={test_size:.2f}", "kind": "preprocessing"})
-
-    # ── Task resolved by the loader ────────────────────────────────────────────
-# load_dataset decides this once (see resolve_task) and hands it over. Deriving
-# it again from y here is what previously sent integer prices to classifiers.
-emit({"type": "step", "message": f"Task: {task}"})
+    if task == "clustering":
+        # Unsupervised: there is no held-out test set.
+        X_train, X_test, y_train, y_test = X, X, y, y
+        emit({"type": "step", "message": f"Clustering all {X.shape[0]} rows (unsupervised — no test split)"})
+        steps_desc.append({"name": "Fit on full dataset", "detail": "unsupervised, no holdout", "kind": "model"})
+    else:
+        emit({"type": "step", "message": f"Splitting train / test (test_size={test_size:.2f})"})
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=42, stratify=y if len(np.unique(y)) > 1 else None
+        )
+        emit({"type": "step", "message": f"Train: {X_train.shape[0]} rows · Test: {X_test.shape[0]} rows"})
+        steps_desc.append({"name": "Train/Test split", "detail": f"test_size={test_size:.2f}", "kind": "preprocessing"})
 
     # 4. model
-    model_node = next((n for n in nodes if n.get("category") == "classic_ml"), None)
-    model_type = model_node["type"] if model_node else "ml:random_forest"
     estimator, model_name, framework, version = make_model(model_type, params_of(model_type), task)
     steps.append(("model", estimator))
     steps_desc.append({"name": f"Train {model_name}", "detail": framework, "kind": "model"})
@@ -1388,6 +1571,12 @@ emit({"type": "step", "message": f"Task: {task}"})
     emit({"type": "step", "message": "Predicting on the test set…"})
     # 5. predictions + probability scores
     y_pred = pipeline.predict(X_test)
+
+    if task == "clustering":
+        return _finish_clustering(
+            pipeline, model_type, model_name, framework, version,
+            X_test, feature_names, steps_desc, train_seconds, start, emit,
+        )
 
     if task == "regression":
         return _finish_regression(

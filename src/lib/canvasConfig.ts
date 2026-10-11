@@ -61,6 +61,13 @@ export const NODE_PALETTE: PaletteItem[] = [
   { type: "pre:split", label: "Train / Test Split", description: "Stratified holdout", category: "preprocessing", icon: "Split", accent: CATEGORIES.preprocessing.accent, params: [TEST_SIZE(0.2)] },
 
   // ── Classic ML — full scikit-learn suite ────────────────────────────────
+  { type: "ml:kmeans", label: "K-Means", description: "Unsupervised clustering into k groups with silhouette scoring", category: "classic_ml", icon: "CirclesFour", accent: CATEGORIES.classic_ml.accent, params: [
+    { key: "n_clusters", label: "Clusters (k)", value: 3, kind: "slider", min: 2, max: 12, step: 1 },
+  ] },
+  { type: "ml:dbscan", label: "DBSCAN", description: "Density-based clustering that finds its own cluster count and flags outliers", category: "classic_ml", icon: "CirclesThreePlus", accent: CATEGORIES.classic_ml.accent, params: [
+    { key: "eps", label: "Neighbourhood radius", value: 0.5, kind: "slider", min: 0.05, max: 3, step: 0.05 },
+    { key: "min_samples", label: "Min samples", value: 5, kind: "slider", min: 2, max: 40, step: 1 },
+  ] },
   { type: "ml:logistic", label: "Logistic Regression", description: "Linear model with L1/L2 regularization", category: "classic_ml", icon: "Sigma", accent: CATEGORIES.classic_ml.accent, params: [
     { key: "C", label: "C (regularization)", value: 1.0 },
     { key: "solver", label: "Solver", value: "lbfgs", options: ["lbfgs", "liblinear", "saga", "newton-cg"] },
