@@ -383,7 +383,7 @@ def csv_column_kinds(
     return missing, numeric, modal, values_by_col
 
 
-def load_csv_dataset(dataset: Dict[str, Any] | None, params: Dict[str, Any] | None = None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
+def load_csv_dataset(dataset: Dict[str, Any] | None, params: Dict[str, Any] | None = None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str, str]:
     """Parse a user-uploaded CSV (text + chosen target column) into X, y arrays.
 
     ``params['task']`` may be "auto" (default), "classification" or "regression"
