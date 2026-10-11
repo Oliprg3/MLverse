@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowsIn,
+  ArrowsOut,
   Check,
   CheckCircle,
   CircleNotch,
@@ -109,16 +111,78 @@ function MetricCard({ label, value }: { label: string; value: number | null }) {
 }
 
 function ChartCard({ title, subtitle, figure }: { title: string; subtitle?: string; figure?: PlotlyFigure }) {
-  return (
-    <div className="animate-chart-in flex flex-col rounded-xl border border-border bg-surface p-3">
-      <div className="mb-1">
-        <h4 className="text-sm font-semibold tracking-tight text-foreground">{title}</h4>
-        {subtitle ? <p className="text-[11px] text-muted">{subtitle}</p> : null}
-      </div>
-      <div className="h-[300px] w-full flex-1">
-        {figure ? <PlotlyChart figure={figure} title={title} /> : <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border bg-foreground/[0.02] text-xs text-muted">No figure returned for this chart</div>}
-      </div>
+  const [expanded, setExpanded] = useState(false);
+
+  // Escape closes the overlay rather than leaving it trapping the user.
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expanded]);
+
+  const body = figure ? (
+    <PlotlyChart figure={figure} title={title} />
+  ) : (
+    <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border bg-foreground/[0.02] text-xs text-muted">
+      No figure returned for this chart
     </div>
+  );
+
+  return (
+    <>
+      <div className="animate-chart-in group relative flex flex-col rounded-xl border border-border bg-surface p-3">
+        <div className="mb-1 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h4 className="text-sm font-semibold tracking-tight text-foreground">{title}</h4>
+            {subtitle ? <p className="text-[11px] text-muted">{subtitle}</p> : null}
+          </div>
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            disabled={!figure}
+            aria-label={`Expand ${title} to full screen`}
+            title="Full screen — double-click the plot to zoom, drag to pan"
+            className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+          >
+            <ArrowsOut size={14} />
+          </button>
+        </div>
+        <div className="h-[300px] w-full flex-1">{body}</div>
+      </div>
+
+      {expanded && figure ? (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col bg-background/95 backdrop-blur-sm animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${title} — full screen`}
+        >
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3">
+            <div className="min-w-0">
+              <h4 className="truncate text-sm font-semibold tracking-tight text-foreground">{title}</h4>
+              {subtitle ? <p className="truncate text-[11px] text-muted">{subtitle}</p> : null}
+            </div>
+            <p className="hidden font-mono text-[10px] text-muted-2 sm:block">
+              scroll to zoom · drag to pan · double-click to reset
+            </p>
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-label="Close full screen chart"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 text-[11px] font-semibold text-foreground-2 transition-colors hover:bg-foreground/[0.06]"
+            >
+              Close <XCircle size={13} weight="fill" />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 p-4">
+            <PlotlyChart figure={figure} title={title} className="h-full" />
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -397,7 +461,14 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
             {requested.map((key) => {
               const spec = chartSpec(key);
               if (!spec) return null;
-              return <ChartCard key={key} title={spec.label} subtitle={spec.subtitle} figure={res.charts[key as keyof typeof res.charts]} />;
+              // Regression diagnostics and wide figures claim both columns —
+              // a residual plot squeezed into half a column is unreadable.
+              const wide = spec.span === 2;
+              return (
+                <div key={key} className={wide ? "lg:col-span-2" : undefined}>
+                  <ChartCard title={spec.label} subtitle={spec.subtitle} figure={res.charts[key as keyof typeof res.charts]} />
+                </div>
+              );
             })}
           </div>
         ) : (
@@ -560,6 +631,17 @@ function ColabView({ res, onViewCode, onOpenColab, code }: { res: ColabExecution
 export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onClose, onViewCode, onOpenColab, code }: ResultsDrawerProps) {
   const route = response?.route ?? "instant";
   const isError = response?.status === "error";
+  const [fullScreen, setFullScreen] = useState(false);
+
+  // Escape leaves full screen; charts close their own overlay first.
+  useEffect(() => {
+    if (!fullScreen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFullScreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullScreen]);
 
   const successMeta = useMemo(() => {
     if (!response || response.status !== "success") return null;
@@ -575,7 +657,7 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
   return (
     <>
       <div className={cn("absolute inset-0 z-20 bg-black/50 transition-opacity duration-300", open ? "opacity-100" : "pointer-events-none opacity-0")} onClick={onClose} />
-      <div className={cn("absolute inset-x-0 bottom-0 z-30 flex max-h-[84%] flex-col overflow-hidden rounded-t-xl border-t border-border bg-surface shadow-[0_-12px_40px_rgba(0,0,0,0.3)] transition-transform duration-300 ease-out", open ? "translate-y-0" : "translate-y-full")}>
+      <div className={cn("absolute inset-x-0 bottom-0 z-30 flex flex-col overflow-hidden border-t border-border bg-surface shadow-[0_-12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 ease-out", fullScreen ? "inset-y-0 h-full max-h-none rounded-none" : "max-h-[84%] rounded-t-xl", open ? "translate-y-0" : fullScreen ? "-translate-y-full" : "translate-y-full")}>
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
           <div className="flex items-center gap-3">
             <span className="h-1 w-9 rounded-full bg-border-strong" />
@@ -605,7 +687,18 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
               {successMeta ? <p className="font-mono text-[11px] text-muted">{successMeta}</p> : null}
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close results"><XCircle className="h-5 w-5" /></Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setFullScreen((v) => !v)}
+              aria-label={fullScreen ? "Exit full screen results" : "Show results full screen"}
+              title={fullScreen ? "Exit full screen" : "Full screen"}
+            >
+              {fullScreen ? <ArrowsIn size={16} /> : <ArrowsOut size={16} />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close results"><XCircle className="h-5 w-5" /></Button>
+          </div>
         </div>
 
         <div className="scroll-thin overflow-y-auto px-5 py-4">

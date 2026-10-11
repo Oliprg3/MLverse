@@ -159,6 +159,17 @@ function Canvas() {
   const [response, setResponse] = useState<ExecutionResponse | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(true);
+  // Focus mode: hide every side panel so the graph gets the whole viewport.
+  const [focusMode, setFocusMode] = useState(false);
+  // Escape leaves focus mode.
+  useEffect(() => {
+    if (!focusMode) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFocusMode(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusMode]);
   const [workflowOpen, setWorkflowOpen] = useState(true);
   const [codeOpen, setCodeOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
@@ -744,7 +755,7 @@ function Canvas() {
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[var(--background)] to-transparent" aria-hidden />
         </div>
 
-        {paletteOpen ? <NodeLibrary onAddItem={addPaletteItem} /> : null}
+        {paletteOpen && !focusMode ? <NodeLibrary onAddItem={addPaletteItem} /> : null}
         <main className="relative flex-1">
           <ReactFlow
             nodes={nodes}
@@ -768,7 +779,7 @@ function Canvas() {
             selectNodesOnDrag={false}
             className="bg-transparent"
           >
-            <CanvasControls />
+            <CanvasControls focusMode={focusMode} onToggleFocus={() => setFocusMode((v) => !v)} />
           </ReactFlow>
 
           <div className="pointer-events-none absolute left-5 top-5 z-10 flex items-center gap-3 rounded-xl border border-neutral-200/80 bg-white/95 px-4 py-2.5 shadow-lg shadow-black/[0.05] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0d]/80 dark:shadow-black/40">
@@ -843,7 +854,7 @@ function Canvas() {
 
         {selectedNode ? (
           <Inspector node={selectedNode} onClose={closeInspector} />
-        ) : workflowOpen ? (
+        ) : workflowOpen && !focusMode ? (
           <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} onCollapse={() => setWorkflowOpen(false)} />
         ) : (
           <button
