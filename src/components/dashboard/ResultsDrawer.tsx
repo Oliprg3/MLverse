@@ -21,6 +21,7 @@ import { TerminalConsole, type TerminalLine } from "./TerminalConsole";
 import { EvaluationAnalytics } from "./EvaluationAnalytics";
 import { AdvancedAnalyticsDashboard } from "./AdvancedAnalyticsDashboard";
 import { PlotlyChart } from "./PlotlyChart";
+import { EdaReport } from "./EdaReport";
 import type { PlotlyFigure } from "@/lib/types";
 import { chartSpec, sortChartKeys } from "@/lib/chartCatalog";
 import { cn, formatPercent } from "@/lib/utils";
@@ -47,6 +48,11 @@ function runtimeOf(res: ExecutionResponse | null): ExecutionRuntime {
 
 const isNotebookHandoff = (res: ExecutionResponse | null) =>
   res !== null && (res.route === "colab" || runtimeOf(res) === "colab_notebook");
+
+/** True when the graph had no model node, so the engine profiled the data and
+ *  fitted nothing. */
+const isProfileOnly = (res: ExecutionResponse | null) =>
+  res !== null && res.route === "instant" && "model" in res && res.model?.name === "No model trained";
 
 interface ResultsDrawerProps {
   open: boolean;
@@ -302,6 +308,9 @@ function ModelExportBar({ res }: { res: InstantExecutionResponse }) {
 }
 
 function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onViewCode?: () => void }) {
+  // The backend fits no model when the graph has no model node — it returns the
+  // profile with a sentinel model name and empty metrics.
+  const profileOnly = res.model?.name === "No model trained" || Object.keys(res.metrics ?? {}).length === 0;
   const report = () => {
     const payload = {
       model: res.model,
@@ -328,18 +337,39 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
         </div>
       </div>
 
+      {/* Exploratory analysis — rendered before the model results because the
+          profile is what tells you whether the model results are worth reading. */}
+      {res.profile && !res.profile.error ? (
+        <section className="rounded-xl border border-border bg-card/40 p-4">
+          <h4 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-foreground-2">
+            Data analysis
+          </h4>
+          <EdaReport profile={res.profile} />
+        </section>
+      ) : null}
+
       <PipelineStrip steps={res.pipeline.steps} />
-      <ModelExportBar res={res} />
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-        {METRIC_META.map((m) => (
-          <MetricCard key={m.key} label={m.label} value={res.metrics[m.key] ?? 0} />
-        ))}
-      </div>
+      {/* A profile-only run fitted no model, so metrics, exports, evaluation and
+          charts are all meaningless — showing empty cards would read as a failed
+          run rather than an analysis that simply has nothing to score. */}
+      {profileOnly ? null : (
+        <>
+          <ModelExportBar res={res} />
 
-      <EvaluationAnalytics predictions={res.predictions} />
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+            {METRIC_META.map((m) => (
+              <MetricCard key={m.key} label={m.label} value={res.metrics[m.key] ?? 0} />
+            ))}
+          </div>
 
-      {(() => {
+          <EvaluationAnalytics predictions={res.predictions} />
+        </>
+      )}
+
+      {profileOnly ? null : (
+        <>
+          {(() => {
         const requested = sortChartKeys(res.charts_requested?.length ? res.charts_requested : Object.keys(res.charts));
         return requested.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -359,6 +389,8 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
       })()}
 
       {res.predictions && res.predictions.y_true.length > 0 ? <PredictionsTable preds={res.predictions} /> : null}
+        </>
+      )}
 
       {/* Advanced Analytics Dashboard */}
       {res.predictions && res.predictions.y_true.length > 0 ? (
@@ -535,14 +567,18 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
                       ? "Preparing notebook export…"
                       : route === "colab"
                         ? "Training neural network in-app…"
-                        : "Training model…"
+                        : isProfileOnly(response)
+                          ? "Profiling dataset…"
+                          : "Training model…"
                     : isError
                       ? "Execution error"
                       : isNotebookHandoff(response)
                         ? "Notebook Export Ready"
-                        : runtimeOf(response) === "pytorch_local"
-                          ? "Neural Network Trained In-App"
-                          : "Training Results & Dashboards"}
+                        : isProfileOnly(response)
+                          ? "Data Analysis Complete"
+                          : runtimeOf(response) === "pytorch_local"
+                            ? "Neural Network Trained In-App"
+                            : "Training Results & Dashboards"}
                 </h3>
               </div>
               {successMeta ? <p className="font-mono text-[11px] text-muted">{successMeta}</p> : null}

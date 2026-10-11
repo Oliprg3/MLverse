@@ -278,7 +278,13 @@ async function streamTs(graph: GraphPayload, send: (obj: unknown) => void, probe
   const supportedFallback = model?.type === "ml:knn" || model?.type === "ml:naive_bayes";
   if (!supportedFallback) {
     const probeNote = probe && !probe.available && probe.reason ? ` Machine check failed: ${probe.reason}.` : "";
-    const message = `The selected model (${model?.label ?? "classical ML"}) requires the Python scikit-learn engine.${probeNote} Install backend requirements on this machine and restart the app.`;
+    // A graph with no model node is a pure data-analysis run. Saying "the
+    // selected model (classical ML) requires scikit-learn" is nonsense here —
+    // no model was ever selected.
+    const wantsProfile = graph.nodes.some((node) => node.type === "viz:eda");
+    const message = model
+      ? `The selected model (${model.label}) requires the Python scikit-learn engine.${probeNote} Install backend requirements on this machine and restart the app.`
+      : `Data profiling${wantsProfile ? "" : " and model training"} needs the Python engine on this deployment.${probeNote} Install backend/requirements.txt (scikit-learn, numpy, networkx) and restart the app.`;
     const error = {
       route: "instant",
       status: "error",

@@ -299,8 +299,14 @@ def _line(
 
 
 # ── Dataset resolution ───────────────────────────────────────────────────────
-def load_csv_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
-    """Parse a user-uploaded CSV (text + chosen target column) into X, y arrays."""
+def _read_csv_rows(dataset: Dict[str, Any] | None) -> Tuple[List[Dict[str, Any]], List[str], str, List[str]]:
+    """Parse CSV text into (rows, fieldnames, target, feature columns).
+
+    Shared by the loader and the data profiler. The profiler needs the *raw*
+    rows because load_csv_dataset ordinal-encodes non-numeric columns and
+    folds empty cells into a category — by the time X exists, real missingness
+    and the true column kind are both unrecoverable.
+    """
     if not dataset:
         raise ValueError("No CSV dataset attached. Upload a CSV in the node settings first.")
     text = dataset.get("csvText", "")
@@ -319,6 +325,59 @@ def load_csv_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.nda
     feat_cols = [c for c in fieldnames if c != target]
     if not feat_cols:
         raise ValueError("The CSV needs at least one feature column besides the target.")
+    return rows, fieldnames, target, feat_cols
+
+
+def csv_column_kinds(
+    rows: List[Dict[str, Any]], feat_cols: List[str]
+) -> Tuple[Dict[str, int], Dict[str, bool], Dict[str, Tuple[str, int]], Dict[str, List[float]]]:
+    """Per-column facts recovered from the raw CSV rows.
+
+    Returns (missing count, numeric flag, (modal value, modal count), numeric
+    values).
+
+    The numeric values matter as much as the counts: load_csv_dataset
+    ordinal-encodes any column containing a blank, so a numeric column with
+    gaps arrives in X as arbitrary integer codes. Taking its mean from X would
+    report a confidently wrong number, so the profile reads the real values
+    from here instead.
+    """
+    missing: Dict[str, int] = {}
+    numeric: Dict[str, bool] = {}
+    modal: Dict[str, Tuple[str, int]] = {}
+    values_by_col: Dict[str, List[float]] = {}
+    for c in feat_cols:
+        values: List[str] = []
+        blanks = 0
+        is_numeric = True
+        for r in rows:
+            v = str(r.get(c, "")).strip()
+            if v == "":
+                # A blank is missing data, not a change of kind. A numeric column
+                # with gaps is still numeric — it just needs imputing.
+                blanks += 1
+                continue
+            values.append(v)
+            try:
+                float(v)
+            except ValueError:
+                is_numeric = False
+        missing[c] = blanks
+        numeric[c] = is_numeric and bool(values)
+        if values and not is_numeric:
+            counts: Dict[str, int] = {}
+            for v in values:
+                counts[v] = counts.get(v, 0) + 1
+            top, top_count = max(counts.items(), key=lambda kv: kv[1])
+            modal[c] = (top, top_count)
+        if numeric[c]:
+            values_by_col[c] = [float(v) for v in values]
+    return missing, numeric, modal, values_by_col
+
+
+def load_csv_dataset(dataset: Dict[str, Any] | None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str]:
+    """Parse a user-uploaded CSV (text + chosen target column) into X, y arrays."""
+    rows, _fieldnames, target, feat_cols = _read_csv_rows(dataset)
 
     n = len(rows)
     cols_enc: List[np.ndarray] = []
@@ -433,6 +492,229 @@ def _opt(params: Dict[str, Any], key: str, default: str) -> str:
 
 
 SKLEARN_VERSION = "1.9.x"
+
+
+def _safe_float(value: Any) -> Any:
+    """JSON-safe float — NaN/Inf become None so the client never sees invalid JSON."""
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return None
+    return None if (np.isnan(out) or np.isinf(out)) else out
+
+
+def build_data_profile(
+    X: np.ndarray,
+    y: np.ndarray,
+    feature_names: List[str],
+    target_names: List[str],
+    max_corr_features: int = 24,
+    top_pairs: int = 12,
+    raw_missing: Dict[str, int] | None = None,
+    raw_numeric: Dict[str, bool] | None = None,
+    raw_modal: Dict[str, Tuple[str, int]] | None = None,
+    raw_values: Dict[str, List[float]] | None = None,
+) -> Dict[str, Any]:
+    """Profile a dataset without fitting anything.
+
+    Runs on the raw matrix straight after load, so it describes the data the
+    user actually has — before any imputation, scaling or projection the
+    pipeline applies. Returns plain JSON-safe primitives.
+
+    ``raw_missing`` / ``raw_numeric`` carry per-column facts recovered from the
+    original CSV rows. They matter because load_csv_dataset ordinal-encodes
+    non-numeric columns and folds empty cells into a category: once X exists,
+    a column with 40% blanks is indistinguishable from one with none, and text
+    columns look like numbers. Profiling X alone would confidently report "no
+    missing values" and print meaningless means for categorical columns.
+    """
+    rows, cols = X.shape
+    names = list(feature_names)[:cols]
+    if len(names) < cols:
+        names += [f"feature_{i}" for i in range(len(names), cols)]
+
+    # ── Per-column descriptive statistics ────────────────────────────────────
+    columns: List[Dict[str, Any]] = []
+    missing_counts = np.isnan(X).sum(axis=0) if X.dtype.kind in "fc" else np.zeros(cols, dtype=int)
+    total_missing = int(missing_counts.sum())
+    constant_columns: List[str] = []
+
+    for i in range(cols):
+        col = X[:, i]
+        name = names[i]
+        raw_missing_i = (raw_missing or {}).get(name)
+        force_numeric = (raw_numeric or {}).get(name)
+        treat_numeric = (col.dtype.kind in "fc") if force_numeric is None else force_numeric
+        missing_i = int(raw_missing_i) if raw_missing_i is not None else int(missing_counts[i])
+
+        # Prefer the raw CSV values: a numeric column with gaps was
+        # ordinal-encoded on the way into X, so its column there is meaningless.
+        source = (raw_values or {}).get(name)
+        if treat_numeric and source is not None and len(source) > 0:
+            finite = np.asarray(source, dtype=float)
+            finite = finite[np.isfinite(finite)]
+        elif col.dtype.kind in "fc":
+            finite = col[np.isfinite(col)]
+        else:
+            finite = col
+
+        entry: Dict[str, Any] = {
+            "index": i,
+            "name": name,
+            "dtype": "float" if treat_numeric else "category",
+            "missing": missing_i,
+            "missing_pct": _safe_float(missing_i / rows * 100.0) if rows else None,
+            "unique": int(len(np.unique(finite))),
+        }
+        if finite.size:
+            if treat_numeric:
+                q1, med, q3 = np.percentile(finite, [25, 50, 75])
+                std = float(np.std(finite))
+                entry.update({
+                    "mean": _safe_float(np.mean(finite)),
+                    "std": _safe_float(std),
+                    "min": _safe_float(np.min(finite)),
+                    "q1": _safe_float(q1),
+                    "median": _safe_float(med),
+                    "q3": _safe_float(q3),
+                    "max": _safe_float(np.max(finite)),
+                    # Skew ~0 is symmetric; >1 or <-1 is strongly skewed.
+                    "skew": _safe_float(np.mean(((finite - np.mean(finite)) / std) ** 3)) if std > 0 else 0.0,
+                })
+            else:
+                modal = (raw_modal or {}).get(name)
+                if modal is not None:
+                    top_value, top_count = modal
+                    share = _safe_float(top_count / rows * 100.0) if rows else None
+                else:
+                    vals, counts = np.unique(finite, return_counts=True)
+                    top_index = int(np.argmax(counts))
+                    top_value = str(vals[top_index])
+                    share = _safe_float(counts[top_index] / finite.size * 100.0) if finite.size else None
+                entry.update({
+                    "mean": None, "std": None, "min": None, "q1": None,
+                    "median": None, "q3": None, "max": None, "skew": None,
+                    "top_value": top_value,
+                    "top_pct": share,
+                })
+        if entry["unique"] <= 1:
+            constant_columns.append(names[i])
+        columns.append(entry)
+
+    # ── Correlation matrix (numeric columns only) ────────────────────────────
+    corr_labels: List[str] = []
+    corr_matrix: List[List[Any]] = []
+    high_correlation: List[Dict[str, Any]] = []
+
+    if X.dtype.kind in "fc" and cols > 1:
+        # Correlating an ordinal-encoded text column produces a confident-looking
+        # number that means nothing, so restrict to genuinely numeric columns
+        # when the raw CSV facts are available.
+        numeric_ok = [i for i in range(cols) if (raw_numeric or {}).get(names[i], True)] if raw_numeric else list(range(cols))
+        if len(numeric_ok) >= 2:
+            # Prefer the most complete columns — a half-empty column correlates with nothing.
+            ranked = sorted(numeric_ok, key=lambda i: missing_counts[i])
+            order = np.asarray(ranked[: max(4, int(max_corr_features))])
+            # Build the matrix from the real values where we recovered them, so
+            # a numeric column that got ordinal-encoded does not produce a
+            # confident correlation between two arbitrary integer codes.
+            cols_of_values: List[np.ndarray] = []
+            kept_names: List[str] = []
+            for i in order:
+                name = names[int(i)]
+                vals = (raw_values or {}).get(name)
+                series = np.asarray(vals, dtype=float) if vals else X[:, int(i)].astype(float)
+                if series.size == 0 or np.std(series) <= 0:
+                    continue  # constant columns correlate with nothing
+                cols_of_values.append(series)
+                kept_names.append(name)
+            if len(cols_of_values) >= 2:
+                width = min(len(cols_of_values[0]), min((len(s) for s in cols_of_values)))
+                sub = np.column_stack([s[:width] for s in cols_of_values])
+                corr_labels = kept_names
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    corr = np.corrcoef(sub, rowvar=False)
+                corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
+                corr_matrix = [[_safe_float(v) for v in row] for row in corr]
+                upper = np.triu_indices(corr.shape[0], k=1)
+                magnitudes = np.abs(corr[upper])
+                if magnitudes.size:
+                    for idx in np.argsort(-magnitudes)[:top_pairs]:
+                        a, b = int(upper[0][idx]), int(upper[1][idx])
+                        value = _safe_float(corr[a, b])
+                        if value is None or abs(value) < 0.5:
+                            continue
+                        high_correlation.append({
+                            "a": corr_labels[a],
+                            "b": corr_labels[b],
+                            "r": value,
+                            "direction": "positive" if value > 0 else "negative",
+                        })
+
+    # ── Human-readable quality findings ─────────────────────────────────────
+    findings: List[Dict[str, str]] = []
+
+    # ── Target / class balance ───────────────────────────────────────────────
+    target: Dict[str, Any] = {}
+    if y is not None and len(y):
+        values, counts = np.unique(y, return_counts=True)
+        label_of = lambda v: str(target_names[int(v)]) if _is_indexable(target_names, v) else str(v)
+        pairs = sorted(
+            ({"label": label_of(v), "count": int(c), "pct": _safe_float(c / len(y) * 100.0)} for v, c in zip(values, counts)),
+            key=lambda d: d["count"],
+            reverse=True,
+        )
+        majority = pairs[0]["pct"] if pairs else 0.0
+        target = {
+            "name": "target",
+            "n_unique": int(len(values)),
+            "kind": "binary" if len(values) == 2 else ("continuous" if len(values) > 20 else "multiclass"),
+            "classes": pairs[:25],
+            "imbalance_ratio": _safe_float(max(counts) / max(1, min(counts))) if len(counts) else None,
+        }
+        # A class holding >65% of the rows will quietly wreck accuracy on the minority.
+        if majority and majority > 65.0 and len(values) > 1:
+            findings.append({"level": "warn", "title": "Class imbalance", "detail": f"The majority class holds {majority:.1f}% of rows — accuracy alone will be misleading."})
+
+    if total_missing:
+        worst = sorted(columns, key=lambda c: -c["missing"])[:3]
+        detail = ", ".join(f"{c['name']} ({c['missing']})" for c in worst if c["missing"])
+        findings.append({"level": "warn", "title": f"{total_missing} missing value{'s' if total_missing != 1 else ''}", "detail": f"Most affected: {detail}."})
+    else:
+        findings.append({"level": "ok", "title": "No missing values", "detail": "Every cell across all columns is populated."})
+    if constant_columns:
+        findings.append({"level": "warn", "title": f"{len(constant_columns)} constant column{'s' if len(constant_columns) != 1 else ''}", "detail": f"{', '.join(constant_columns[:4])} carry no information and will be dropped by most models."})
+    if high_correlation:
+        top = high_correlation[0]
+        findings.append({"level": "warn", "title": f"{len(high_correlation)} strongly correlated pair{'s' if len(high_correlation) != 1 else ''}", "detail": f"Strongest: {top['a']} vs {top['b']} (r={top['r']:.2f}) — multicollinearity can destabilise linear models."})
+    skewed = [c for c in columns if c.get("skew") is not None and abs(c["skew"]) > 2]
+    if skewed:
+        findings.append({"level": "info", "title": f"{len(skewed)} heavily skewed column{'s' if len(skewed) != 1 else ''}", "detail": f"{', '.join(c['name'] for c in skewed[:3])} — a log or robust scaler usually helps."})
+    if rows < 100:
+        findings.append({"level": "info", "title": "Small dataset", "detail": f"Only {rows} rows — cross-validation will be noisy and complex models will overfit."})
+
+    return {
+        "rows": int(rows),
+        "columns": int(cols),
+        "n_missing": total_missing,
+        "missing_pct": _safe_float(total_missing / max(1, rows * cols) * 100.0),
+        "constant_columns": constant_columns[:20],
+        "columns_profile": columns,
+        "correlation_labels": corr_labels,
+        "correlation_matrix": corr_matrix,
+        "high_correlation": high_correlation[:top_pairs],
+        "target": target,
+        "findings": findings,
+    }
+
+
+def _is_indexable(seq: Any, value: Any) -> bool:
+    try:
+        int(value)
+        return 0 <= int(value) < len(seq)
+    except (TypeError, ValueError):
+        return False
 
 
 def make_model(model_type: str, params: Dict[str, Any]) -> Tuple[Any, str, str, str]:
@@ -603,6 +885,7 @@ class ExecutionResult:
     # notebook hand-off (route="colab").
     runtime: str = "sklearn_cpu"
     pipeline: Dict[str, Any] = field(default_factory=lambda: {"steps": []})
+    profile: Dict[str, Any] = field(default_factory=dict)
     dataset: Dict[str, Any] = field(default_factory=dict)
     model: Dict[str, Any] = field(default_factory=dict)
     metrics: Dict[str, Any] = field(default_factory=dict)
@@ -619,6 +902,7 @@ class ExecutionResult:
             "engine": self.engine,
             "runtime": self.runtime,
             "pipeline": self.pipeline,
+            "profile": self.profile,
             "dataset": self.dataset,
             "model": self.model,
             "metrics": self.metrics,
@@ -666,6 +950,73 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
     emit({"type": "step", "message": f"Loaded {dataset_name} — {X.shape[0]} samples · {X.shape[1]} features · {len(set(y.tolist()))} classes"})
 
     steps_desc: List[Dict[str, str]] = [{"name": "Load dataset", "detail": dataset_name, "kind": "data"}]
+
+    # ── Data analysis (EDA) ────────────────────────────────────────────────
+    # Computed on the raw matrix before any transformation, so it describes the
+    # data the user actually has. Runs whenever a Data Profile node is present,
+    # or when the graph has no model node at all (profile-only analysis).
+    eda_node = by_type.get("viz:eda")
+    model_node_present = any(n.get("category") == "classic_ml" for n in nodes)
+    want_profile = bool(eda_node) or not model_node_present
+    profile: Dict[str, Any] = {}
+
+    if want_profile:
+        emit({"type": "step", "message": "Profiling the dataset — statistics, missing values, correlations…"})
+        eda_params = (eda_node or {}).get("params") or {}
+        # Recover real missingness / column kinds from the CSV text. After
+        # load_csv_dataset has run, a column with 40% blanks is indistinguishable
+        # from a complete one, so profiling X alone would report "no missing
+        # values" for every dataset — a confidently wrong answer.
+        raw_missing: Dict[str, int] | None = None
+        raw_numeric: Dict[str, bool] | None = None
+        raw_modal: Dict[str, Tuple[str, int]] | None = None
+        raw_values: Dict[str, List[float]] | None = None
+        if data_type in ("data:csv", "data:db") and dataset:
+            try:
+                raw_rows, _fns, _tgt, raw_feats = _read_csv_rows(dataset)
+                raw_missing, raw_numeric, raw_modal, raw_values = csv_column_kinds(raw_rows, raw_feats)
+            except Exception:
+                raw_missing = raw_numeric = raw_modal = raw_values = None
+        try:
+            profile = build_data_profile(
+                X, y, feature_names, target_names,
+                max_corr_features=int(eda_params.get("corr_features", 24) or 24),
+                top_pairs=int(eda_params.get("top_pairs", 12) or 12),
+                raw_missing=raw_missing,
+                raw_numeric=raw_numeric,
+                raw_modal=raw_modal,
+                raw_values=raw_values,
+            )
+            emit({"type": "step", "message": f"Profile ready — {profile['rows']}×{profile['columns']}, {profile['n_missing']} missing values"})
+            steps_desc.append({"name": "Profile dataset", "detail": f"{profile['rows']}×{profile['columns']}", "kind": "analysis"})
+        except Exception as exc:  # never let profiling sink a real run
+            profile = {"error": f"{type(exc).__name__}: {exc}"}
+            emit({"type": "step", "message": f"Profiling skipped ({type(exc).__name__}) — continuing without it"})
+
+    # Profile-only run: the user asked to analyse data, not to fit a model.
+    if not model_node_present:
+        emit({"type": "step", "message": "No model node on the canvas — returning the data profile"})
+        seconds = time.perf_counter() - start
+        return ExecutionResult(
+            runtime="sklearn_cpu",
+            status="success",
+            engine="data profiler",
+            pipeline={"steps": steps_desc},
+            profile=profile,
+            dataset={
+                "name": dataset_name,
+                "n_samples": int(X.shape[0]),
+                "n_features": int(X.shape[1]),
+                "n_classes": int(len(np.unique(y))) if y is not None else 0,
+                "target_type": profile.get("target", {}).get("kind", ""),
+            },
+            model={"name": "No model trained", "framework": "data profiler"},
+            metrics={},
+            charts={},
+            predictions={"y_true": [], "y_pred": [], "classes": [], "n_test": 0},
+            timing={"total_seconds": seconds, "training_seconds": 0.0},
+            message="Data profile complete.",
+        )
 
     # 2. preprocessing pipeline assembly
     steps: List[Tuple[str, Any]] = []
@@ -811,6 +1162,7 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
         status="success",
         engine=f"{framework} ({version}) · plotly",
         pipeline={"steps": steps_desc},
+        profile=profile,
         dataset={
             "name": dataset_name,
             "n_samples": int(X.shape[0]),

@@ -32,6 +32,7 @@ interface TaskPlan {
 }
 
 const TASK_KEYWORDS: Array<{ kind: keyof typeof PLANS; words: string[] }> = [
+  { kind: "analysis", words: ["analyse", "analyze", "analysis", "explore", "profile", "inspect", "audit", "what's in", "whats in", "describe the data", "summary", "missing values", "correlat", "data quality", "statistics", "eda"] },
   { kind: "vision", words: ["image", "photo", "picture", "cnn", "resnet", "visual", "camera", "mnist"] },
   { kind: "nlp", words: ["text", "nlp", "language", "bert", "sentiment", "transformer", "tweet", "review", "document"] },
   { kind: "timeseries", words: ["time series", "timeseries", "forecast", "sequence", "lstm", "temporal", "stock", "demand", "signal"] },
@@ -41,6 +42,16 @@ const TASK_KEYWORDS: Array<{ kind: keyof typeof PLANS; words: string[] }> = [
 ];
 
 const PLANS: Record<string, TaskPlan> = {
+  analysis: {
+    reply: "This is an exploration task rather than a prediction one, so I have not fitted a model — there is no target to predict yet. I attached a Data Profile node instead: it reports per-column descriptive statistics, missing-value counts, the correlation structure between numeric features, class balance, and flags data-quality problems like constant columns and collinear pairs. Run it and the full report lands in the results panel.",
+    blueprint: {
+      nodes: [
+        { type: "data:csv", reason: "Point this at your own CSV once you have uploaded it, or swap in any bundled dataset to see the report shape." },
+        { type: "viz:eda", reason: "Profiles the dataset without fitting anything: statistics, missing values, correlations, class balance and quality findings." },
+      ],
+      suggestions: [],
+    },
+  },
   classification: {
     reply: "I designed a classification pipeline: a benchmark dataset flows through standard scaling into a random forest, with evaluation charts at the end. Random forests are robust on tabular data with almost no tuning — see the ranked alternatives below.",
     blueprint: {
@@ -318,7 +329,9 @@ ${CATALOG}
 Rules:
 - Propose a connected pipeline of 3-8 nodes using ONLY the listed types, ordered data -> preprocessing -> model -> visualization.
 - Include exactly one data node first and at least one model node (classic_ml or deep_learning).
-- Suggest 3-5 algorithms ranked by fit. Each suggestion's "type" MUST be a classic_ml or deep_learning node type from the list.
+- EXCEPTION: if the user only wants to understand/explore/audit their data (e.g. "analyse my data", "what's in this CSV", "check for missing values", "profile it", "which columns correlate"), propose a data node plus a "viz:eda" Data Profile node and NO model node. Profiling fits nothing.
+- You may also add a "viz:eda" Data Profile node alongside a model when the user wants both insights and a trained model.
+- Suggest 3-5 algorithms ranked by fit. Each suggestion's "type" MUST be a classic_ml or deep_learning node type from the list. Omit "suggestions" entirely for a profile-only plan.
 - "score" is a 0-1 match confidence for the user's task. "reason" explains the fit in one sentence.
 - If the canvas already has nodes, explain in your prose how your proposal relates to them (extend / replace / redesign).
 - Never invent node types outside the list.

@@ -20,6 +20,7 @@ import {
   Image,
   Lego,
   MagicWand,
+  MagnifyingGlass,
   Minus,
   Network,
   Percent,
@@ -81,6 +82,7 @@ const REGISTRY: Record<string, IconComponent> = {
   Activity: Pulse,
   ScatterChart: ChartScatter,
   Stethoscope: Stethoscope,
+  MagnifyingGlass: MagnifyingGlass,
 };
 
 /** Resolve an icon component by its registry name, with a safe fallback. */

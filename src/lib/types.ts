@@ -235,6 +235,56 @@ export interface SkippedChart {
  *  are both route="instant". This is what tells them apart in the UI. */
 export type ExecutionRuntime = "sklearn_cpu" | "pytorch_local" | "colab_notebook";
 
+/** One column of the data profile. Numeric columns carry the quartile block;
+ *  categorical columns carry the modal value instead. */
+export interface ProfileColumn {
+  index: number;
+  name: string;
+  dtype: string;
+  missing: number;
+  missing_pct: number | null;
+  unique: number;
+  mean?: number | null;
+  std?: number | null;
+  min?: number | null;
+  q1?: number | null;
+  median?: number | null;
+  q3?: number | null;
+  max?: number | null;
+  /** 0 = symmetric; |skew| > 1 is strongly skewed. */
+  skew?: number | null;
+  top_value?: string;
+  top_pct?: number | null;
+}
+
+export interface ProfileFinding {
+  level: "ok" | "info" | "warn";
+  title: string;
+  detail: string;
+}
+
+/** Exploratory data analysis for a dataset — no model is fitted. */
+export interface DataProfile {
+  rows: number;
+  columns: number;
+  n_missing: number;
+  missing_pct: number | null;
+  constant_columns: string[];
+  columns_profile: ProfileColumn[];
+  correlation_labels: string[];
+  correlation_matrix: Array<Array<number | null>>;
+  high_correlation: Array<{ a: string; b: string; r: number; direction: string }>;
+  target: {
+    name: string;
+    n_unique: number;
+    kind: string;
+    classes: Array<{ label: string; count: number; pct: number | null }>;
+    imbalance_ratio?: number | null;
+  };
+  findings: ProfileFinding[];
+  error?: string;
+}
+
 /** Response shape when the graph contains only basic ML nodes, or when a
  *  deep-learning graph trained in-app on the local PyTorch engine. */
 export interface InstantExecutionResponse {
@@ -243,6 +293,9 @@ export interface InstantExecutionResponse {
   status: "success" | "error";
   engine: string;
   pipeline: { steps: PipelineStep[] };
+  /** Present when a Data Profile node is on the graph, or when the run was
+   *  profile-only (no model node). */
+  profile?: DataProfile;
   dataset: DatasetInfo;
   model: ModelInfo;
   metrics: MetricSet;

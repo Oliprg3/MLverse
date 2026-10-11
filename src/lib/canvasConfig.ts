@@ -30,6 +30,12 @@ const TEST_SIZE = (value: number): NodeParam => ({
 });
 
 export const NODE_PALETTE: PaletteItem[] = [
+  // ── Analysis ──────────────────────────────────────────────────────────────
+  { type: "viz:eda", label: "Data Profile", description: "Descriptive stats, missing values, correlations, class balance and data-quality findings", category: "visualization", icon: "MagnifyingGlass", accent: CATEGORIES.visualization.accent, params: [
+    { key: "corr_features", label: "Features in correlation map", value: 20, kind: "slider", min: 4, max: 40, step: 1 },
+    { key: "top_pairs", label: "Correlated pairs to list", value: 12, kind: "slider", min: 0, max: 30, step: 1 },
+  ] },
+
   // ── Data ─────────────────────────────────────────────────────────────────
   { type: "data:csv", label: "Custom CSV", description: "Upload your own dataset with auto target detection", category: "data", icon: "FileSpreadsheet", accent: CATEGORIES.data.accent },
   { type: "data:db", label: "Cloud Database", description: "Query PostgreSQL, Supabase, Neon or MySQL with SQL", category: "data", icon: "CloudDatabase", accent: CATEGORIES.data.accent },
