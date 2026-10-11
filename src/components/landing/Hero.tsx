@@ -3,9 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Play, CaretDown } from "@phosphor-icons/react";
-
-const HERO_VIDEO = "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4";
-const HERO_VIDEO_FALLBACK = "https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4";
+import { PipelineScene } from "./PipelineScene";
 
 function CountUp({ to, suffix = "", prefix = "", decimals = 0 }: { to: number; suffix?: string; prefix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -48,22 +46,9 @@ function CountUp({ to, suffix = "", prefix = "", decimals = 0 }: { to: number; s
 export function Hero() {
   return (
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white dark:bg-[#030304]">
-      {/* Layer 1 — background video (dark mode only) */}
-      <video
-        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover opacity-25 mix-blend-screen dark:block"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-hidden="true"
-      >
-        <source src={HERO_VIDEO} type="video/mp4" />
-        <source src={HERO_VIDEO_FALLBACK} type="video/mp4" />
-      </video>
-
-      {/* Layer 3 — cinematic overlays */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/70 via-transparent to-white dark:from-[#030304]/70 dark:to-[#050506]" />
+      {/* Layer 1 — live 3D pipeline topology (WebGL, degrades to an empty layer) */}
+      <PipelineScene />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-white dark:from-[#030304]/50 dark:via-transparent dark:to-[#050506]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent dark:from-[#050506]" />
 
       {/* HUD grid lines */}
