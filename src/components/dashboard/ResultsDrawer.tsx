@@ -24,6 +24,7 @@ import { EvaluationAnalytics } from "./EvaluationAnalytics";
 import { AdvancedAnalyticsDashboard } from "./AdvancedAnalyticsDashboard";
 import { PlotlyChart } from "./PlotlyChart";
 import { EdaReport } from "./EdaReport";
+import { ResultSkeleton } from "@/components/ui/loading";
 import type { PlotlyFigure } from "@/lib/types";
 import { chartSpec, sortChartKeys } from "@/lib/chartCatalog";
 import { cn, formatPercent } from "@/lib/utils";
@@ -712,7 +713,20 @@ export function ResultsDrawer({ open, loading, logs, liveMetrics, response, onCl
 
         <div className="scroll-thin overflow-y-auto px-5 py-4">
           {loading ? (
-            <LiveConsole logs={logs} liveMetrics={liveMetrics} running={loading} />
+            <>
+              <LiveConsole logs={logs} liveMetrics={liveMetrics} running={loading} />
+              {/* Show the shape of what is arriving. Previously the live console
+                  sat alone and the panel looked empty/broken while a run
+                  streamed in. */}
+              {logs.length > 1 ? (
+                <div className="mt-4">
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-2">
+                    Building results
+                  </p>
+                  <ResultSkeleton />
+                </div>
+              ) : null}
+            </>
           ) : isError && response ? (
             <div className="rounded-xl border border-rose-500/30 bg-rose-500/[0.06] p-5">
               <div className="flex items-center gap-2 text-rose-400"><XCircle className="h-5 w-5" /><span className="text-sm font-semibold">The engine reported an error</span></div>

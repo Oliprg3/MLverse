@@ -855,7 +855,8 @@ function Canvas() {
         {selectedNode ? (
           <Inspector node={selectedNode} onClose={closeInspector} />
         ) : workflowOpen && !focusMode ? (
-          <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} onCollapse={() => setWorkflowOpen(false)} />
+          <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel}
+        loading={loading} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} onCollapse={() => setWorkflowOpen(false)} />
         ) : (
           <button
             type="button"

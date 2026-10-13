@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CaretRight, Code, Play, SlidersHorizontal } from "@phosphor-icons/react";
 import type { ExecutionRoute } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Spinner, SpinnerDot } from "@/components/ui/loading";
 
 interface WorkflowPanelProps {
   nodeCount: number;
@@ -12,6 +13,7 @@ interface WorkflowPanelProps {
   hasModel: boolean;
   errors: number;
   warnings: number;
+  loading?: boolean;
   onExecute: () => void;
   onCode: () => void;
   onCollapse?: () => void;
@@ -24,7 +26,7 @@ interface EngineInfo {
   torch?: boolean;
 }
 
-export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, onExecute, onCode, onCollapse }: WorkflowPanelProps) {
+export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, loading = false, onExecute, onCode, onCollapse }: WorkflowPanelProps) {
   const [engine, setEngine] = useState<EngineInfo | null>(null);
 
   useEffect(() => {
@@ -102,15 +104,28 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
       </div>
 
       <div className="mt-auto space-y-2 border-t border-neutral-200/80 p-5 dark:border-white/[0.06]">
-        <button
+<button
           type="button"
           onClick={onExecute}
-          disabled={!hasModel}
+          disabled={!hasModel || loading}
+          aria-busy={loading || undefined}
           className="group relative inline-flex h-10 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
         >
           <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-full dark:bg-neutral-900/10" />
-          <Play size={13} weight="fill" className="relative" />
-          <span className="relative">Run workflow</span>
+          {/* The button used to look identical before, during and after a run,
+              so a click on "Run" gave no feedback at all while it worked. */}
+          {loading ? (
+            <>
+              <Spinner size={13} className="relative" />
+              <SpinnerDot className="relative" />
+              <span className="relative">Running workflow…</span>
+            </>
+          ) : (
+            <>
+              <Play size={13} weight="fill" className="relative" />
+              <span className="relative">Run workflow</span>
+            </>
+          )}
         </button>
         <button
           type="button"

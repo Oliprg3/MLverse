@@ -511,6 +511,18 @@
   transform: perspective(900px) rotateX(1.2deg) rotateY(-1.2deg) translateY(-6px) translateZ(8px);
 }
 
+@keyframes nf-dash {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: -100; }
+}
+
+/* Indeterminate progress: a bar that sweeps across and resets. Deliberately not
+   a fake percentage — nothing measures the real one. */
+@keyframes nf-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nf-orbit, .nf-aurora, .nf-button-glow { animation: none; }
   .nf-tilt-card:hover { transform: none; }
