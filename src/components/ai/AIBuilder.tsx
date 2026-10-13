@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { MarkerType, type Edge, type Node } from "@xyflow/react";
 import {
   ArrowLeft,
+  ArrowRight,
   CaretDown,
   ChatCenteredDots,
   Check,
@@ -199,32 +200,97 @@ function CategoryBadge({ category }: { category: NodeCategory }) {
   );
 }
 
+/** The agent's activity trace.
+ *
+ *  This is the part that decides whether the thing feels like an agent or like
+ *  a form. Two rules: only render steps the server actually reported (never a
+ *  local timer), and keep finished steps visible as a collapsed audit trail so
+ *  the work remains inspectable after it completes. */
+function AgentTrace({
+  steps,
+  activeIndex,
+  done,
+}: {
+  steps: TraceStep[];
+  activeIndex: number;
+  done: boolean;
+}) {
+  if (!steps.length) return null;
+  const visible = done ? steps.length : Math.min(steps.length, activeIndex + 1);
+
+  return (
+    <div className="animate-builder-message overflow-hidden rounded-xl border border-border bg-card/70">
+      <div className="flex items-center gap-2 border-b border-border/70 bg-foreground/[0.02] px-3.5 py-2">
+        {done ? (
+          <Check size={12} weight="bold" className="text-emerald-500" />
+        ) : (
+          <CircleNotch size={12} className="animate-spin text-foreground" />
+        )}
+        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+          {done ? "Agent · completed" : "Agent · working"}
+        </span>
+      </div>
+      <ol className="divide-y divide-border/50">
+        {steps.slice(0, visible).map((step, index) => {
+          const complete = done || index < activeIndex;
+          const active = !done && index === activeIndex;
+          return (
+            <li key={`${step.label}-${index}`} className="flex items-start gap-3 px-3.5 py-2">
+              {/* status rail */}
+              <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center">
+                {complete ? (
+                  <Check size={11} weight="bold" className="text-emerald-500" />
+                ) : active ? (
+                  <CircleNotch size={11} className="animate-spin text-foreground" />
+                ) : (
+                  <span className="h-1.5 w-1.5 rounded-full bg-border-strong" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className={`text-[12px] leading-5 ${complete || active ? "text-foreground" : "text-muted-2"}`}>
+                  {step.label}
+                </span>
+                {step.detail ? (
+                  <span className="mt-0.5 block truncate font-mono text-[10px] text-muted-2">{step.detail}</span>
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 /** A proposed pipeline node rendered as a card. */
 function BlueprintNodeCard({ entry, index }: { entry: BlueprintNode; index: number }) {
   const item = getPaletteItem(entry.type);
   if (!item) return null;
   const Icon = resolveIcon(item.icon);
   return (
-    <div className="animate-builder-message relative rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:border-border-strong hover:shadow-md">
-      <div className="flex items-start gap-3">
+    <div className="animate-builder-message group relative flex gap-3 rounded-xl border border-border bg-card p-3.5 transition-colors duration-200 hover:border-border-strong">
+      {/* step number + connector rail */}
+      <div className="flex shrink-0 flex-col items-center">
         <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border"
-          style={{ color: item.accent, backgroundColor: `${item.accent}10` }}
+          className="flex h-7 w-7 items-center justify-center rounded-lg border font-mono text-[10px] font-bold tabular-nums"
+          style={{ color: item.accent, borderColor: `${item.accent}40`, backgroundColor: `${item.accent}12` }}
         >
-          <Icon size={18} weight="duotone" />
+          {String(index + 1).padStart(2, "0")}
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] font-semibold text-muted-2">{String(index + 1).padStart(2, "0")}</span>
-            <p className="truncate text-xs font-bold">{item.label}</p>
-          </div>
-          <div className="mt-1.5"><CategoryBadge category={item.category} /></div>
-          <p className="mt-2 text-[11px] leading-5 text-muted">{entry.reason || item.description}</p>
-        </div>
+        <span className="mt-1 flex-1 w-px bg-border" aria-hidden />
       </div>
-      {index < 100 ? (
-        <span className="absolute -bottom-2.5 left-1/2 h-5 w-px -translate-x-1/2 bg-border" aria-hidden />
-      ) : null}
+
+      <div className="min-w-0 flex-1 pb-0.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Icon size={15} weight="duotone" style={{ color: item.accent }} />
+          <span className="text-[13px] font-semibold tracking-tight">{item.label}</span>
+          <CategoryBadge category={item.category} />
+          <code className="ml-auto shrink-0 font-mono text-[10px] text-muted-2">{entry.type}</code>
+        </div>
+        {entry.reason ? (
+          <p className="mt-1.5 text-[12px] leading-5 text-muted">{entry.reason}</p>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -527,7 +593,17 @@ export function AIBuilder() {
           <div className="border-b border-neutral-200/80 bg-white/45 px-5 py-4 lg:rounded-t-2xl lg:px-6 lg:py-6 dark:border-white/[0.06] dark:bg-white/[0.02]">
             <div className="flex items-center justify-between gap-3">
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Design session</div>
-              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Ready</span>
+              {/* Reflect real state rather than a permanent green "Ready". */}
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-mono text-[9px] uppercase tracking-wider ${
+                  loading
+                    ? "border-border text-foreground-2"
+                    : "border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300"
+                }`}
+              >
+                {loading ? <CircleNotch size={9} className="animate-spin" /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                {loading ? "Working" : "Ready"}
+              </span>
             </div>
             <p className="mt-1.5 hidden text-xs leading-6 text-muted sm:block">
               Describe the ML problem you want to solve. I’ll map it into a canvas-ready plan when you ask.
@@ -564,23 +640,10 @@ export function AIBuilder() {
                 </div>
               </div>
             ) : null}
-            {/* Real trace: steps the server reported, in the order it reported them. */}
-            {loading && trace.length > 0 ? (
-              <div className="animate-builder-message space-y-2 rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
-                {trace.map((step, index) => {
-                  const done = index < activeTrace;
-                  const active = index === activeTrace;
-                  return (
-                    <div key={`${step.label}-${index}`} className={`flex items-start gap-2.5 text-[11px] transition-colors duration-300 ${done ? "text-muted" : active ? "text-foreground" : "text-muted-2 opacity-50"}`}>
-                      {done ? <Check size={13} weight="bold" className="mt-0.5 shrink-0 text-emerald-500" /> : active ? <CircleNotch size={13} className="mt-0.5 shrink-0 animate-spin text-foreground" /> : <span className="mt-1 h-2 w-2 shrink-0 rounded-[3px] border border-border-strong" />}
-                      <span className="min-w-0">
-                        <span className="font-semibold">{step.label}</span>
-                        {step.detail ? <span className="ml-1.5 font-mono text-[9px] text-muted-2">{step.detail}</span> : null}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+            {/* Real trace: steps the server reported, in the order it reported
+                them. Kept mounted after completion as an audit trail. */}
+            {trace.length > 0 ? (
+              <AgentTrace steps={trace} activeIndex={activeTrace} done={!loading} />
             ) : null}
           </div>
 
@@ -707,8 +770,16 @@ export function AIBuilder() {
                   </p>
                   <div className="mt-6 grid gap-2 text-left">
                     {SUGGESTION_CHIPS.map((chip) => (
-                      <button key={chip} type="button" disabled={loading} onClick={() => void send(chip)} className="rounded-xl border border-neutral-200 bg-white/50 px-4 py-2.5 text-[11px] font-medium text-neutral-600 transition-all hover:border-neutral-300 hover:bg-white hover:text-neutral-900 active:scale-[0.98] disabled:opacity-50 dark:border-white/[0.09] dark:bg-white/[0.02] dark:text-zinc-400 dark:hover:border-white/20 dark:hover:bg-white/[0.05] dark:hover:text-white">
-                        {chip}
+                      <button
+                        key={chip}
+                        type="button"
+                        disabled={loading}
+                        onClick={() => void send(chip)}
+                        className="group flex items-center gap-3 rounded-xl border border-border bg-background/60 px-3.5 py-3 text-left transition-all hover:border-border-strong hover:bg-background active:scale-[0.99] disabled:opacity-50"
+                      >
+                        <Sparkle size={14} weight="fill" className="shrink-0 text-muted-2 transition-colors group-hover:text-foreground" />
+                        <span className="text-[12px] font-medium text-foreground-2">{chip}</span>
+                        <ArrowRight size={13} className="ml-auto shrink-0 text-muted-3 transition-transform group-hover:translate-x-0.5" />
                       </button>
                     ))}
                   </div>
