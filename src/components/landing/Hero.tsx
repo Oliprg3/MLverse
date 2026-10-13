@@ -48,7 +48,10 @@ export function Hero() {
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white dark:bg-[#030304]">
       {/* Layer 1 — live 3D pipeline topology (WebGL, degrades to an empty layer) */}
       <PipelineScene />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-white dark:from-[#030304]/50 dark:via-transparent dark:to-[#050506]" />
+      {/* Light mode only needs enough wash to keep the headline legible; the
+          previous from-white/60 … to-white gradient erased the scene entirely
+          on the white hero. Dark mode keeps its original cinematic falloff. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/35 via-transparent to-white/85 dark:from-[#030304]/50 dark:via-transparent dark:to-[#050506]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent dark:from-[#050506]" />
 
       {/* HUD grid lines */}

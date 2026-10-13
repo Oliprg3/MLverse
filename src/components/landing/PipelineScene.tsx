@@ -31,8 +31,26 @@ const STAGES: Stage[] = [
   { key: "eval", label: "eval", accent: "#34d399", nodes: ["metrics", "charts"] },
 ];
 
-/** Distinct hues per node so the depth reads without needing labels. */
-const NODE_INK = ["#e4e4e7", "#a1a1aa", "#71717a", "#d4d4d8"];
+/** Per-stage palette. Each theme needs its own inks: the hero is white in light
+ *  mode, so light-grey nodes (which read well on near-black) disappear on it.
+ *  These were originally one hardcoded light ramp, which made the scene
+ *  invisible in light mode — the default for most visitors. */
+const THEMES = {
+  dark: {
+    ink: ["#e4e4e7", "#a1a1aa", "#71717a", "#d4d4d8"],
+    stars: "#a1a1aa",
+    starOpacity: 0.5,
+    edgeOpacity: 0.16,
+    fog: 0x000000,
+  },
+  light: {
+    ink: ["#18181b", "#3f3f46", "#71717a", "#52525b"],
+    stars: "#52525b",
+    starOpacity: 0.32,
+    edgeOpacity: 0.3,
+    fog: 0xffffff,
+  },
+} as const;
 
 export function PipelineScene({ className = "" }: { className?: string }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -70,6 +88,9 @@ export function PipelineScene({ className = "" }: { className?: string }) {
       const isSmall = window.matchMedia("(max-width: 640px)").matches;
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const lean = isCoarse || isSmall;
+      // Resolve the palette before anything is built — the hero is white in
+      // light mode, so light-grey nodes would be invisible on it.
+      const palette = THEMES[themeRef.current === "light" ? "light" : "dark"];
 
       let renderer: import("three").WebGLRenderer;
       try {
@@ -107,7 +128,7 @@ export function PipelineScene({ className = "" }: { className?: string }) {
           const spread = stage.nodes.length > 1 ? 1.05 : 0;
           const y = (ni - (stage.nodes.length - 1) / 2) * spread;
           const mat = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(NODE_INK[ni % NODE_INK.length]),
+            color: new THREE.Color(palette.ink[ni % palette.ink.length]),
             transparent: true,
             opacity: 0.9,
           });
@@ -139,7 +160,7 @@ export function PipelineScene({ className = "" }: { className?: string }) {
             const mat = new THREE.MeshBasicMaterial({
               color: new THREE.Color(STAGES[si].accent),
               transparent: true,
-              opacity: 0.16,
+              opacity: palette.edgeOpacity,
               side: THREE.DoubleSide,
               depthWrite: false,
             });
@@ -167,8 +188,8 @@ export function PipelineScene({ className = "" }: { className?: string }) {
       const starMat = new THREE.PointsMaterial({
         size: 0.06,
         transparent: true,
-        opacity: 0.5,
-        color: new THREE.Color("#a1a1aa"),
+        opacity: palette.starOpacity,
+        color: new THREE.Color(palette.stars),
         sizeAttenuation: true,
       });
       const stars = new THREE.Points(starGeo, starMat);
@@ -197,10 +218,7 @@ export function PipelineScene({ className = "" }: { className?: string }) {
       const ro = new ResizeObserver(resize);
       ro.observe(host);
 
-      const light = themeRef.current === "light";
-      scene.fog = new THREE.FogExp2(light ? 0xffffff : 0x000000, 0.055);
-      starMat.color = new THREE.Color(light ? "#52525b" : "#a1a1aa");
-      starMat.opacity = light ? 0.35 : 0.5;
+      scene.fog = new THREE.FogExp2(palette.fog, 0.055);
       starMat.needsUpdate = true;
 
       // ── Loop ───────────────────────────────────────────────────────────────
