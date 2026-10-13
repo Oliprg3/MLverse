@@ -112,7 +112,7 @@ def test_blank_cell_is_missing_not_a_kind_change():
     """`age` has 40% blanks but is still a numeric column."""
     dataset = _csv_dataset(MESSY_CSV, "constant")
     rows, _fns, _tgt, feats = eng._read_csv_rows(dataset)
-    missing, numeric, _modal, values = eng.csv_column_kinds(rows, feats)
+    missing, numeric, _modal, values, _tops = eng.csv_column_kinds(rows, feats)
     assert missing["age"] == 2
     assert numeric["age"] is True
     assert values["age"] == [27.0, 45.0, 33.0]
@@ -125,7 +125,7 @@ def test_numeric_with_blanks_keeps_real_values():
     from the raw values, not from X."""
     dataset = _csv_dataset(MESSY_CSV, "constant")
     rows, _fns, _tgt, feats = eng._read_csv_rows(dataset)
-    _missing, _numeric, _modal, values = eng.csv_column_kinds(rows, feats)
+    _missing, _numeric, _modal, values, _tops = eng.csv_column_kinds(rows, feats)
     X, _y, feature_names, _t, _n, _task = eng.load_csv_dataset(dataset, {})
     # X is encoded; the profile source must not be.
     assert sorted(values["income"]) == [42000.0, 61000.0]
@@ -151,7 +151,7 @@ def test_profile_reports_real_missingness_on_a_messy_csv():
     dataset = _csv_dataset(MESSY_CSV, "city")
     X, y, feature_names, target_names, _n, _task = eng.load_csv_dataset(dataset, {})
     rows, _fns, _tgt, feats = eng._read_csv_rows(dataset)
-    missing, numeric, modal, values = eng.csv_column_kinds(rows, feats)
+    missing, numeric, modal, values, _tops = eng.csv_column_kinds(rows, feats)
     profile = eng.build_data_profile(
         X, y, feature_names, target_names,
         raw_missing=missing, raw_numeric=numeric, raw_modal=modal, raw_values=values,

@@ -34,6 +34,8 @@ export const NODE_PALETTE: PaletteItem[] = [
   { type: "viz:eda", label: "Data Profile", description: "Descriptive stats, missing values, correlations, class balance and data-quality findings", category: "visualization", icon: "MagnifyingGlass", accent: CATEGORIES.visualization.accent, params: [
     { key: "corr_features", label: "Features in correlation map", value: 20, kind: "slider", min: 4, max: 40, step: 1 },
     { key: "top_pairs", label: "Correlated pairs to list", value: 12, kind: "slider", min: 0, max: 30, step: 1 },
+    { key: "sample_rows", label: "Rows shown in explorer", value: 100, kind: "slider", min: 25, max: 1000, step: 25, hint: "A bounded slice of the real rows, sent to the browser for the data explorer grid." },
+    { key: "hist_bins", label: "Histogram bins", value: 24, kind: "slider", min: 8, max: 60, step: 1 },
   ] },
 
   // ── Data ─────────────────────────────────────────────────────────────────

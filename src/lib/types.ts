@@ -275,7 +275,20 @@ export interface ProfileColumn {
   skew?: number | null;
   top_value?: string;
   top_pct?: number | null;
+  /** Per-column distribution — binned counts for numeric, top values for
+   *  categorical. What an analyst actually looks at first. */
+  histogram?: {
+    kind: "numeric" | "categorical";
+    /** Numeric: bin populations; edges has counts.length + 1 entries. */
+    counts?: number[];
+    edges?: Array<number | null>;
+    /** Categorical: most frequent values with their counts. */
+    top?: Array<{ value: string; count: number }>;
+  };
 }
+
+/** One row of the explorer grid: feature columns, then the target. */
+export type ProfileRow = Array<number | string | null>;
 
 export interface ProfileFinding {
   level: "ok" | "info" | "warn";
@@ -302,6 +315,13 @@ export interface DataProfile {
     imbalance_ratio?: number | null;
   };
   findings: ProfileFinding[];
+  /** Column names in X order; the target is appended to each sample row. */
+  column_names?: string[];
+  target_name?: string;
+  /** A bounded slice of the real rows, so the explorer can show data. */
+  sample_rows?: ProfileRow[];
+  /** True when the dataset was larger than the slice returned. */
+  sample_truncated?: boolean;
   error?: string;
 }
 

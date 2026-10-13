@@ -340,7 +340,7 @@ def _read_csv_rows(dataset: Dict[str, Any] | None) -> Tuple[List[Dict[str, Any]]
 
 def csv_column_kinds(
     rows: List[Dict[str, Any]], feat_cols: List[str]
-) -> Tuple[Dict[str, int], Dict[str, bool], Dict[str, Tuple[str, int]], Dict[str, List[float]]]:
+) -> Tuple[Dict[str, int], Dict[str, bool], Dict[str, Tuple[str, int]], Dict[str, List[float]], Dict[str, List[Tuple[str, int]]]]:
     """Per-column facts recovered from the raw CSV rows.
 
     Returns (missing count, numeric flag, (modal value, modal count), numeric
@@ -356,6 +356,7 @@ def csv_column_kinds(
     numeric: Dict[str, bool] = {}
     modal: Dict[str, Tuple[str, int]] = {}
     values_by_col: Dict[str, List[float]] = {}
+    top_by_col: Dict[str, List[Tuple[str, int]]] = {}
     for c in feat_cols:
         values: List[str] = []
         blanks = 0
@@ -378,11 +379,13 @@ def csv_column_kinds(
             counts: Dict[str, int] = {}
             for v in values:
                 counts[v] = counts.get(v, 0) + 1
-            top, top_count = max(counts.items(), key=lambda kv: kv[1])
+            ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+            top_by_col[c] = ranked
+            top, top_count = ranked[0]
             modal[c] = (top, top_count)
         if numeric[c]:
             values_by_col[c] = [float(v) for v in values]
-    return missing, numeric, modal, values_by_col
+    return missing, numeric, modal, values_by_col, top_by_col
 
 
 def load_csv_dataset(dataset: Dict[str, Any] | None, params: Dict[str, Any] | None = None) -> Tuple[np.ndarray, np.ndarray, List[str], List[str], str, str]:
@@ -585,6 +588,9 @@ def build_data_profile(
     raw_numeric: Dict[str, bool] | None = None,
     raw_modal: Dict[str, Tuple[str, int]] | None = None,
     raw_values: Dict[str, List[float]] | None = None,
+    raw_modal_counts: Dict[str, List[Tuple[str, int]]] | None = None,
+    hist_bins: int = 24,
+    sample_rows: int = 100,
 ) -> Dict[str, Any]:
     """Profile a dataset without fitting anything.
 
@@ -777,6 +783,54 @@ def build_data_profile(
     if rows < 100:
         findings.append({"level": "info", "title": "Small dataset", "detail": f"Only {rows} rows — cross-validation will be noisy and complex models will overfit."})
 
+    # ── Distributions + raw rows ────────────────────────────────────────────
+    # Real analytics tools (Exploratory, Power BI, Azure Data Explorer's
+    # columns pane) all show a per-column distribution and the underlying rows.
+    # Aggregates alone answer "how many are missing" but not "what does this
+    # column actually look like", which is what exploration is for.
+    histogram_bins = int(hist_bins or 24)
+    for entry in columns:
+        name = entry["name"]
+        idx = entry["index"]
+        source = (raw_values or {}).get(name)
+        series = np.asarray(source, dtype=float) if source else (
+            X[:, idx].astype(float) if idx < cols and X.dtype.kind in "fc" else np.asarray([])
+        )
+        series = series[np.isfinite(series)] if series.size else series
+        if entry["mean"] is not None and series.size >= 2:
+            lo, hi = float(np.min(series)), float(np.max(series))
+            if hi > lo:
+                counts, edges = np.histogram(series, bins=histogram_bins, range=(lo, hi))
+                entry["histogram"] = {
+                    "counts": [int(c) for c in counts],
+                    "edges": [_safe_float(e) for e in edges],
+                    "kind": "numeric",
+                }
+            else:
+                entry["histogram"] = {"counts": [int(series.size)], "edges": [_safe_float(lo), _safe_float(hi)], "kind": "numeric"}
+        else:
+            # Categorical: top values as a bar distribution rather than a histogram.
+            top = (raw_modal_counts or {}).get(name)
+            if top:
+                entry["histogram"] = {"kind": "categorical", "top": top[:12]}
+            else:
+                vals, counts = np.unique(np.asarray([str(v) for v in X[:, idx]]) if idx < cols else [], return_counts=True)
+                order = np.argsort(-counts)[:12]
+                entry["histogram"] = {
+                    "kind": "categorical",
+                    "top": [{"value": str(vals[i]), "count": int(counts[i])} for i in order],
+                }
+
+    # A bounded slice of the real rows so the explorer can show the data, not
+    # just its summary. Columns are emitted as they exist in X, plus the target.
+    sample_limit = int(sample_rows or 100)
+    preview: List[List[Any]] = []
+    for r in range(min(rows, sample_limit)):
+        preview.append(
+            [_safe_cell(X[r, c]) for c in range(cols)]
+            + ([_safe_cell(y[r])] if y is not None and r < len(y) else [])
+        )
+
     return {
         "rows": int(rows),
         "columns": int(cols),
@@ -789,7 +843,25 @@ def build_data_profile(
         "high_correlation": high_correlation[:top_pairs],
         "target": target,
         "findings": findings,
+        "column_names": names[:cols],
+        "target_name": "target",
+        "sample_rows": preview,
+        "sample_truncated": rows > sample_limit,
     }
+
+
+def _safe_cell(value: Any) -> Any:
+    """JSON-safe cell: numpy scalars become primitives, NaN/Inf become null."""
+    if isinstance(value, (np.integer,)):
+        return int(value)
+    if isinstance(value, (np.floating,)):
+        out = float(value)
+        return None if (np.isnan(out) or np.isinf(out)) else out
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    if isinstance(value, (int, float, str)) or value is None:
+        return None if isinstance(value, float) and (np.isnan(value) or np.isinf(value)) else value
+    return str(value)
 
 
 def _finish_regression(
@@ -1473,9 +1545,9 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
         if data_type in ("data:csv", "data:db") and dataset:
             try:
                 raw_rows, _fns, _tgt, raw_feats = _read_csv_rows(dataset)
-                raw_missing, raw_numeric, raw_modal, raw_values = csv_column_kinds(raw_rows, raw_feats)
+                raw_missing, raw_numeric, raw_modal, raw_values, raw_tops = csv_column_kinds(raw_rows, raw_feats)
             except Exception:
-                raw_missing = raw_numeric = raw_modal = raw_values = None
+                raw_missing = raw_numeric = raw_modal = raw_values = raw_tops = None
         try:
             profile = build_data_profile(
                 X, y, feature_names, target_names,
@@ -1485,6 +1557,9 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
                 raw_numeric=raw_numeric,
                 raw_modal=raw_modal,
                 raw_values=raw_values,
+                raw_modal_counts=raw_tops,
+                hist_bins=int(eda_params.get("hist_bins", 24) or 24),
+                sample_rows=int(eda_params.get("sample_rows", 100) or 100),
             )
             emit({"type": "step", "message": f"Profile ready — {profile['rows']}×{profile['columns']}, {profile['n_missing']} missing values"})
             steps_desc.append({"name": "Profile dataset", "detail": f"{profile['rows']}×{profile['columns']}", "kind": "analysis"})

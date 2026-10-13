@@ -25,6 +25,7 @@ import { AdvancedAnalyticsDashboard } from "./AdvancedAnalyticsDashboard";
 import { PlotlyChart } from "./PlotlyChart";
 import { EdaReport } from "./EdaReport";
 import { ResultSkeleton } from "@/components/ui/loading";
+import { DataExplorer } from "./DataExplorer";
 import type { PlotlyFigure } from "@/lib/types";
 import { chartSpec, sortChartKeys } from "@/lib/chartCatalog";
 import { cn, formatPercent } from "@/lib/utils";
@@ -429,7 +430,12 @@ function InstantView({ res, onViewCode }: { res: InstantExecutionResponse; onVie
           <h4 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-foreground-2">
             Data analysis
           </h4>
-          <EdaReport profile={res.profile} />
+          {/* Explorer first: seeing the data is what exploration is for, and
+              the summary below is easier to read once you've seen the rows. */}
+          <DataExplorer profile={res.profile} />
+          <div className="mt-4 border-t border-border pt-4">
+            <EdaReport profile={res.profile} />
+          </div>
         </section>
       ) : null}
 

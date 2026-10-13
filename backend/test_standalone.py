@@ -49,7 +49,7 @@ def _load_functions(path, names):
 
 ns = _load_functions(ENGINE_PATH, {
     "_safe_float", "_is_indexable", "_read_csv_rows", "csv_column_kinds", "resolve_task",
-    "load_csv_dataset", "build_data_profile",
+    "load_csv_dataset", "build_data_profile", "_safe_cell",
 })
 # The extracted functions use these module-level imports directly.
 ns["csv"] = csv
@@ -160,7 +160,7 @@ def test_many_distinct_codes_rejected():
 def test_blank_is_missing_not_a_kind_change():
     ds = _dataset(MESSY_CSV, "constant")
     rows, _fns, _tgt, feats = ns["_read_csv_rows"](ds)
-    missing, numeric, _modal, values = ns["csv_column_kinds"](rows, feats)
+    missing, numeric, _modal, values, _tops = ns["csv_column_kinds"](rows, feats)
     assert missing["age"] == 2, missing
     assert numeric["age"] is True, numeric
     assert values["age"] == [27.0, 45.0, 33.0], values
@@ -171,7 +171,7 @@ def test_blank_is_missing_not_a_kind_change():
 def test_modal_value_is_raw():
     ds = _dataset(MESSY_CSV, "constant")
     rows, _fns, _tgt, feats = ns["_read_csv_rows"](ds)
-    _m, _n, modal, _v = ns["csv_column_kinds"](rows, feats)
+    _m, _n, modal, _v, _t = ns["csv_column_kinds"](rows, feats)
     assert modal["city"][0] == "London", modal
     assert modal["city"][1] == 2, modal
 
@@ -184,7 +184,7 @@ def test_profile_reports_real_missingness():
     ds = _dataset(MESSY_CSV, "city")
     X, y, feature_names, target_names, _n, _task = ns["load_csv_dataset"](ds, {})
     rows, _fns, _tgt, feats = ns["_read_csv_rows"](ds)
-    missing, numeric, modal, values = ns["csv_column_kinds"](rows, feats)
+    missing, numeric, modal, values, _tops = ns["csv_column_kinds"](rows, feats)
     prof = ns["build_data_profile"](
         X, y, feature_names, target_names,
         raw_missing=missing, raw_numeric=numeric, raw_modal=modal, raw_values=values,
@@ -208,6 +208,43 @@ def test_correlation_survives_single_numeric_column():
         raw_missing={"a": 0, "b": 0}, raw_modal={}, raw_values={"a": [1.0, 2.0, 3.0]},
     )
     assert prof["correlation_matrix"] == []
+
+
+def test_profile_exposes_distributions_and_real_rows():
+    """The gap versus real analytics tools: the profile showed aggregates but
+    never the data. Every column now carries a distribution and the explorer
+    gets a bounded slice of actual rows."""
+    ds = _dataset(MESSY_CSV, "city")
+    X, y, feature_names, target_names, _n, _task = ns["load_csv_dataset"](ds, {})
+    rows, _fns, _tgt, feats = ns["_read_csv_rows"](ds)
+    missing, numeric, modal, values, tops = ns["csv_column_kinds"](rows, feats)
+    prof = ns["build_data_profile"](
+        X, y, feature_names, target_names,
+        raw_missing=missing, raw_numeric=numeric, raw_modal=modal, raw_values=values,
+        raw_modal_counts=tops, sample_rows=100,
+    )
+    by_name = {c["name"]: c for c in prof["columns_profile"]}
+    # numeric column gets a binned histogram
+    hist = by_name["age"].get("histogram")
+    assert hist, "age should carry a distribution"
+    assert hist["kind"] == "numeric"
+    assert len(hist["counts"]) == len(hist["edges"]) - 1
+    assert sum(hist["counts"]) == 3  # only the three non-blank ages
+    # and the explorer can show real rows
+    assert prof["column_names"] == feature_names
+    assert len(prof["sample_rows"]) == 5
+    assert all(len(row) == len(feature_names) + 1 for row in prof["sample_rows"]), "target column must be included"
+    assert prof["sample_truncated"] is False
+
+
+def test_sample_is_capped():
+    """A 5000-row dataset must not ship 5000 rows to the browser."""
+    values = [str(i * 1.5) for i in range(500)]
+    text = "x,t\n" + "\n".join(f"{i},{v}" for i, v in enumerate(values)) + "\n"
+    X, y, fn, tn, _n, task = ns["load_csv_dataset"](_dataset(text, "t"), {})
+    prof = ns["build_data_profile"](X, y, fn, tn, sample_rows=25)
+    assert len(prof["sample_rows"]) == 25, len(prof["sample_rows"])
+    assert prof["sample_truncated"] is True
 
 
 def main() -> int:
