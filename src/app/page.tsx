@@ -7,7 +7,6 @@ import { TrainingShowcase } from "@/components/landing/TrainingShowcase";
 import { ModelPlayground } from "@/components/landing/ModelPlayground";
 import { WorkflowSteps } from "@/components/landing/WorkflowSteps";
 import { AIComposer } from "@/components/landing/AIComposer";
-import { VideoShowcase } from "@/components/landing/VideoShowcase";
 import { StatsBand } from "@/components/landing/StatsBand";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Pricing } from "@/components/landing/Pricing";
@@ -29,7 +28,6 @@ export default function LandingPage() {
         <StatsBand />
         <WorkflowSteps />
         <AIComposer />
-        <VideoShowcase />
         <Testimonials />
         <Pricing />
         <FAQ />
