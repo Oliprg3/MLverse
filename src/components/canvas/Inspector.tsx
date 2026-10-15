@@ -56,7 +56,13 @@ async function fileToVector(file: File, size: number): Promise<{ vector: number[
     ctx.drawImage(img, 0, 0, size, size);
     const { data } = ctx.getImageData(0, 0, size, size);
     const vector: number[] = [];
-    for (let i = 0; i < data.length; i += 4) vector.push(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+    // Keep all three channels. Converting to grayscale here threw away colour
+    // before the CNN ever saw it — a real loss for most natural images, and it
+    // also contradicted the architecture, which already accepts c channels.
+    // Values stay 0-255; the engine standardises before training.
+    for (let i = 0; i < data.length; i += 4) {
+      vector.push(data[i], data[i + 1], data[i + 2]);
+    }
     return { vector, thumb: canvas.toDataURL("image/jpeg", 0.6) };
   } finally {
     URL.revokeObjectURL(url);

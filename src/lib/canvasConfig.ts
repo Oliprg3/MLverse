@@ -180,8 +180,11 @@ export const NODE_PALETTE: PaletteItem[] = [
     { key: "heads", label: "Attention heads", value: 4 },
     { key: "layers", label: "Layers", value: 2 },
   ] },
-  { type: "dl:cnn", label: "CNN", description: "Convolutional classifier (images or features) — trains in-app", category: "deep_learning", icon: "Image", accent: CATEGORIES.deep_learning.accent, params: [
-    { key: "epochs", label: "Epochs", value: 20 },
+  { type: "dl:cnn", label: "CNN", description: "Convolutional network with BatchNorm, dropout and on-the-fly image augmentation — use CNN over MLP whenever your features are pixels", category: "deep_learning", icon: "Image", accent: CATEGORIES.deep_learning.accent, params: [
+    { key: "channels", label: "Base channels", value: 32, kind: "slider", min: 8, max: 128, step: 8, hint: "Wider extracts more feature maps but trains slower." },
+    { key: "dropout", label: "Dropout", value: 0.25, kind: "slider", min: 0, max: 0.6, step: 0.05, hint: "Raise it when the model memorises a small image set." },
+    { key: "augment", label: "Image augmentation", value: 1, hint: "Flips, rotation and shift. Set to 0 to disable — the biggest accuracy win on small image sets." },
+    { key: "epochs", label: "Epochs", value: 25, kind: "slider", min: 5, max: 80, step: 5 },
     { key: "batch_size", label: "Batch size", value: 32 },
     { key: "optimizer", label: "Optimizer", value: "adamw", options: ["adamw", "adam", "sgd"] },
   ] },

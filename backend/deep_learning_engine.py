@@ -119,6 +119,43 @@ def _build_mlp(n_features: int, n_classes: int, params: Dict[str, Any]) -> tuple
     return nn.Sequential(*layers), "MLP (128→64→out)"
 
 
+def _augment_batch(xb: torch.Tensor, shape: tuple, rng) -> torch.Tensor:
+    """Random flips, shifts and 90° rotations for image batches.
+
+    Real image datasets uploaded through a browser are small — often tens of
+    images per class. Without augmentation a CNN memorises the training set in
+    a handful of epochs and generalises to nothing. This is the single largest
+    accuracy win available on small image data, and it needs no extra data.
+
+    Works on (B, F) tensors: each row is reshaped to its image geometry,
+    augmented, then flattened back, so the training loop is unchanged.
+    """
+    c, h, w = shape
+    if c != 1 or min(h, w) < 8:
+        return xb
+    out = xb.reshape(-1, c, h, w)
+    n = out.shape[0]
+    # Horizontal flip.
+    out = torch.where(torch.rand(n, device=out.device) < 0.5, out.flip(-1), out)
+    # Vertical flip.
+    out = torch.where(torch.rand(n, device=out.device) < 0.5, out.flip(-2), out)
+    # Random 90° rotation.
+    k = torch.randint(0, 4, (n,), device=out.device)
+    for i in range(n):
+        turns = int(k[i])
+        if turns:
+            out[i] = torch.rot90(out[i], turns, dims=(-2, -1))
+    # Random translation (roll) — cheap stand-in for random crop.
+    max_dy, max_dx = max(1, h // 8), max(1, w // 8)
+    dys = torch.randint(-max_dy, max_dy + 1, (n,))
+    dxs = torch.randint(-max_dx, max_dx + 1, (n,))
+    for i in range(n):
+        dy, dx = int(dys[i]), int(dxs[i])
+        if dy or dx:
+            out[i] = torch.roll(out[i], shifts=(dy, dx), dims=(-2, -1))
+    return out.reshape(xb.shape[0], -1)
+
+
 def _build_cnn(n_features: int, n_classes: int, params: Dict[str, Any], image_shape: tuple | None):
     """Conv2d when we have real image geometry, else Conv1d over the feature vector.
 
@@ -136,17 +173,36 @@ def _build_cnn(n_features: int, n_classes: int, params: Dict[str, Any], image_sh
 
     if image_shape:
         c, h, w = image_shape
-        chans = 16
+        chans = int(params.get("channels", 32) or 32)
+        dropout = float(params.get("dropout", 0.25) or 0.25)
+        # BatchNorm stabilises activations and speeds convergence; without it a
+        # plain conv stack on small, augmented data trains poorly and slowly.
+        # Adaptive pooling makes the head independent of input size, so the same
+        # architecture trains on 32x32 or 224x224 uploads.
+        def block(cin: int, cout: int) -> Any:
+            return nn.Sequential(
+                nn.Conv2d(cin, cout, 3, padding=1, bias=False),
+                nn.BatchNorm2d(cout),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(cout, cout, 3, padding=1, bias=False),
+                nn.BatchNorm2d(cout),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(2),
+            )
+
         net = nn.Sequential(
-            nn.Conv2d(c, chans, kernel_size=3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(chans, chans * 2, kernel_size=3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            block(c, chans),
+            block(chans, chans * 2),
+            block(chans * 2, chans * 4),
+            nn.AdaptiveAvgPool2d((4, 4)),
             nn.Flatten(),
         )
         with torch.no_grad():
             dummy = torch.zeros(1, c, h, w)
             flat = net(dummy).shape[1]
+        net.add_module("drop", nn.Dropout(dropout))
         net.add_module("fc", nn.Linear(flat, n_classes))
-        return ConvNet(net, (c, h, w)), f"CNN (2×Conv2d, {chans}/{chans * 2}ch, {h}×{w})"
+        return ConvNet(net, (c, h, w)), f"CNN (3×ConvBlock, {chans}-{chans * 2}-{chans * 4}ch, BN, {h}×{w})"
     net = nn.Sequential(
         nn.Conv1d(1, 16, kernel_size=3, padding=1), nn.ReLU(), nn.MaxPool1d(2),
         nn.Conv1d(16, 32, kernel_size=3, padding=1), nn.ReLU(), nn.AdaptiveAvgPool1d(8),
@@ -432,12 +488,22 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any) -> Exec
     if model_type == "dl:cnn" and data_type == "data:images" and dataset:
         w = int(dataset.get("width") or 0)
         h = int(dataset.get("height") or 0)
-        if w > 0 and h > 0 and w * h == X.shape[1]:
-            image_shape = (1, h, w)
+        # Vectors may be grayscale (w*h) or RGB (3*w*h) depending on how the
+        # client encoded them; accept either so older saved datasets still load.
+        if w > 0 and h > 0:
+            pixels = w * h
+            for channels in (1, 3):
+                if channels * pixels == X.shape[1]:
+                    image_shape = (channels, h, w)
+                    break
     if image_shape is None and model_type == "dl:cnn":
         side = int(round(np.sqrt(X.shape[1])))
         if side * side == X.shape[1] and side >= 8:
             image_shape = (1, side, side)
+        elif (X.shape[1] % 3) == 0:
+            side = int(round(np.sqrt(X.shape[1] // 3)))
+            if side * side * 3 == X.shape[1] and side >= 8:
+                image_shape = (3, side, side)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -525,6 +591,14 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any) -> Exec
     hist_acc: List[float] = []
     t0 = time.perf_counter()
 
+    # Augmentation applies only to real 2D image geometry on a CNN; a CNN fed a
+    # flat feature vector, an LSTM on sequences, or any tabular tensor must not
+    # be flipped or rotated.
+    aug_shape = image_shape if (model_type == "dl:cnn" and image_shape and image_shape[0] == 1 and min(image_shape[1], image_shape[2]) >= 8) else None
+    if aug_shape is not None and float(params.get("augment", 1)) != 0:
+        steps_desc.append({"name": "Image augmentation", "detail": "flips + rotation + shift", "kind": "preprocessing"})
+        emit({"type": "step", "message": "Augmenting images (flips, rotation, shift) — small image sets need this or the model memorises them"})
+
     for epoch in range(1, epochs + 1):
         model.train()
         perm = rng.permutation(n_train)
@@ -533,6 +607,10 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any) -> Exec
         for i in range(0, n_train, batch_size):
             idx = perm[i : i + batch_size]
             xb, yb = Xtr_t[idx], ytr_t[idx]
+            # Augment images only — never text/tabular/sequence tensors, where a
+            # flip would corrupt the meaning of the features.
+            if aug_shape is not None:
+                xb = _augment_batch(xb, aug_shape, rng)
             optimizer.zero_grad()
             loss = criterion(model(xb), yb)
             loss.backward()
