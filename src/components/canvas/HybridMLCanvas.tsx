@@ -46,6 +46,7 @@ import type {
   MLNodeData,
   NodeCategory,
   PaletteItem,
+  RunState,
 } from "@/lib/types";
 
 const nodeTypes = { custom: CustomCanvasNode, dbSource: DatabaseSourceNode };
@@ -162,6 +163,8 @@ function Canvas() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+  // Single source of truth for run progress, shared with the Run overview.
+  const [runState, setRunState] = useState<RunState>("idle");
   const [isDragActive, setIsDragActive] = useState(false);
   /** null = probing, true = server Python imports PyTorch (in-app DL training). */
   const [serverTorch, setServerTorch] = useState<boolean | null>(null);
@@ -551,6 +554,9 @@ const nextTapPosition = useCallback((): { x: number; y: number } => {
 
     const payload = buildPayload();
     setLoading(true);
+    // "waking" until the server actually acknowledges: on the Render free tier
+    // the container can take ~13s to spin up, and that must not look like a hang.
+    setRunState("waking");
     setResponse(null);
     setLogs([]);
     setLiveMetrics({});
@@ -628,11 +634,16 @@ const nextTapPosition = useCallback((): { x: number; y: number } => {
           } catch {
             continue;
           }
-          if (evt.type === "step" && evt.message) pushLine(evt.message);
+          // First byte from the server means the container is awake.
+          if (evt.type === "step" && evt.message) {
+            setRunState((prev: RunState) => (prev === "waking" ? "running" : prev));
+            pushLine(evt.message);
+          }
           else if (evt.type === "metric" && evt.name) setLiveMetrics((m) => ({ ...m, [evt.name!]: evt.value ?? 0 }));
           else if (evt.type === "result" && evt.data) {
             setResponse(evt.data);
             const ok = evt.data.status === "success";
+            setRunState(ok ? "done" : "error");
             const seconds = "timing" in evt.data ? evt.data.timing.total_seconds ?? 0 : 0;
             pushLine(ok ? `Run complete in ${seconds.toFixed(2)}s.` : `Engine error: ${evt.data.error ?? "unknown failure"}`, ok ? "success" : "error");
             stampStatuses(ok ? "success" : "error");
@@ -655,6 +666,7 @@ const nextTapPosition = useCallback((): { x: number; y: number } => {
         error: err instanceof Error ? err.message : "Network request failed",
       });
       pushLine(err instanceof Error ? err.message : "Network request failed", "error");
+      setRunState("error");
       stampStatuses("error");
     } finally {
       setLoading(false);
@@ -929,7 +941,7 @@ const nextTapPosition = useCallback((): { x: number; y: number } => {
           <Inspector node={selectedNode} onClose={closeInspector} />
         ) : workflowOpen && !focusMode ? (
           <WorkflowPanel nodeCount={nodes.length} edgeCount={edges.length} route={route} hasModel={hasModel}
-        loading={loading} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} onCollapse={() => setWorkflowOpen(false)} />
+        runState={runState} errors={blockingErrors} warnings={problemCounts.warnings} onExecute={handleExecute} onCode={openCode} onCollapse={() => setWorkflowOpen(false)} />
         ) : (
           <button
             type="button"

@@ -253,6 +253,20 @@ export interface SkippedChart {
   reason: string;
 }
 
+/**
+ * One state machine for a run, shared by the Run button and the STATUS badge.
+ * They previously tracked progress independently, so the button said "Running
+ * workflow…" while the badge still read "Ready".
+ *
+ *  idle    — nothing in flight
+ *  waking  — request sent, waiting for the container to wake (free tier)
+ *  running — server acknowledged and is streaming work
+ *  done    — finished successfully
+ *  error   — failed or timed out
+ */
+export type RunState = "idle" | "waking" | "running" | "done" | "error";
+
+/** Where a model actually ran. `route` only records whether the *graph* was a
 /** Where a model actually ran. `route` only records whether the *graph* was a
  *  deep-learning one, so a PyTorch model trained in-app and a scikit-learn run
  *  are both route="instant". This is what tells them apart in the UI. */

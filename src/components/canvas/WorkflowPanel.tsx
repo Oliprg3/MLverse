@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CaretRight, Code, Play, SlidersHorizontal } from "@phosphor-icons/react";
+import { CaretRight, Code, Play, SlidersHorizontal, Warning } from "@phosphor-icons/react";
 import type { ExecutionRoute } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Spinner, SpinnerDot } from "@/components/ui/loading";
+import { useEngineProbe } from "./useEngineProbe";
+import type { RunState } from "@/lib/types";
 
 interface WorkflowPanelProps {
   nodeCount: number;
@@ -13,7 +15,7 @@ interface WorkflowPanelProps {
   hasModel: boolean;
   errors: number;
   warnings: number;
-  loading?: boolean;
+  runState?: RunState;
   onExecute: () => void;
   onCode: () => void;
   onCollapse?: () => void;
@@ -26,20 +28,37 @@ interface EngineInfo {
   torch?: boolean;
 }
 
-export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, loading = false, onExecute, onCode, onCollapse }: WorkflowPanelProps) {
-  const [engine, setEngine] = useState<EngineInfo | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/execute")
-      .then((res) => res.json())
-      .then((data: EngineInfo) => { if (!cancelled) setEngine(data); })
-      .catch(() => { if (!cancelled) setEngine({}); });
-    return () => { cancelled = true; };
-  }, []);
+export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, warnings, runState: runStateProp = "idle", onExecute, onCode, onCollapse }: WorkflowPanelProps) {
+  // Shared probe: pre-warms on mount, reports elapsed time while the Render
+  // free-tier container wakes, and surfaces a real error instead of hanging.
+  const probe = useEngineProbe(true);
+  const engine: EngineInfo | null = probe.status
+    ? {
+        engine: probe.status.engine === "unknown" ? undefined : probe.status.engine,
+        python_version: probe.status.python_version,
+        machine_check: probe.status.machine_check,
+        torch: probe.status.torch,
+      }
+    : null;
 
   const native = engine?.engine === "native-python";
-  const statusTone = errors > 0 ? "text-rose-500" : hasModel ? "text-emerald-500" : "text-amber-500";
+  // One state machine drives BOTH the badge and the button. They used to track
+  // progress separately, so the button read "Running workflow…" while the badge
+  // still said "Ready".
+  const runState: RunState = runStateProp;
+  const statusTone =
+    runState === "error" ? "text-rose-500"
+    : runState === "waking" || runState === "running" ? "text-sky-500"
+    : runState === "done" ? "text-emerald-500"
+    : errors > 0 ? "text-rose-500"
+    : hasModel ? "text-emerald-500" : "text-amber-500";
+  const statusLabel =
+    runState === "waking" ? `Waking server · ${probe.elapsed}s`
+    : runState === "running" ? "Running"
+    : runState === "done" ? "Complete"
+    : runState === "error" ? "Failed"
+    : errors > 0 ? `${errors} error${errors === 1 ? "" : "s"}`
+    : hasModel ? "Ready" : "Incomplete";
 
   return (
     <aside className="hidden h-full w-[292px] shrink-0 flex-col border-l border-neutral-200/80 bg-white/90 shadow-[-14px_0_40px_-34px_rgba(15,23,42,0.7)] glass-panel lg:flex dark:border-white/[0.07] dark:bg-[#080c12]/80">
@@ -66,7 +85,7 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
         <div className="flex items-center justify-between">
           <span className="nf-hud-label">status</span>
           <span className={cn("text-[11px] font-semibold", statusTone)}>
-            {errors > 0 ? `${errors} error${errors === 1 ? "" : "s"}` : hasModel ? "Ready" : "Incomplete"}
+            {statusLabel}
           </span>
         </div>
         {warnings > 0 ? (
@@ -90,16 +109,38 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
           <p className="nf-hud-label">server engine</p>
           {engine === null ? (
             <p className="mt-1.5 text-[11px] text-neutral-400 dark:text-zinc-500">Checking deployment…</p>
+          ) : probe.isUnreachable ? (
+            <p className="mt-1.5 text-[11px] leading-snug text-amber-500">
+              The server did not respond after {probe.elapsed}s. On the free tier the container
+              spins down when idle — retry, or check that the service is running.
+            </p>
           ) : native ? (
             <>
-              <p className="mt-1.5 text-[11px] font-medium leading-snug text-emerald-500">Native Python {engine.python_version}: the full model suite trains here.</p>
-              {engine.torch ? (
+              <p className="mt-1.5 text-[11px] font-medium leading-snug text-emerald-500">
+                Native Python {engine?.python_version}: the full model suite trains here.
+              </p>
+              {engine?.torch ? (
                 <p className="mt-1 text-[11px] leading-snug text-sky-500">PyTorch detected — deep-learning graphs (MLP, CNN, LSTM, GRU, tabular transformer) train in-app, no Colab needed.</p>
               ) : (
                 <p className="mt-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">PyTorch not detected — it will install automatically on the first deep-learning run, or we hand off to Colab if the install fails.</p>
               )}
             </>
-          ) : null}
+          ) : (
+            /* Previously this branch was missing entirely, so any non-native
+               response rendered a blank "SERVER ENGINE" panel. */
+            <>
+              <p className="mt-1.5 text-[11px] font-medium leading-snug text-amber-500">
+                No Python engine on this deployment.
+              </p>
+              <p className="mt-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">
+                {engine?.machine_check ?? "Machine check failed."}
+              </p>
+              <p className="mt-1 text-[11px] leading-snug text-neutral-400 dark:text-zinc-500">
+                Only KNN and Naive Bayes can run here. Install backend/requirements.txt and redeploy
+                for the full suite.
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -107,18 +148,29 @@ export function WorkflowPanel({ nodeCount, edgeCount, route, hasModel, errors, w
 <button
           type="button"
           onClick={onExecute}
-          disabled={!hasModel || loading}
-          aria-busy={loading || undefined}
+          disabled={!hasModel || runState === "waking" || runState === "running"}
+          aria-busy={runState === "waking" || runState === "running"}
           className="group relative inline-flex h-10 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-all duration-300 hover:bg-neutral-700 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
         >
           <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-500 group-hover:translate-x-full dark:bg-neutral-900/10" />
           {/* The button used to look identical before, during and after a run,
               so a click on "Run" gave no feedback at all while it worked. */}
-          {loading ? (
+          {runState === "waking" ? (
+            <>
+              <Spinner size={13} className="relative" />
+              <SpinnerDot className="relative" />
+              <span className="relative">Waking server · {probe.elapsed}s…</span>
+            </>
+          ) : runState === "running" ? (
             <>
               <Spinner size={13} className="relative" />
               <SpinnerDot className="relative" />
               <span className="relative">Running workflow…</span>
+            </>
+          ) : runState === "error" ? (
+            <>
+              <Warning size={13} weight="fill" className="relative text-rose-500" />
+              <span className="relative">Retry run</span>
             </>
           ) : (
             <>
