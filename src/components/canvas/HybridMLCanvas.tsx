@@ -32,7 +32,7 @@ import { WorkflowPanel } from "@/components/canvas/WorkflowPanel";
 import { Toast, type ToastData } from "@/components/ui/toast";
 import { getPaletteItem, hasModelNode, resolveRoute } from "@/lib/canvasConfig";
 import { generateCode, generateNodeServer, type GeneratedCode } from "@/lib/codeGen";
-import { autoConnectChain, summarizeDiagnostics, validatePipeline, type Diagnostic } from "@/lib/pipelineValidation";
+import { autoConnectChain, canConnect, summarizeDiagnostics, validatePipeline, type Diagnostic } from "@/lib/pipelineValidation";
 import { pyodideSupported, probeServerEngine, serverHasNativePython, trainInBrowser } from "@/lib/localEngine";
 import { deserializeWorkflow, downloadWorkflow, serializeWorkflow } from "@/lib/workflowSerialization";
 import type { TerminalLine } from "@/components/dashboard/TerminalConsole";
@@ -246,8 +246,23 @@ function Canvas() {
   }, []);
 
   const onConnect: OnConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge({ ...connection, ...DEFAULT_EDGE_OPTIONS }, eds)),
-    [setEdges],
+    (connection: Connection) => {
+      const source = nodes.find((n) => n.id === connection.source);
+      const target = nodes.find((n) => n.id === connection.target);
+      if (!source || !target) return;
+      // Manual drags now pass the same gate as auto-fix, so the two can never
+      // disagree about what a legal pipeline is.
+      const check = canConnect(
+        { category: source.data.category, type: source.data.type },
+        { category: target.data.category, type: target.data.type },
+      );
+      if (!check.ok) {
+        notify(check.reason ?? "Those nodes cannot be connected", "warn");
+        return;
+      }
+      setEdges((eds) => addEdge({ ...connection, ...DEFAULT_EDGE_OPTIONS }, eds));
+    },
+    [nodes, setEdges, notify],
   );
 
   const categories: NodeCategory[] = useMemo(() => nodes.map((n) => n.data.category), [nodes]);

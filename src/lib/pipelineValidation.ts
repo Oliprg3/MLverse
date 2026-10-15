@@ -46,12 +46,47 @@ const CATEGORY_ORDER: Record<string, number> = {
 };
 
 /**
+ * Can these two nodes be connected at all?
+ *
+ * One rule set for BOTH manual drags and auto-fix. Previously onConnect
+ * validated nothing while auto-fix had its own logic, so the two disagreed —
+ * auto-fix happily produced data → data, which cannot be a legal pipeline since
+ * the backend loads exactly one dataset.
+ *
+ * Two data sources may never be chained: a data node is a root, and feeding one
+ * into another is not a valid edge.
+ */
+export function canConnect(
+  source: { category: string; type: string },
+  target: { category: string; type: string },
+): { ok: boolean; reason?: string } {
+  if (source.category === "data" && target.category === "data") {
+    return { ok: false, reason: "A data source cannot feed another data source — pick one dataset per pipeline." };
+  }
+  if (target.category === "data") {
+    return { ok: false, reason: "Nothing can flow into a data source; it is the start of the pipeline." };
+  }
+  // A node may only have one upstream parent, otherwise the graph forks and the
+  // backend silently uses whichever node happens to come first.
+  return { ok: true };
+}
+
+/** Stage rank used for ordering, with classic_ml and deep_learning unified. */
+function stageOf(category: string): string {
+  return category === "classic_ml" || category === "deep_learning" ? "model" : category;
+}
+
+/**
  * Wire a canonical data → preprocessing → model → visualization chain between
  * whatever stages exist, skipping links that are already present.
  * classic_ml and deep_learning are treated as one "model" stage so deep
  * learning pipelines get wired too.
+ *
+ * Every candidate edge is checked with canConnect(), so auto-fix can no longer
+ * produce a connection that a manual drag would refuse.
  */
 export function autoConnectChain(fragment: GraphFragment): Array<{ id: string; source: string; target: string }> {
+  const byId = new Map(fragment.nodes.map((n) => [n.id, n]));
   const ordered = [...fragment.nodes].sort((a, b) => {
     const rank = (CATEGORY_ORDER[a.category] ?? 9) - (CATEGORY_ORDER[b.category] ?? 9);
     return rank !== 0 ? rank : (a.x ?? 0) - (b.x ?? 0);
@@ -60,36 +95,54 @@ export function autoConnectChain(fragment: GraphFragment): Array<{ id: string; s
   const additions: Array<{ id: string; source: string; target: string }> = [];
   let counter = fragment.edges.length;
 
-  const modelStageOf = (category: string) => (category === "classic_ml" || category === "deep_learning" ? "model" : category);
+  const add = (sourceId: string, targetId: string): boolean => {
+    if (!sourceId || !targetId || sourceId === targetId) return false;
+    if (existing.has(`${sourceId}->${targetId}`)) return false;
+    const s = byId.get(sourceId);
+    const t = byId.get(targetId);
+    if (!s || !t) return false;
+    // Same gate as a manual connection.
+    if (!canConnect({ category: s.category, type: s.type }, { category: t.category, type: t.type }).ok) return false;
+    additions.push({ id: `autofix-${++counter}`, source: sourceId, target: targetId });
+    existing.add(`${sourceId}->${targetId}`);
+    return true;
+  };
 
-  // Chain within the same exact category (scaler → pca …).
+  // Chain within a category (scaler → pca …), never within `data`.
   const lastOfCategory = new Map<string, string>();
   for (const node of ordered) {
-    const prev = lastOfCategory.get(node.category);
-    if (prev && !existing.has(`${prev}->${node.id}`)) {
-      additions.push({ id: `autofix-${++counter}`, source: prev, target: node.id });
-      existing.add(`${prev}->${node.id}`);
+    if (node.category === "data") {
+      lastOfCategory.delete("data");
+      continue;
     }
+    const prev = lastOfCategory.get(node.category);
+    if (prev) add(prev, node.id);
     lastOfCategory.set(node.category, node.id);
   }
 
   // Wire stage → stage (data → preprocessing → model → visualization),
-  // from the LAST node of each stage into the FIRST node of the next.
-  const firstOfStage = new Map<string, string>();
-  const lastOfStage = new Map<string, string>();
+  // choosing the NEAREST upstream node rather than the first in sort order, so
+  // the edge lands where the user drew the nodes instead of across the canvas.
+  const byStage = new Map<string, typeof ordered>();
   for (const node of ordered) {
-    const stage = modelStageOf(node.category);
-    if (!firstOfStage.has(stage)) firstOfStage.set(stage, node.id);
-    lastOfStage.set(stage, node.id);
+    const stage = stageOf(node.category);
+    if (!byStage.has(stage)) byStage.set(stage, []);
+    byStage.get(stage)!.push(node);
   }
-  const stageSeq = ["data", "preprocessing", "model", "visualization"].filter((s) => firstOfStage.has(s));
+  const stageSeq = ["data", "preprocessing", "model", "visualization"].filter((s) => byStage.has(s));
+  const alreadyLinked = new Set(fragment.edges.map((e) => e.target));
+
   for (let i = 0; i < stageSeq.length - 1; i += 1) {
-    const from = lastOfStage.get(stageSeq[i])!;
-    const to = firstOfStage.get(stageSeq[i + 1])!;
-    if (from !== to && !existing.has(`${from}->${to}`)) {
-      additions.push({ id: `autofix-${++counter}`, source: from, target: to });
-      existing.add(`${from}->${to}`);
-    }
+    const from = byStage.get(stageSeq[i])!;
+    const to = byStage.get(stageSeq[i + 1])!;
+    const target = to[0];
+    // Skip a node that already has an upstream parent; never re-parent it.
+    if (alreadyLinked.has(target.id)) continue;
+    // Nearest by horizontal distance.
+    const nearest = from
+      .filter((n) => !existing.has(`${n.id}->${target.id}`))
+      .sort((a, b) => Math.abs((a.x ?? 0) - (target.x ?? 0)) - Math.abs((b.x ?? 0) - (target.x ?? 0)))[0];
+    if (nearest) add(nearest.id, target.id);
   }
   return additions.filter((a) => !fragment.edges.some((e) => e.id === a.id));
 }
