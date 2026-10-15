@@ -20,22 +20,28 @@ const CATEGORY_ORDER: NodeCategory[] = [
 
 interface NodeLibraryProps {
   /** Adds the tapped item to the canvas — HTML5 drag alone can't fire on touch. */
-  onAddItem?: (item: PaletteItem, point: { x: number; y: number }) => void;
+  /** Point is supplied on drag-and-drop; omitted on tap-to-add, where the canvas
+   *  decides placement (viewport centre or next to the last selected node). */
+  onAddItem?: (item: PaletteItem, point?: { x: number; y: number }) => void;
 }
 
 function LibraryCard({ item, onAddItem }: { item: PaletteItem; onAddItem?: NodeLibraryProps["onAddItem"] }) {
   const Icon = resolveIcon(item.icon);
 
   const onDragStart = (event: DragEvent<HTMLDivElement>) => {
+    // Set both MIME types: React Flow reads "application/reactflow", and
+    // text/plain is the fallback for browsers that drop custom payloads during
+    // a cross-element drag.
     event.dataTransfer.setData("application/reactflow", JSON.stringify(item));
-    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", JSON.stringify(item));
+    event.dataTransfer.effectAllowed = "copyMove";
   };
 
   return (
     <div
       draggable
       onDragStart={onDragStart}
-      onClick={(e) => onAddItem?.(item, { x: e.clientX, y: e.clientY })}
+      onClick={() => onAddItem?.(item)}
       className="group flex cursor-grab items-center gap-2.5 rounded-lg border border-transparent px-2 py-2 transition-all duration-200 hover:border-neutral-200/80 hover:bg-white/60 active:cursor-grabbing active:scale-[0.98] dark:hover:border-white/[0.07] dark:hover:bg-white/[0.03]"
       title="Drag onto canvas or tap to add"
     >

@@ -15,7 +15,7 @@ import {
   type Node,
   type OnConnect,
 } from "@xyflow/react";
-import { CaretLeft, CaretRight, SquaresFour } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, SquaresFour, Sparkle } from "@phosphor-icons/react";
 import { CustomCanvasNode } from "./CustomCanvasNode";
 import { DatabaseSourceNode } from "./DatabaseSourceNode";
 import { TextColumnsFixModal } from "./TextColumnsFixModal";
@@ -125,8 +125,17 @@ function makeNodeData(type: string): MLNodeData | null {
 }
 
 function createInitialGraph(): { nodes: CanvasFlowNode[]; edges: Edge[] } {
+  // A fresh canvas starts empty. It used to open pre-wired with a Breast Cancer
+  // demo that users had to clear before starting their own work — which read as
+  // "someone else's pipeline" and was the first thing to delete every time.
+  // The example is now opt-in behind a button in the empty state.
+  return { nodes: [] as CanvasFlowNode[], edges: [] as Edge[] };
+}
+
+/** The opt-in example pipeline shown by the empty-state button. */
+function buildExampleGraph(): { nodes: CanvasFlowNode[]; edges: Edge[] } {
   const seed = (type: string, x: number, y: number): CanvasFlowNode => ({
-    id: `${type}-seed`,
+    id: `${type}-demo`,
     type: "custom",
     position: { x, y },
     data: makeNodeData(type) as MLNodeData,
@@ -138,9 +147,9 @@ function createInitialGraph(): { nodes: CanvasFlowNode[]; edges: Edge[] } {
     seed("viz:charts", 450, -20),
   ];
   const edges: Edge[] = [
-    { id: "e1", source: "data:breast_cancer-seed", target: "pre:scaler-seed", ...DEFAULT_EDGE_OPTIONS },
-    { id: "e2", source: "pre:scaler-seed", target: "ml:random_forest-seed", ...DEFAULT_EDGE_OPTIONS },
-    { id: "e3", source: "ml:random_forest-seed", target: "viz:charts-seed", ...DEFAULT_EDGE_OPTIONS },
+    { id: "demo-e1", source: "data:breast_cancer-demo", target: "pre:scaler-demo", ...DEFAULT_EDGE_OPTIONS },
+    { id: "demo-e2", source: "pre:scaler-demo", target: "ml:random_forest-demo", ...DEFAULT_EDGE_OPTIONS },
+    { id: "demo-e3", source: "ml:random_forest-demo", target: "viz:charts-demo", ...DEFAULT_EDGE_OPTIONS },
   ];
   return { nodes, edges };
 }
@@ -391,12 +400,30 @@ function Canvas() {
 
   const onDragLeave = useCallback(() => setIsDragActive(false), []);
 
+  /** Where should a tap-to-add node land?
+ *
+ *  Previously this passed the click's clientX/clientY straight to
+ *  screenToFlowPosition — but on tap the click happens inside the node library
+ *  on the left, so the node was placed at the flow coordinate of a library
+ *  position: far off-screen or stacked on top of existing work. Prefer a spot
+ *  just right of the last node the user selected; otherwise centre the viewport. */
+const nextTapPosition = useCallback((): { x: number; y: number } => {
+    const anchor = nodes.find((n) => n.selected) ?? nodes[nodes.length - 1];
+    if (anchor) {
+      return { x: anchor.position.x + 280, y: anchor.position.y };
+    }
+    // No anchor: flow-space origin. fitView centres the graph on load, so the
+    // first node lands in view without needing the canvas rect (which
+    // ReactFlowInstance does not expose).
+    return { x: 0, y: 0 };
+  }, [nodes]);
+
   /** Add a palette item to the canvas at a screen point (drag-and-drop + tap-to-add). */
   const addPaletteItem = useCallback(
-    (item: PaletteItem, point: { x: number; y: number }) => {
+    (item: PaletteItem, point?: { x: number; y: number }) => {
       const data = makeNodeData(item.type);
       if (!data) return;
-      const position = screenToFlowPosition(point);
+      const position = point ? screenToFlowPosition(point) : nextTapPosition();
       idCounter.current += 1;
       const flowType = item.type === "data:db" ? "dbSource" : "custom";
       setNodes((nds) =>
@@ -404,14 +431,20 @@ function Canvas() {
       );
       notify(`${item.label} added`);
     },
-    [notify, screenToFlowPosition, setNodes],
+    [notify, screenToFlowPosition, nextTapPosition, setNodes],
   );
 
   const onDrop = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
       setIsDragActive(false);
-      const raw = event.dataTransfer.getData("application/reactflow");
+      // Accept either MIME type. React Flow's convention is
+      // "application/reactflow", but some browsers drop custom payloads, and
+      // text/plain costs nothing to set as a fallback.
+      const raw =
+        event.dataTransfer.getData("application/reactflow") ||
+        event.dataTransfer.getData("text/plain") ||
+        event.dataTransfer.getData("text");
       if (!raw) return;
       let item: PaletteItem;
       try {
@@ -419,10 +452,22 @@ function Canvas() {
       } catch {
         return;
       }
+      if (!item?.type || !getPaletteItem(item.type)) return;
+      // Drop coordinates, not the dragstart coordinates.
       addPaletteItem(item, { x: event.clientX, y: event.clientY });
     },
     [addPaletteItem],
   );
+
+  /** Opt-in demo pipeline for the empty state. */
+  const loadExampleGraph = useCallback(() => {
+    const demo = buildExampleGraph();
+    if (!demo.nodes.length) return;
+    setNodes(demo.nodes);
+    setEdges(demo.edges);
+    window.setTimeout(() => fitView({ padding: 0.25, duration: 450 }), 60);
+    notify("Example pipeline loaded");
+  }, [setNodes, setEdges, fitView, notify]);
 
   const buildPayload = useCallback(
     (): GraphPayload => ({
@@ -821,13 +866,26 @@ function Canvas() {
           ) : null}
 
           {nodes.length === 0 ? (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="animate-slide-up text-center">
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
+              <div className="animate-slide-up max-w-md text-center">
                 <div className="nf-hud-corners relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-neutral-200/80 bg-white/95 backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.03]">
                   <SquaresFour size={26} weight="light" className="text-neutral-400 dark:text-zinc-500" />
                 </div>
-                <p className="mt-5 text-base font-semibold tracking-tight text-neutral-900 dark:text-white">Start with a dataset</p>
-                <p className="mt-1.5 text-xs text-neutral-400 dark:text-zinc-500">Drag a node from the library to begin your pipeline.</p>
+                <p className="mt-5 text-base font-semibold tracking-tight text-neutral-900 dark:text-white">Drop a CSV to start</p>
+                <p className="mx-auto mt-1.5 max-w-xs text-xs leading-5 text-neutral-400 dark:text-zinc-500">
+                  Drag a node from the library, or upload a CSV and we&apos;ll read its columns for you.
+                </p>
+                {/* Opt-in example rather than a pre-filled canvas. */}
+                <div className="pointer-events-auto mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={loadExampleGraph}
+                    className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white/80 px-3.5 py-2 text-[11px] font-semibold text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-zinc-300 dark:hover:text-white"
+                  >
+                    <Sparkle size={12} weight="fill" />
+                    Load example
+                  </button>
+                </div>
                 <p className="nf-hud-label mt-6">canvas://untitled, awaiting first node</p>
               </div>
             </div>
