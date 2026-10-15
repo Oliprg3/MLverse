@@ -63,6 +63,14 @@ export const NODE_PALETTE: PaletteItem[] = [
   { type: "pre:split", label: "Train / Test Split", description: "Stratified holdout", category: "preprocessing", icon: "Split", accent: CATEGORIES.preprocessing.accent, params: [TEST_SIZE(0.2)] },
 
   // ── Classic ML — full scikit-learn suite ────────────────────────────────
+  { type: "ml:ensemble", label: "Voting Ensemble", description: "Soft or hard vote across a tree ensemble, a booster and a linear model — diverse errors cancel out", category: "classic_ml", icon: "Stack", accent: CATEGORIES.classic_ml.accent, params: [
+    { key: "kind", label: "Voting", value: "soft", options: ["soft", "hard"], hint: "Soft uses predicted probabilities and usually wins; hard just takes majority votes." },
+    { key: "weights", label: "Member weights", value: "", hint: "Optional, comma separated, e.g. 2,1,1. Blank = auto." },
+  ] },
+  { type: "ml:stacking", label: "Stacking Ensemble", description: "Base learners feed a logistic meta-model; strong on larger tabular data, costly on small sets", category: "classic_ml", icon: "StackPlus", accent: CATEGORIES.classic_ml.accent, params: [
+    { key: "cv", label: "Stacking folds", value: 5, kind: "slider", min: 2, max: 10, step: 1 },
+    { key: "n_neighbors", label: "KNN neighbours", value: 5, kind: "slider", min: 1, max: 25, step: 1 },
+  ] },
   { type: "ml:kmeans", label: "K-Means", description: "Unsupervised clustering into k groups with silhouette scoring", category: "classic_ml", icon: "CirclesFour", accent: CATEGORIES.classic_ml.accent, params: [
     { key: "n_clusters", label: "Clusters (k)", value: 3, kind: "slider", min: 2, max: 12, step: 1 },
   ] },

@@ -53,19 +53,21 @@ const PLANS: Record<string, TaskPlan> = {
     },
   },
   classification: {
-    reply: "I designed a classification pipeline: a benchmark dataset flows through standard scaling into a random forest, with evaluation charts at the end. Random forests are robust on tabular data with almost no tuning — see the ranked alternatives below.",
+    reply: "I designed a classification pipeline rather than reaching for the simplest model. Blanks are imputed first because real data almost always has some, then features are standardized so the linear member is well conditioned. The model is a soft-voting ensemble — a random forest, a gradient booster and a logistic regression — rather than three variants of one algorithm, because diverse learners cancel each other's errors instead of repeating them. Expect it to beat any single member. If you need to explain a decision to a human, swap the ensemble for a depth-limited decision tree; you will lose a little accuracy and gain full interpretability.",
     blueprint: {
       nodes: [
         { type: "data:breast_cancer", reason: "A clean binary-classification benchmark to prototype on before attaching your own CSV." },
-        { type: "pre:scaler", reason: "Zero-mean, unit-variance scaling keeps distance-based and linear models well conditioned." },
-        { type: "ml:random_forest", reason: "Bagged trees are robust on tabular data, need little tuning, and expose feature importances." },
+        { type: "pre:impute", reason: "Median imputation — a gap in one feature should not cost you the whole row." },
+        { type: "pre:scaler", reason: "Standardization keeps the logistic member of the ensemble well conditioned." },
+        { type: "ml:ensemble", reason: "Soft vote across forest + booster + linear. Diversity is what makes this beat its members." },
         { type: "viz:charts", reason: "Confusion matrix, ROC and PR curves to evaluate the trained model." },
       ],
       suggestions: [
-        { algorithm: "Random Forest", type: "ml:random_forest", score: 0.92, reason: "Strong default for tabular classification: handles mixed scales, resists overfitting, gives feature importances." },
-        { algorithm: "Gradient Boosting", type: "ml:gradient_boosting", score: 0.88, reason: "Often the top scorer on structured data when you can afford slower sequential training." },
-        { algorithm: "Logistic Regression", type: "ml:logistic", score: 0.8, reason: "Fast, interpretable baseline with well-calibrated probabilities." },
-        { algorithm: "Support Vector Machine", type: "ml:svm", score: 0.72, reason: "Excels on small, well-scaled datasets with clear class margins." },
+        { algorithm: "Soft Voting Ensemble", type: "ml:ensemble", score: 0.93, reason: "Forest, booster and linear disagree in different places, so averaging their probabilities beats each one alone." },
+        { algorithm: "Gradient Boosting", type: "ml:boosting", score: 0.9, reason: "Often the single strongest tabular model when sequential correction of errors is worth the training time." },
+        { algorithm: "Random Forest", type: "ml:forest", score: 0.87, reason: "Strong, low-tuning default that resists overfitting on mixed-scale features and gives feature importances." },
+        { algorithm: "Stacking Ensemble", type: "ml:stacking", score: 0.78, reason: "Stronger on large tabular sets, but trains a model per fold — wasteful below ~1000 rows." },
+        { algorithm: "Decision Tree", type: "ml:decision_tree", score: 0.6, reason: "The choice when a human has to read the decision, not the score." },
       ],
     },
   },
@@ -134,18 +136,19 @@ const PLANS: Record<string, TaskPlan> = {
     },
   },
   timeseries: {
-    reply: "For sequence data I scaled the inputs and used an LSTM — recurrent models keep temporal order, which feed-forward models discard. It trains in-app on the local PyTorch engine.",
+    reply: "For sequence data the order of observations carries the signal, and a feed-forward model throws it away. I scaled the inputs — recurrent training is unstable otherwise — and used an LSTM rather than a GRU: gated memory handles the long-range dependencies in series that tend to drift. On short sequences or a fast baseline, GRU reaches nearly the same accuracy for a fraction of the training time, so it is ranked second. This trains in-app on the local PyTorch engine.",
     blueprint: {
       nodes: [
-        { type: "data:csv", reason: "Your sequential observations with a target column." },
-        { type: "pre:scaler", reason: "Scaling stabilizes recurrent training." },
-        { type: "dl:lstm", reason: "Long short-term memory captures temporal dependencies." },
-        { type: "viz:metrics", reason: "Metrics to check the sequence model fit." },
+        { type: "data:csv", reason: "Your sequential observations with a target column, in time order." },
+        { type: "pre:impute", reason: "Real time series almost always have gaps; forward-fill before scaling." },
+        { type: "pre:scaler", reason: "Scaling stabilizes recurrent training — unscaled inputs diverge." },
+        { type: "dl:lstm", reason: "Gated memory holds long-range dependencies that drift over time." },
+        { type: "viz:metrics", reason: "Metrics plus the training curve, to see whether it converged or plateaued." },
       ],
       suggestions: [
-        { algorithm: "LSTM Sequence", type: "dl:lstm", score: 0.88, reason: "Gated memory handles long-range dependencies in ordered data." },
-        { algorithm: "GRU Sequence", type: "dl:gru", score: 0.84, reason: "Lighter gated unit — often matches LSTM with faster training." },
-        { algorithm: "Tabular Transformer", type: "dl:tabular_transformer", score: 0.7, reason: "Attention over feature tokens when order matters less than interactions." },
+        { algorithm: "LSTM Sequence", type: "dl:lstm", score: 0.9, reason: "Gated memory captures long-range structure in ordered data." },
+        { algorithm: "GRU Sequence", type: "dl:gru", score: 0.86, reason: "One fewer gate — often matches LSTM at a fraction of the training time." },
+        { algorithm: "Tabular Transformer", type: "dl:tabular_transformer", score: 0.7, reason: "Attention over feature tokens when order matters less than feature interactions." },
       ],
     },
   },
@@ -326,10 +329,25 @@ Available node types (type — label [category]):
 ${CATALOG}
 
 Rules:
-- Propose a connected pipeline of 3-8 nodes using ONLY the listed types, ordered data -> preprocessing -> model -> visualization.
+- Propose a connected pipeline of 3-9 nodes using ONLY the listed types, ordered data -> preprocessing -> model -> visualization.
 - Include exactly one data node first and at least one model node (classic_ml or deep_learning).
 - REGRESSION IS SUPPORTED. When the user wants to predict a continuous quantity (price, revenue, demand, temperature, a count that is really a quantity), the SAME model node types resolve to their regressor equivalents — ml:boosting becomes Gradient Boosting Regressor, ml:forest becomes Random Forest Regressor, ml:ridge becomes Ridge Regression. Do NOT propose confusion matrices, ROC curves or PR curves for these; they require class labels. Use viz:charts for the regression diagnostics instead.
 - EXCEPTION: if the user only wants to understand/explore/audit their data (e.g. "analyse my data", "what's in this CSV", "check for missing values", "profile it", "which columns correlate"), propose a data node plus a "viz:eda" Data Profile node and NO model node. Profiling fits nothing.
+
+Escalate to the more advanced model when the data justifies it — do not always propose the simplest thing:
+  - "ml:ensemble" (soft voting) when the task is well-studied tabular data and a single model will plateau. Its members are deliberately different (forest + booster + linear) so their errors cancel.
+  - "ml:stacking" when there are enough rows to afford cross-validated meta-learning (say 1000+). Be honest in your prose that it costs a model per fold and is slower on small data.
+  - "ml:boosting" over "ml:forest" when accuracy matters more than interpretability.
+  - "ml:linear_tree" (a single depth-limited tree) as a transparent baseline when the user needs to explain a decision to a human.
+  - "dl:*" only when the task is genuinely perceptual (images) or sequential (text, time series) AND there is enough data. Justify it; do not reach for a neural net on 500 tabular rows.
+
+Preprocessing is not decoration — justify each step from the data's likely properties:
+  - "pre:impute" when blanks are plausible (real-world data almost always has some).
+  - "pre:scaler" before any distance-based or linear model (KNN, logistic, ridge, SVM).
+  - "pre:polynomial" or "pre:pca" when the relationship is plausibly non-linear or the feature count is high.
+  - Skip preprocessing steps you cannot justify; a needless scaler just adds noise to the plan.
+
+Be explicit about uncertainty. If the user's request implies data characteristics you have not seen, say what you assumed and what would change the design.
 - You may also add a "viz:eda" Data Profile node alongside a model when the user wants both insights and a trained model.
 - Suggest 3-5 algorithms ranked by fit. Each suggestion's "type" MUST be a classic_ml or deep_learning node type from the list. Omit "suggestions" entirely for a profile-only plan.
 - "score" is a 0-1 match confidence for the user's task. "reason" explains the fit in one sentence.

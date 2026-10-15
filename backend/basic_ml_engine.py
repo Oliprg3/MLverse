@@ -50,6 +50,8 @@ from sklearn.ensemble import (
     HistGradientBoostingRegressor,
     RandomForestClassifier,
     RandomForestRegressor,
+    StackingClassifier,
+    VotingClassifier,
 )
 from sklearn.linear_model import ElasticNet, LinearRegression, LogisticRegression, Ridge, RidgeClassifier, SGDClassifier, SGDRegressor
 from sklearn.naive_bayes import GaussianNB
@@ -1217,6 +1219,61 @@ def _is_indexable(seq: Any, value: Any) -> bool:
         return False
 
 
+def _make_ensemble(params: Dict[str, Any], rs: int) -> Tuple[Any, str, str, str]:
+    """Voting ensemble of three deliberately different learners.
+
+    Diversity is the point: a soft vote over a tree ensemble, a linear model and
+    k-NN cancels their individual errors far better than three variants of the
+    same algorithm. Soft voting is the default because it uses probabilities,
+    which needs calibratable members — LogisticRegression and the trees qualify.
+    """
+    kind = _opt(params, "kind", "soft")
+    voting = "soft" if kind == "soft" else "hard"
+    estimators: List[Tuple[str, Any]] = [
+        ("rf", RandomForestClassifier(n_estimators=250, random_state=rs, n_jobs=-1)),
+        ("gb", GradientBoostingClassifier(n_estimators=200, random_state=rs)),
+        ("lr", LogisticRegression(max_iter=2000)),
+    ]
+    weights = _opt(params, "weights", "")
+    parsed: Any = "auto"
+    if weights.strip():
+        try:
+            parts = [float(w) for w in weights.split(",") if w.strip()]
+            if len(parts) == len(estimators):
+                parsed = parts
+        except ValueError:
+            parsed = "auto"
+    return VotingClassifier(estimators=estimators, voting=voting, weights=parsed, n_jobs=-1), f"{voting.capitalize()} Voting Ensemble", "scikit-learn", SKLEARN_VERSION
+
+
+def _make_stacking(params: Dict[str, Any], rs: int) -> Tuple[Any, str, str, str]:
+    """Stacking: diverse base learners feeding a logistic meta-learner.
+
+    Weaker than voting on small data (a model is trained per fold on a small
+    sample) but stronger on larger tabular sets, so the node says so rather
+    than pretending stacking is free.
+    """
+    folds = max(2, int(_num(params, "cv", 5)))
+    estimators: List[Tuple[str, Any]] = [
+        ("rf", RandomForestClassifier(n_estimators=200, random_state=rs, n_jobs=-1)),
+        ("gb", GradientBoostingClassifier(n_estimators=150, random_state=rs)),
+        ("lr", LogisticRegression(max_iter=2000)),
+        ("knn", KNeighborsClassifier(n_neighbors=int(_num(params, "n_neighbors", 5)))),
+    ]
+    return (
+        StackingClassifier(
+            estimators=estimators,
+            final_estimator=LogisticRegression(max_iter=2000),
+            cv=folds,
+            n_jobs=-1,
+            passthrough=False,
+        ),
+        f"Stacking Ensemble (cv={folds})",
+        "scikit-learn",
+        SKLEARN_VERSION,
+    )
+
+
 def make_model(model_type: str, params: Dict[str, Any], task: str = "classification") -> Tuple[Any, str, str, str]:
     """Return (estimator, display_name, framework, library_version).
 
@@ -1371,6 +1428,12 @@ def make_model(model_type: str, params: Dict[str, Any], task: str = "classificat
             max_iter=int(_num(params, "max_iter", 300)),
             random_state=rs,
         ), "Neural Net (MLP)", "scikit-learn", SKLEARN_VERSION
+
+    if model_type == "ml:ensemble":
+        return _make_ensemble(params, rs)
+
+    if model_type == "ml:stacking":
+        return _make_stacking(params, rs)
 
     if model_type == "ml:qda":
         return QuadraticDiscriminantAnalysis(reg_param=_num(params, "reg_param", 0.0)), "Quadratic Discriminant Analysis", "scikit-learn", SKLEARN_VERSION
