@@ -55,6 +55,10 @@ export const NODE_PALETTE: PaletteItem[] = [
   ] },
 
   // ── Preprocessing ───────────────────────────────────────────────────────
+  { type: "pre:select_columns", label: "Select / Drop Columns", description: "Keep or drop specific columns before training — the way to stop an identifier leaking in as a feature", category: "preprocessing", icon: "Columns", accent: CATEGORIES.preprocessing.accent, params: [
+    { key: "keep", label: "Keep columns", value: "", hint: "Comma separated. Leave blank and use Drop instead. Ignores columns that do not exist." },
+    { key: "drop", label: "Drop columns", value: "", hint: "Comma separated. Used only when Keep is blank." },
+  ] },
   { type: "pre:scaler", label: "Standard Scaler", description: "Zero mean and unit variance", category: "preprocessing", icon: "Scale", accent: CATEGORIES.preprocessing.accent },
   { type: "pre:minmax", label: "Min-Max Scaler", description: "Scale features to [0, 1]", category: "preprocessing", icon: "MoveHorizontal", accent: CATEGORIES.preprocessing.accent },
   { type: "pre:pca", label: "PCA", description: "Principal component reduction", category: "preprocessing", icon: "Minimize2", accent: CATEGORIES.preprocessing.accent, params: [{ key: "n_components", label: "Components", value: 0.95 }] },

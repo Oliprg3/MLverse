@@ -16,6 +16,8 @@ import {
   Target,
   UploadSimple,
   Warning,
+  Columns,
+  Check,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { DataCleaningModal } from "./DataCleaningModal";
@@ -112,6 +114,26 @@ async function processImageFiles(files: FileList | File[]): Promise<ImageDataset
   return { name: "Image Dataset", classNames, labels, vectors, width: IMG_SIZE, height: IMG_SIZE, nsamples: vectors.length, thumbnails: thumbnails.slice(0, 8) };
 }
 
+/** Does this column look like a row key rather than a signal?
+ *
+ *  Mirrors the backend heuristic in basic_ml_engine._looks_like_identifier so the
+ *  inspector's suggestion and Pipeline Check's warning agree. An identifier
+ *  that leaks in as a feature is perfectly predictive of every other row, so
+ *  the model memorises instead of generalising — and the score looks great,
+ *  which is exactly what makes it dangerous. */
+function looksLikeIdentifier(name: string, values: string[]): boolean {
+  const n = name.trim().toLowerCase();
+  if (/(^|_)(id|ids|uuid|guid|key|index|idx|row|rownum|seq|no|num)$/.test(n) || n === "id" || n === "index") return true;
+  const present = values.filter((v) => v !== "");
+  if (!present.length) return false;
+  if (new Set(present).size === present.length) return true;
+  if (present.every((v) => /^-?\d+$/.test(v))) {
+    const nums = present.map(Number);
+    return nums.every((b, i) => i === 0 || b > nums[i - 1]);
+  }
+  return false;
+}
+
 export function Inspector({ node, onClose }: InspectorProps) {
   const { updateNodeData } = useReactFlow();
   const csvInputRef = useRef<HTMLInputElement>(null);
@@ -131,6 +153,25 @@ export function Inspector({ node, onClose }: InspectorProps) {
       description: `${dataset.nrows.toLocaleString()} rows, ${dataset.columns.length} cols, cleaned (${summary})`,
     });
   };
+
+  // Hooks must run before any early return.
+  // Parse once per dataset, not per column — hooks cannot run inside .map().
+  const idSuspects = useMemo(() => {
+    const ds = node?.data.dataset;
+    if (!ds?.csvText) return new Set<string>();
+    try {
+      const parsed = Papa.parse<Record<string, string>>(ds.csvText, { header: true, skipEmptyLines: true });
+      const rows = parsed.data ?? [];
+      const suspects = new Set<string>();
+      for (const column of ds.columns) {
+        if (column === ds.targetColumn) continue;
+        if (looksLikeIdentifier(column, rows.map((r) => String(r[column] ?? "").trim()))) suspects.add(column);
+      }
+      return suspects;
+    } catch {
+      return new Set<string>();
+    }
+  }, [node?.data.dataset]);
 
   if (!node) return null;
   const data = node.data;
@@ -182,9 +223,25 @@ export function Inspector({ node, onClose }: InspectorProps) {
 
   const updateCsvTarget = (targetColumn: string) => {
     if (!data.dataset) return;
+    // The target can never also be a feature.
+    const exclude = (data.dataset.excludeColumns ?? []).filter((c) => c !== targetColumn);
     updateNodeData(node.id, {
-      dataset: { ...data.dataset, targetColumn },
+      dataset: { ...data.dataset, targetColumn, excludeColumns: exclude },
       description: `${data.dataset.nrows.toLocaleString()} rows, ${data.dataset.columns.length} cols, target: ${targetColumn}`,
+    });
+  };
+
+  /** Toggle a feature column on or off. Persisted on the node and applied by
+   *  the backend before the split, so exclusion is real rather than cosmetic. */
+  const toggleCsvColumn = (column: string) => {
+    if (!data.dataset || column === data.dataset.targetColumn) return;
+    const current = new Set(data.dataset.excludeColumns ?? []);
+    if (current.has(column)) current.delete(column);
+    else current.add(column);
+    const kept = data.dataset.columns.length - current.size;
+    updateNodeData(node.id, {
+      dataset: { ...data.dataset, excludeColumns: [...current] },
+      description: `${data.dataset.nrows.toLocaleString()} rows, ${kept} features, target: ${data.dataset.targetColumn}`,
     });
   };
 
@@ -270,6 +327,72 @@ export function Inspector({ node, onClose }: InspectorProps) {
                   >
                     {data.dataset.columns.map((c) => (<option key={c} value={c}>{c}</option>))}
                   </select>
+                </div>
+
+                {/* Per-column include/exclude. Without this an identifier like
+                    customer_id becomes a feature and the model memorises rows,
+                    scoring beautifully while learning nothing transferable. */}
+                <div className="mt-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <SectionLabel icon={<Columns className="h-3.5 w-3.5" />}>Features</SectionLabel>
+                    <span className="font-mono text-[10px] text-neutral-400 dark:text-zinc-500">
+                      {data.dataset.columns.length - (data.dataset.excludeColumns ?? []).length} / {data.dataset.columns.length - 1}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] leading-5 text-neutral-400 dark:text-zinc-500">
+                    Switch off anything you do not want the model to see.
+                  </p>
+                  <ul className="mt-2 max-h-56 space-y-1 overflow-y-auto">
+                    {data.dataset.columns.map((column) => {
+                      const isTarget = column === data.dataset!.targetColumn;
+                      const excluded = (data.dataset!.excludeColumns ?? []).includes(column);
+                      const flagged = idSuspects.has(column);
+                      return (
+                        <li key={column}>
+                          <button
+                            type="button"
+                            disabled={isTarget}
+                            onClick={() => toggleCsvColumn(column)}
+                            aria-pressed={isTarget ? undefined : !excluded}
+                            className={`flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors ${
+                              isTarget
+                                ? "cursor-not-allowed border-emerald-500/30 bg-emerald-500/[0.07]"
+                                : excluded
+                                  ? "border-neutral-200 bg-neutral-50/60 hover:border-neutral-300 dark:border-white/[0.07] dark:bg-white/[0.02]"
+                                  : "border-neutral-200 bg-white/70 hover:border-neutral-400 dark:border-white/[0.09] dark:bg-white/[0.03]"
+                            }`}
+                          >
+                            <span
+                              aria-hidden
+                              className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border ${
+                                isTarget
+                                  ? "border-emerald-500 bg-emerald-500"
+                                  : excluded
+                                    ? "border-neutral-300 dark:border-white/20"
+                                    : "border-neutral-900 bg-neutral-900 dark:border-white dark:bg-white"
+                              }`}
+                            >
+                              {excluded ? null : <Check className="h-2.5 w-2.5 text-white dark:text-neutral-900" weight="bold" />}
+                            </span>
+                            <span className={`min-w-0 flex-1 truncate text-[11px] ${excluded ? "text-neutral-400 line-through dark:text-zinc-600" : "text-neutral-800 dark:text-zinc-200"}`}>
+                              {column}
+                            </span>
+                            {flagged ? (
+                              <span
+                                title="Looks like a row identifier — unique per row. Including it lets the model memorise instead of generalise."
+                                className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400"
+                              >
+                                id?
+                              </span>
+                            ) : null}
+                            {isTarget ? (
+                              <span className="shrink-0 font-mono text-[9px] uppercase text-emerald-600 dark:text-emerald-400">target</span>
+                            ) : null}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               </div>
             ) : (

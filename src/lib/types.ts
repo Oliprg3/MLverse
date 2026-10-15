@@ -94,6 +94,9 @@ export interface CsvDataset {
   columns: string[];
   nrows: number;
   csvText: string;
+  /** Feature columns the user has switched off. Applied on the backend before
+   *  training — the excluded columns never reach the estimator. */
+  excludeColumns?: string[];
 }
 
 /** SQL dialect behind a Cloud Database source node. */

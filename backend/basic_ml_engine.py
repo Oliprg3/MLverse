@@ -28,6 +28,7 @@ import base64
 import csv
 import io
 import pickle
+import re
 import time
 import warnings
 from dataclasses import dataclass, field
@@ -311,6 +312,56 @@ def _line(
 
 
 # ── Dataset resolution ───────────────────────────────────────────────────────
+def _looks_like_identifier(column: str, values: List[Any]) -> bool:
+    """Heuristic: does this column look like a row key rather than a feature?
+
+    An identifier passed into a model is harmless-looking and actively harmful —
+    a unique-per-row integer is perfectly predictive of every other row, so the
+    model memorises instead of generalising. Three signals, any of which is
+    damning on its own:
+      * the name reads like an id (id, *_id, index, uuid, key, guid, row);
+      * every value is unique across the column;
+      * values are integers that increase monotonically down the rows.
+    """
+    name = column.strip().lower()
+    if re.search(r"(^|_)(id|ids|uuid|guid|key|index|idx|row|rownum|seq|no|num)$", name) or name in {"id", "index"}:
+        return True
+    present = [v for v in values if v not in (None, "")]
+    if not present:
+        return False
+    if len(set(map(str, present))) == len(present):
+        # Unique per row. Only an identifier if it is also low-cardinality-free;
+        # a high-cardinality text field (names, emails) is equally unhelpful but
+        # is reported as categorical noise instead.
+        return True
+    if all(re.fullmatch(r"-?\d+", str(v)) for v in present):
+        try:
+            nums = [int(v) for v in present]
+        except ValueError:
+            return False
+        return all(b > a for a, b in zip(nums, nums[1:]))
+    return False
+
+
+def suggest_excluded_columns(dataset: Dict[str, Any] | None) -> List[Dict[str, Any]]:
+    """Columns that look like identifiers, with the reason, for Pipeline Check."""
+    if not dataset or not dataset.get("csvText"):
+        return []
+    try:
+        rows, fieldnames, target, feat_cols = _read_csv_rows(dataset)
+    except Exception:
+        return []
+    out: List[Dict[str, Any]] = []
+    for col in feat_cols:
+        values = [str(r.get(col, "")).strip() for r in rows]
+        if _looks_like_identifier(col, values):
+            out.append({
+                "column": col,
+                "reason": "every value is unique — this is a row key, not a signal the model can use",
+            })
+    return out
+
+
 def _read_csv_rows(dataset: Dict[str, Any] | None) -> Tuple[List[Dict[str, Any]], List[str], str, List[str]]:
     """Parse CSV text into (rows, fieldnames, target, feature columns).
 
@@ -335,8 +386,23 @@ def _read_csv_rows(dataset: Dict[str, Any] | None) -> Tuple[List[Dict[str, Any]]
     if target not in fieldnames:
         target = fieldnames[-1]
     feat_cols = [c for c in fieldnames if c != target]
+
+    # Per-node column selection. `excludeColumns` is an explicit user choice and
+    # wins; `includeColumns` is the inverse when a client sends it instead.
+    exclude = {str(c) for c in (dataset.get("excludeColumns") or [])}
+    include_raw = dataset.get("includeColumns")
+    if isinstance(include_raw, list) and include_raw:
+        allowed = {str(c) for c in include_raw}
+        feat_cols = [c for c in feat_cols if c in allowed]
+    if exclude:
+        feat_cols = [c for c in feat_cols if c not in exclude]
+    dropped = [c for c in fieldnames if c != target and c not in feat_cols]
+
     if not feat_cols:
-        raise ValueError("The CSV needs at least one feature column besides the target.")
+        raise ValueError(
+            "Every feature column has been excluded — the model would have nothing to learn from. "
+            "Re-include at least one column that is not the target."
+        )
     return rows, fieldnames, target, feat_cols
 
 
@@ -1690,6 +1756,37 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
     if model_type in ("ml:kmeans", "ml:dbscan"):
         task = "clustering"
     emit({"type": "step", "message": f"Task: {task}"})
+
+    if by_type.get("pre:select_columns"):
+        # Explicit keep/drop list from a Select/Drop Columns node. Applied by
+        # masking the loaded matrix rather than adding a transformer, so the
+        # excluded columns genuinely never reach the estimator.
+        spec = params_of("pre:select_columns") or {}
+        keep_raw = spec.get("keep") or spec.get("columns") or ""
+        drop_raw = spec.get("drop") or ""
+        keep = [c.strip() for c in str(keep_raw).split(",") if c.strip()]
+        drop = [c.strip() for c in str(drop_raw).split(",") if c.strip()]
+        selected_mask: List[int] = []
+        if keep:
+            selected_mask = [i for i, n in enumerate(feature_names) if n in keep]
+            if not selected_mask:
+                raise ValueError(
+                    "Select/Drop Columns kept nothing: none of "
+                    f"{keep[:4]} match the loaded columns {list(feature_names)[:6]}."
+                )
+        elif drop:
+            selected_mask = [i for i, n in enumerate(feature_names) if n not in drop]
+            if not selected_mask:
+                raise ValueError("Select/Drop Columns dropped every remaining feature column.")
+        if selected_mask:
+            X = X[:, selected_mask]
+            feature_names = [feature_names[i] for i in selected_mask]
+            steps_desc.append({
+                "name": "Select columns",
+                "detail": f"kept {len(selected_mask)} of {X.shape[1]} features",
+                "kind": "preprocessing",
+            })
+            emit({"type": "step", "message": f"Select/Drop Columns kept {len(selected_mask)} features"})
 
     # 3. train/test split
     test_size = float(params_of(data_type).get("test_size", 0.2)) or float(params_of("pre:split").get("test_size", 0.2))
