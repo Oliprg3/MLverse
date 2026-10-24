@@ -1340,6 +1340,28 @@ def _make_stacking(params: Dict[str, Any], rs: int) -> Tuple[Any, str, str, str]
     )
 
 
+def _requested_chart_keys(nodes: List[Dict[str, Any]]) -> List[str]:
+    """Which charts the Visualization nodes asked for, in node order.
+
+    Mirrors collectRequestedCharts() on the client so both sides agree.
+    """
+    keys: List[str] = []
+    saw_viz = False
+    for node in nodes:
+        if node.get("category") != "visualization":
+            continue
+        params = node.get("params") or {}
+        raw = params.get("charts")
+        if raw is None:
+            continue
+        saw_viz = True
+        for token in str(raw).split(","):
+            token = token.strip()
+            if token and token not in keys:
+                keys.append(token)
+    return keys if saw_viz else []
+
+
 def make_model(model_type: str, params: Dict[str, Any], task: str = "classification") -> Tuple[Any, str, str, str]:
     """Return (estimator, display_name, framework, library_version).
 
@@ -1590,6 +1612,7 @@ class ExecutionResult:
     model: Dict[str, Any] = field(default_factory=dict)
     metrics: Dict[str, Any] = field(default_factory=dict)
     charts: Dict[str, Any] = field(default_factory=dict)
+    charts_requested: List[str] = field(default_factory=list)
     predictions: Dict[str, Any] = field(default_factory=dict)
     timing: Dict[str, Any] = field(default_factory=dict)
     message: str = ""
@@ -1610,6 +1633,8 @@ class ExecutionResult:
             "predictions": self.predictions,
             "timing": self.timing,
         }
+        if self.charts_requested:
+            out["charts_requested"] = list(self.charts_requested)
         if self.message:
             out["message"] = self.message
         if self.error:
@@ -1901,6 +1926,17 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
         "feature_importance": feature_importance_figure(importances, fi_names),
     }
 
+    # Report which charts were requested so the UI can tell the difference
+    # between "you did not ask for that chart" and "we failed to build it".
+    # This was never set by the Python engine, so the drawer silently fell back
+    # to Object.keys(charts) and a ticked checkbox appeared to do nothing.
+    requested = _requested_chart_keys(nodes)
+    charts_requested = requested if requested else sorted(charts)
+    # Only ship figures the client actually asked for; the four above are the
+    # defaults when nothing was specified.
+    if requested:
+        charts = {k: v for k, v in charts.items() if k in requested}
+
     # 8. raw predictions (so the UI can show a results table + CSV export)
     cap = 500
     predictions = {
@@ -1954,6 +1990,7 @@ def _execute_inner(nodes: List[Dict[str, Any]], start: float, emit: Any = lambda
         },
         metrics=metrics,
         charts=charts,
+        charts_requested=charts_requested,
         predictions=predictions,
         timing={"total_seconds": time.perf_counter() - start, "training_seconds": train_seconds},
         message=f"{model_name} trained in {train_seconds:.2f}s on CPU.",
