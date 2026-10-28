@@ -20,10 +20,10 @@ export interface ChartGroupConfig {
 }
 
 export const CHART_GROUPS: Record<ChartGroup, ChartGroupConfig> = {
-  core: { id: "core", label: "Evaluation", accent: "#0ea5e9", description: "How well did it classify?" },
-  scatter: { id: "scatter", label: "Scatter & Geometry", accent: "#ec4899", description: "Where do the samples sit in feature space?" },
-  knn: { id: "knn", label: "KNN Analysis", accent: "#f59e0b", description: "Neighbourhood structure: needs a KNN model." },
-  diagnostics: { id: "diagnostics", label: "Diagnostics", accent: "#8b5cf6", description: "Is the model trustworthy / well-fit?" },
+  core: { id: "core", label: "Evaluation", accent: "#3eb8a8", description: "How well did it classify?" },
+  scatter: { id: "scatter", label: "Scatter & Geometry", accent: "#c9649b", description: "Where do the samples sit in feature space?" },
+  knn: { id: "knn", label: "KNN Analysis", accent: "#cf8f4e", description: "Neighbourhood structure: needs a KNN model." },
+  diagnostics: { id: "diagnostics", label: "Diagnostics", accent: "#af7ab3", description: "Is the model trustworthy / well-fit?" },
 };
 
 export interface ChartSpec {

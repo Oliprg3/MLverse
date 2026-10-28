@@ -48,7 +48,7 @@ function corrColor(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "rgba(161,161,170,0.12)";
   const magnitude = Math.min(1, Math.abs(value));
   const alpha = 0.12 + magnitude * 0.78;
-  return value >= 0 ? `rgba(239,68,68,${alpha.toFixed(3)})` : `rgba(56,189,248,${alpha.toFixed(3)})`;
+  return value >= 0 ? `rgba(239,68,68,${alpha.toFixed(3)})` : `rgba(45,212,191,${alpha.toFixed(3)})`;
 }
 
 function ColumnTable({ columns }: { columns: ProfileColumn[] }) {
@@ -190,7 +190,7 @@ function CorrelationMatrix({ labels, matrix }: { labels: string[]; matrix: Array
         ))}
         <div className="mt-3 flex items-center gap-2 font-mono text-[9px] text-muted-2">
           <span>-1</span>
-          <span className="h-2 w-28 rounded-full" style={{ background: "linear-gradient(90deg, rgba(56,189,248,0.9), rgba(161,161,170,0.12), rgba(239,68,68,0.9))" }} />
+          <span className="h-2 w-28 rounded-full" style={{ background: "linear-gradient(90deg, rgba(45,212,191,0.9), rgba(161,161,170,0.12), rgba(239,68,68,0.9))" }} />
           <span>+1</span>
           <span className="ml-2">negative → positive correlation</span>
         </div>

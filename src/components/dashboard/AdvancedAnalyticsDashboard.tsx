@@ -165,7 +165,7 @@ export function AdvancedAnalyticsDashboard({ data, fileName = "data", csvText }:
           data: [{
             type: "histogram",
             x: values,
-            marker: { color: "#0ea5e9" },
+            marker: { color: "#3eb8a8" },
             name: col,
           }],
           layout: {
@@ -214,7 +214,7 @@ export function AdvancedAnalyticsDashboard({ data, fileName = "data", csvText }:
           type: "bar",
           x: Object.keys(counts),
           y: Object.values(counts),
-          marker: { color: "#10b981" },
+          marker: { color: "#2aa89a" },
         }],
         layout: {
           title: { text: `Count by ${col}` },

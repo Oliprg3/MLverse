@@ -28,7 +28,7 @@ import type {
   PlotlyFigure,
 } from "@/lib/types";
 
-const PALETTE = ["#0ea5e9", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", "#ef4444", "#6366f1", "#14b8a6"];
+const PALETTE = ["#3eb8a8", "#5aa9e6", "#af7ab3", "#c9b96a", "#cf8f4e", "#c9649b", "#7c8fd6", "#2aa89a"];
 const AVG_COLOR = "#6366f1";
 const CHANCE_COLOR = "#a1a1aa";
 
@@ -367,7 +367,7 @@ function baseLayout(title: string): Record<string, unknown> {
   return {
     title: { text: `<b>${title}</b>`, font: { size: 15 } },
     margin: { l: 56, r: 20, t: 48, b: 44 },
-    hoverlabel: { bgcolor: "#0b1220", bordercolor: AVG_COLOR, font: { color: "#f8fafc" } },
+    hoverlabel: { bgcolor: "#0e1a1c", bordercolor: AVG_COLOR, font: { color: "#f8fafc" } },
   };
 }
 function confusionFigure(cm: number[][], classNames: string[]): PlotlyFigure {

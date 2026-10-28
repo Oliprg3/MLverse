@@ -103,7 +103,7 @@ export function perClassBarsFigure(rows: ClassMetricRow[]): PlotlyFigure {
       name: metric === "f1" ? "F1" : metric[0].toUpperCase() + metric.slice(1),
       x: rows.map((r) => r.label),
       y: rows.map((r) => Number(r[metric].toFixed(3))),
-      marker: { color: ["#0ea5e9", "#14b8a6", "#8b5cf6"][i] },
+      marker: { color: ["#3eb8a8", "#5aa9e6", "#af7ab3"][i] },
       hovertemplate: "%{x}<br>%{fullData.name} %{y:.3f}<extra></extra>",
     })),
     layout: {
@@ -125,7 +125,7 @@ export function confidenceHistogramFigure(confidence: number[]): PlotlyFigure | 
       type: "histogram",
       x: confidence.map((c) => Number(c.toFixed(3))),
       nbinsx: 20,
-      marker: { color: "#10b981" },
+      marker: { color: "#2aa89a" },
       hovertemplate: "confidence %{x}<br>count %{y}<extra></extra>",
     }],
     layout: {

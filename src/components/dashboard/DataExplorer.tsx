@@ -170,7 +170,7 @@ export function DataExplorer({ profile }: { profile: DataProfile }) {
                 >
                   <span
                     className="font-mono text-[9px] font-bold uppercase tracking-wider"
-                    style={{ color: kindOf(column) === "numeric" ? "#0ea5e9" : "#f59e0b" }}
+                    style={{ color: kindOf(column) === "numeric" ? "#3eb8a8" : "#cf8f4e" }}
                   >
                     {kindOf(column) === "numeric" ? "123" : "abc"}
                   </span>

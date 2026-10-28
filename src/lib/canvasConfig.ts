@@ -8,11 +8,11 @@ export interface CategoryConfig {
 }
 
 export const CATEGORIES: Record<NodeCategory, CategoryConfig> = {
-  data: { id: "data", label: "Data Sources", accent: "#10b981", description: "Datasets that flow into the pipeline." },
-  preprocessing: { id: "preprocessing", label: "Preprocessing", accent: "#f59e0b", description: "Transform & clean features." },
-  classic_ml: { id: "classic_ml", label: "Classic ML", accent: "#0ea5e9", description: "The full scikit-learn suite on instant CPU." },
-  deep_learning: { id: "deep_learning", label: "Deep Learning", accent: "#8b5cf6", description: "PyTorch neural nets trained in-app on your machine." },
-  visualization: { id: "visualization", label: "Visualization", accent: "#ec4899", description: "Plotly analytics dashboards." },
+  data: { id: "data", label: "Data Sources", accent: "#5aa9e6", description: "Datasets that flow into the pipeline." },
+  preprocessing: { id: "preprocessing", label: "Preprocessing", accent: "#cf8f4e", description: "Transform & clean features." },
+  classic_ml: { id: "classic_ml", label: "Classic ML", accent: "#3eb8a8", description: "The full scikit-learn suite on instant CPU." },
+  deep_learning: { id: "deep_learning", label: "Deep Learning", accent: "#af7ab3", description: "PyTorch neural nets trained in-app on your machine." },
+  visualization: { id: "visualization", label: "Visualization", accent: "#c9b96a", description: "Plotly analytics dashboards." },
 };
 
 export const COLAB_CATEGORIES: NodeCategory[] = ["deep_learning"];

@@ -5,7 +5,7 @@
 
 /* ────────────────────────────────────────────────────────────────────────
    Design tokens — Datlify.
-   Neutral slate dark with a single sky accent. Calm, premium feel.
+   Lab/IDE palette: teal-cast deep ink dark, deep-teal accent on calm paper light.
    ──────────────────────────────────────────────────────────────────────── */
 :root {
   --background: #f8fafc;
@@ -25,41 +25,41 @@
   /* Tertiary tier for decorative marks only (inactive states, indices,
      aria-hidden HUD labels). Below 4.5:1 by design — never for copy. */
   --muted-3: #9aa5b4;
-  --primary: #0369a1;
-  --primary-light: #38bdf8;
-  --accent: #0ea5e9;
-  --accent-2: #7dd3fc;
-  --ring: #0369a1;
+  --primary: #0f766e;
+  --primary-light: #2dd4bf;
+  --accent: #14b8a6;
+  --accent-2: #7ee6da;
+  --ring: #0f766e;
   --input: #e2e5ea;
-  --glow-primary: rgba(2, 132, 199, 0.14);
-  --glow-accent: rgba(14, 165, 233, 0.12);
+  --glow-primary: rgba(20, 184, 166, 0.14);
+  --glow-accent: rgba(20, 184, 166, 0.12);
 }
 
 .dark {
-  --background: #06080c;
-  --background-2: #090c11;
-  --surface: #0d1117;
-  --surface-2: #131922;
-  --card: #0f141b;
-  --card-2: #151c26;
-  --border: #222b37;
-  --border-strong: #2f3b4a;
-  --foreground: #f1f5f9;
-  --foreground-2: #d2dae4;
-  --muted: #8b96a6;
-  --muted-2: #7c8798;
-  --muted-3: #5b6474;
-  --primary: #38bdf8;
-  --primary-light: #7dd3fc;
-  --accent: #0ea5e9;
-  --accent-2: #7dd3fc;
-  --ring: #38bdf8;
-  --input: #1a2230;
-  --glow-primary: rgba(56, 189, 248, 0.10);
-  --glow-accent: rgba(14, 165, 233, 0.08);
+  --background: #050b0c;
+  --background-2: #081012;
+  --surface: #0b1517;
+  --surface-2: #101c1e;
+  --card: #0d1719;
+  --card-2: #121e20;
+  --border: #1e2d2e;
+  --border-strong: #2c3e3f;
+  --foreground: #eef5f4;
+  --foreground-2: #c9d6d5;
+  --muted: #93a7a6;
+  --muted-2: #809492;
+  --muted-3: #566766;
+  --primary: #2dd4bf;
+  --primary-light: #5eead4;
+  --accent: #2dd4bf;
+  --accent-2: #99f6e4;
+  --ring: #2dd4bf;
+  --input: #162527;
+  --glow-primary: rgba(45, 212, 191, 0.10);
+  --glow-accent: rgba(45, 212, 191, 0.08);
 
   background-image:
-    radial-gradient(120% 60% at 50% -8%, rgba(56, 189, 248, 0.05), transparent 55%),
+    radial-gradient(120% 60% at 50% -8%, rgba(45, 212, 191, 0.05), transparent 55%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), var(--background) 40%);
   background-attachment: fixed;
 }
@@ -785,9 +785,9 @@
   --muted: #5e6b82;
   --muted-2: #6b7280;
   --muted-3: #9aa5b4;
-  --primary: #0369a1;
-  --accent: #0ea5e9;
-  --ring: #0369a1;
+  --primary: #0f766e;
+  --accent: #14b8a6;
+  --ring: #0f766e;
   --input: #e2e5ea;
 }
 
@@ -797,28 +797,28 @@
   color-scheme: dark;
 }
 .preview-dark {
-  --background: #06080c;
-  --background-2: #090c11;
-  --surface: #0d1117;
-  --surface-2: #131922;
-  --card: #0f141b;
-  --card-2: #151c26;
-  --border: #222b37;
-  --border-strong: #2f3b4a;
-  --foreground: #f1f5f9;
-  --foreground-2: #d2dae4;
-  --muted: #8b96a6;
-  --muted-2: #7c8798;
-  --muted-3: #5b6474;
-  --primary: #38bdf8;
-  --primary-light: #7dd3fc;
-  --accent: #0ea5e9;
-  --accent-2: #7dd3fc;
-  --ring: #38bdf8;
-  --input: #1a2230;
-  background-color: #06080c;
+  --background: #050b0c;
+  --background-2: #081012;
+  --surface: #0b1517;
+  --surface-2: #101c1e;
+  --card: #0d1719;
+  --card-2: #121e20;
+  --border: #1e2d2e;
+  --border-strong: #2c3e3f;
+  --foreground: #eef5f4;
+  --foreground-2: #c9d6d5;
+  --muted: #93a7a6;
+  --muted-2: #809492;
+  --muted-3: #566766;
+  --primary: #2dd4bf;
+  --primary-light: #5eead4;
+  --accent: #2dd4bf;
+  --accent-2: #99f6e4;
+  --ring: #2dd4bf;
+  --input: #162527;
+  background-color: #050b0c;
   background-image:
-    radial-gradient(120% 60% at 50% -8%, rgba(56, 189, 248, 0.05), transparent 55%);
+    radial-gradient(120% 60% at 50% -8%, rgba(45, 212, 191, 0.05), transparent 55%);
 }
 
 /* ── Interactive lab modules ───────────────────────────────────────── */
@@ -934,12 +934,12 @@
 
 /* ── Auth page ─────────────────────────────────────────────────────── */
 .auth-panel {
-  --auth-node: #0369a1;
-  --auth-node-hi: #0ea5e9;
+  --auth-node: #0f766e;
+  --auth-node-hi: #14b8a6;
 }
 .dark .auth-panel {
-  --auth-node: #38bdf8;
-  --auth-node-hi: #7dd3fc;
+  --auth-node: #2dd4bf;
+  --auth-node-hi: #5eead4;
 }
 
 @keyframes nf-auth-line-in {
